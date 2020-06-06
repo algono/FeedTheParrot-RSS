@@ -11,6 +11,9 @@
       "locales": {
         "en-US": {
           "name": "Feed the Parrot - RSS Feed Manager"
+        },
+        "es-ES": {
+          "name": "Al Loro - Maneja tus feeds RSS"
         }
       }
     }
