@@ -10,7 +10,7 @@ const LaunchRequestHandler = {
     handle(handlerInput) {
         const locale = Alexa.getLocale(handlerInput.requestEnvelope);
         const speakOutput = 
-        locale === 'es-ES' 
+        locale.startsWith('es') 
             ? 'Bienvenido, puedes decir Hola o Ayuda. ¿Cuál quieres probar?' 
             : 'Welcome, you can say Hello or Help. Which would you like to try?';
         return handlerInput.responseBuilder
@@ -26,7 +26,7 @@ const HelloWorldIntentHandler = {
     },
     handle(handlerInput) {
         const locale = Alexa.getLocale(handlerInput.requestEnvelope);
-        const speakOutput = locale === 'es-ES' ? '¡Hola mundo!' : 'Hello World!';
+        const speakOutput = locale.startsWith('es') ? '¡Hola mundo!' : 'Hello World!';
         return handlerInput.responseBuilder
             .speak(speakOutput)
             //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
@@ -39,7 +39,8 @@ const HelpIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-        const speakOutput = 'You can say hello to me! How can I help?';
+        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
+        const speakOutput = locale.startsWith('es') ? '¡Puedes saludarme! ¿Cómo puedo ayudar?' : 'You can say hello to me! How can I help?';
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -54,7 +55,8 @@ const CancelAndStopIntentHandler = {
                 || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent');
     },
     handle(handlerInput) {
-        const speakOutput = 'Goodbye!';
+        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
+        const speakOutput = locale.startsWith('es') ? '¡Hasta pronto!': 'Goodbye!';
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();

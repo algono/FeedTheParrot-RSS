@@ -1,0 +1,40 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "al loro",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "HelloWorldIntent",
+          "slots": [],
+          "samples": [
+            "hola",
+            "cómo estás",
+            "di hola mundo",
+            "di hola",
+            "hey",
+            "dime hola mundo",
+            "dime hola"
+          ]
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        }
+      ],
+      "types": []
+    }
+  },
+  "version": "1"
+}
