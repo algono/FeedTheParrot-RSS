@@ -2,17 +2,14 @@
 // Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
 // session persistence, api calls, and more.
 const Alexa = require('ask-sdk-core');
+const localization = require('./localization');
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
     handle(handlerInput) {
-        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
-        const speakOutput = 
-        locale.startsWith('es') 
-            ? 'Bienvenido, puedes decir Hola o Ayuda. ¿Cuál quieres probar?' 
-            : 'Welcome, you can say Hello or Help. Which would you like to try?';
+        const speakOutput = handlerInput.t('WELCOME_MSG');
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
@@ -25,8 +22,7 @@ const HelloWorldIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'HelloWorldIntent';
     },
     handle(handlerInput) {
-        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
-        const speakOutput = locale.startsWith('es') ? '¡Hola mundo!' : 'Hello World!';
+        const speakOutput = handlerInput.t('HELLO_MSG');
         return handlerInput.responseBuilder
             .speak(speakOutput)
             //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
@@ -39,8 +35,7 @@ const HelpIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
-        const speakOutput = locale.startsWith('es') ? '¡Puedes saludarme! ¿Cómo puedo ayudar?' : 'You can say hello to me! How can I help?';
+        const speakOutput = handlerInput.t('HELP_MSG');
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -55,8 +50,7 @@ const CancelAndStopIntentHandler = {
                 || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent');
     },
     handle(handlerInput) {
-        const locale = Alexa.getLocale(handlerInput.requestEnvelope);
-        const speakOutput = locale.startsWith('es') ? '¡Hasta pronto!': 'Goodbye!';
+        const speakOutput = handlerInput.t('GOODBYE_MSG');
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
@@ -82,7 +76,7 @@ const IntentReflectorHandler = {
     },
     handle(handlerInput) {
         const intentName = Alexa.getIntentName(handlerInput.requestEnvelope);
-        const speakOutput = `You just triggered ${intentName}`;
+        const speakOutput = handlerInput.t('REFLECTOR_MSG', {intent: intentName});
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -100,7 +94,7 @@ const ErrorHandler = {
     },
     handle(handlerInput, error) {
         console.log(`~~~~ Error handled: ${error.stack}`);
-        const speakOutput = `Sorry, I had trouble doing what you asked. Please try again.`;
+        const speakOutput = handlerInput.t('ERROR_MSG');
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -120,6 +114,9 @@ exports.handler = Alexa.SkillBuilders.custom()
         CancelAndStopIntentHandler,
         SessionEndedRequestHandler,
         IntentReflectorHandler, // make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+    )
+    .addRequestInterceptors(
+        localization.localizationRequestInterceptor,
     )
     .addErrorHandlers(
         ErrorHandler,
