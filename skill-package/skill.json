@@ -1,0 +1,18 @@
+{
+  "manifest": {
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-1:968299150356:function:9e1b8357-de97-4e8f-8761-90387c96d746:Release_0"
+        }
+      }
+    },
+    "publishingInformation": {
+      "locales": {
+        "en-US": {
+          "name": "Feed the Parrot - RSS Feed Manager"
+        }
+      }
+    }
+  }
+}
