@@ -3,6 +3,9 @@
 // session persistence, api calls, and more.
 const Alexa = require('ask-sdk-core');
 const localization = require('./localization');
+const util = require('./util');
+
+const persistenceAdapter = util.getPersistenceAdapter();
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -121,4 +124,5 @@ exports.handler = Alexa.SkillBuilders.custom()
     .addErrorHandlers(
         ErrorHandler,
     )
+    .withPersistenceAdapter(persistenceAdapter)
     .lambda();
