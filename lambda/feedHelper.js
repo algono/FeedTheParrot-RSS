@@ -25,16 +25,16 @@ module.exports = {
             });
 
             // Received stream. Read them, process them, and save them in a list
-            feedparser.on('readable', function() {
+            feedparser.on('readable', async function() {
                 let stream = this;
                 let meta = this.meta;
 
                 // Get localization function for the feed's language
-                let locale = meta['language'], handler = {};
-                localization.makeTranslatable(locale, handler);
+                let locale = meta['language'];
+                let t = await localization.init(locale);
 
                 // Get ampersand replacement for that language (i.e: 'and' in English)
-                const ampersandReplacement = handler.t('AMPERSAND');
+                const ampersandReplacement = t('AMPERSAND');
 
                 let item;
                 while (item = stream.read()) {

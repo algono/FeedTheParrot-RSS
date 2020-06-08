@@ -31,21 +31,19 @@ const languageStrings = {
   },
 };
 
-function makeTranslatable(locale, handler) {
-  i18n
-      .init({
-        lng: locale,
-        resources: languageStrings,
-      })
-      .then((t) => {
-        handler.t = (...args) => t(...args);
-      });
+function init(locale) {
+  return i18n.init({
+    lng: locale,
+    resources: languageStrings,
+  });
 }
 
 const localizationRequestInterceptor = {
   process(handlerInput) {
-    makeTranslatable(Alexa.getLocale(handlerInput.requestEnvelope), handlerInput);
+    init(Alexa.getLocale(handlerInput.requestEnvelope)).then((t) => {
+      handlerInput.t = (...args) => t(...args);
+    });
   },
 };
 
-module.exports = { makeTranslatable, localizationRequestInterceptor };
+module.exports = { init, localizationRequestInterceptor };
