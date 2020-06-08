@@ -14,9 +14,8 @@ module.exports = {
             req.then(function (res) {
                 console.log('Is Get Feed Status OK = ' + res.ok);
                 console.log('Get Feed Status = ' + res.status);
-                console.log('Get Feed Status Code = ' + res.statusCode);
                 console.log('Get Feed Body = ' + res.body);
-                if (res.statusCode === 200) {
+                if (res.status === 200) {
                     res.body.pipe(feedparser); // res.body is a stream
                 } else {
                     reject(Error('Bad status code'));
