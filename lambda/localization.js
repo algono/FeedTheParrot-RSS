@@ -12,6 +12,7 @@ const languageStrings = {
       REFLECTOR_MSG: "You just triggered {{intent}}",
       FALLBACK_MSG: "Sorry, I don't know about that. Please try again.",
       ERROR_MSG: "Sorry, I had trouble doing what you asked. Please try again.",
+      AMPERSAND: "and",
     },
   },
   es: {
@@ -25,21 +26,26 @@ const languageStrings = {
       FALLBACK_MSG: "Lo siento, no lo sé. Por favor, vuelva a intentarlo.",
       ERROR_MSG:
         "Lo siento, ha habido un error. Por favor, vuelva a intentarlo.",
+      AMPERSAND: "y",
     },
   },
 };
 
-const localizationRequestInterceptor = {
-  process(handlerInput) {
-    i18n
+function makeTranslatable(locale, handler) {
+  i18n
       .init({
-        lng: Alexa.getLocale(handlerInput.requestEnvelope),
+        lng: locale,
         resources: languageStrings,
       })
       .then((t) => {
-        handlerInput.t = (...args) => t(...args);
+        handler.t = (...args) => t(...args);
       });
+}
+
+const localizationRequestInterceptor = {
+  process(handlerInput) {
+    makeTranslatable(Alexa.getLocale(handlerInput.requestEnvelope), handlerInput);
   },
 };
 
-module.exports = { localizationRequestInterceptor };
+module.exports = { makeTranslatable, localizationRequestInterceptor };
