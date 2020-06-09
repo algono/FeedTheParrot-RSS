@@ -25,9 +25,15 @@ const HelloWorldIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'HelloWorldIntent';
     },
     async handle(handlerInput) {
-        const speakOutput = await require('./feedHelper').getFeed("https://www.madrid.es/ContentPublisher/jsp/apl/obtenerRSS.jsp?tipoContenido=Noticia&idCanal=e40362215c483510VgnVCM2000001f4a900aRCRD");
+        const feed = await require('./feedHelper').getFeed("https://www.madrid.es/ContentPublisher/jsp/apl/obtenerRSS.jsp?tipoContenido=Noticia&idCanal=e40362215c483510VgnVCM2000001f4a900aRCRD");
+
+        let speakOutput = "";
+        for (let i = 0; i < feed.length; i++) {
+            speakOutput += feed[i]['title'] + '. ' + feed[i]['description'] + '. ';
+        }
+
         return handlerInput.responseBuilder
-            .speak(speakOutput[0]['title'] + '. ' + speakOutput[0]['description'])
+            .speak(speakOutput)
             //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
             .getResponse();
     }
