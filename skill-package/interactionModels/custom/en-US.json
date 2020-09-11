@@ -16,25 +16,171 @@
           "samples": []
         },
         {
-          "name": "HelloWorldIntent",
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.RepeatIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NextIntent",
+          "samples": []
+        },
+        {
+          "name": "AuthIntent",
           "slots": [],
           "samples": [
-            "hello",
-            "how are you",
-            "say hi world",
-            "say hi",
-            "hi",
-            "say hello world",
-            "say hello"
+            "login",
+            "login code",
+            "code to login",
+            "give me the login code",
+            "give me the code to login"
           ]
         },
         {
-          "name": "AMAZON.NavigateHomeIntent",
+          "name": "ListIntent",
+          "slots": [],
+          "samples": [
+            "to tell me what feeds are available",
+            "to tell me what feeds does it have available",
+            "to tell me what feeds does it have",
+            "to tell me what feeds do I have",
+            "to tell me what feeds do I have available",
+            "to tell me the feeds list",
+            "to give me the feeds list",
+            "feeds list",
+            "list",
+            "give me the list",
+            "tell me the list",
+            "tell me the feeds list",
+            "give me the feeds list",
+            "list of feeds",
+            "tell me the list of feeds",
+            "give me the list of feeds",
+            "what feeds do you have available",
+            "what feeds do you have",
+            "what feeds are available",
+            "what feeds are there",
+            "what feeds do I have available",
+            "what feeds feeds do I have"
+          ]
+        },
+        {
+          "name": "ReadIntent",
+          "slots": [
+            {
+              "name": "feed",
+              "type": "FeedName",
+              "samples": [
+                "It is {feed}",
+                "It is the feed {feed}",
+                "The feed is called {feed}",
+                "It is called {feed}",
+                "{feed}"
+              ]
+            }
+          ],
+          "samples": [
+            "tell me the news from the feed {feed}",
+            "tell me the news",
+            "to tell me the news from the feed {feed}",
+            "to tell me the news",
+            "tell me what's up with the feed {feed}",
+            "tell me what's up",
+            "to tell me what's up with the feed {feed}",
+            "to tell me what's up",
+            "to read me the feed {feed}",
+            "to read me a feed",
+            "to read the feed {feed}",
+            "to read a feed",
+            "to give me the feed {feed}",
+            "to give me a feed",
+            "give me the feed {feed}",
+            "give me a feed",
+            "what does the {feed} feed have",
+            "read me the feed {feed}",
+            "read the feed {feed}",
+            "read me a feed",
+            "read a feed"
+          ]
+        },
+        {
+          "name": "ReadItemIntent",
+          "slots": [],
           "samples": []
         }
       ],
-      "types": []
-    }
-  },
-  "version": "1"
+      "types": [
+        {
+          "name": "FeedName",
+          "values": [
+            {
+              "name": {
+                "value": "test",
+                "synonyms": []
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "ReadIntent",
+          "delegationStrategy": "SKILL_RESPONSE",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "feed",
+              "type": "FeedName",
+              "confirmationRequired": false,
+              "elicitationRequired": true,
+              "prompts": {
+                "elicitation": "Elicit.Slot.249032860686.526588349079"
+              }
+            }
+          ]
+        }
+      ],
+      "delegationStrategy": "ALWAYS"
+    },
+    "prompts": [
+      {
+        "id": "Elicit.Slot.249032860686.526588349079",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "What is the feed I have to read called?"
+          },
+          {
+            "type": "PlainText",
+            "value": "What is the name of the feed I have to read?"
+          },
+          {
+            "type": "PlainText",
+            "value": "Tell me which feed do you want me to read"
+          },
+          {
+            "type": "PlainText",
+            "value": "Which feed do you want me to read?"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -16,25 +16,174 @@
           "samples": []
         },
         {
-          "name": "HelloWorldIntent",
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.RepeatIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NextIntent",
+          "samples": []
+        },
+        {
+          "name": "AuthIntent",
           "slots": [],
           "samples": [
-            "hola",
-            "cómo estás",
-            "di hola mundo",
-            "di hola",
-            "hey",
-            "dime hola mundo",
-            "dime hola"
+            "login",
+            "iniciar sesión",
+            "código para iniciar sesión",
+            "dame el código para iniciar sesión"
           ]
         },
         {
-          "name": "AMAZON.NavigateHomeIntent",
+          "name": "ListIntent",
+          "slots": [],
+          "samples": [
+            "que me diga qué feeds tiene disponibles",
+            "que me diga qué feeds tiene",
+            "que me diga qué feeds tengo",
+            "que me diga qué feeds tengo disponibles",
+            "que me diga la lista de feeds",
+            "que me dé la lista de feeds",
+            "lista de feeds",
+            "lista",
+            "dame la lista",
+            "dime la lista",
+            "dime la lista de feeds",
+            "dame la lista de feeds",
+            "qué feeds tienes disponibles",
+            "qué feeds tienes",
+            "qué feeds hay disponibles",
+            "qué feeds hay",
+            "qué feeds tengo disponibles",
+            "qué feeds tengo"
+          ]
+        },
+        {
+          "name": "ReadIntent",
+          "slots": [
+            {
+              "name": "feed",
+              "type": "FeedName",
+              "samples": [
+                "Se trata de la feed {feed}",
+                "Se trata de {feed}",
+                "Es {feed}",
+                "Es la feed {feed}",
+                "La feed se llama {feed}",
+                "Se llama {feed}",
+                "{feed}"
+              ]
+            }
+          ],
+          "samples": [
+            "di las noticias de la feed {feed}",
+            "di las noticias",
+            "que diga las noticias de la feed {feed}",
+            "que diga las noticias",
+            "que me dé las noticias de la feed {feed}",
+            "que me dé las noticias",
+            "dame las noticias de la feed {feed}",
+            "dame las noticias",
+            "que me diga las noticias de la feed {feed}",
+            "que me diga las noticias",
+            "dime las noticias de la feed {feed}",
+            "dime las noticias",
+            "que me dé la feed {feed}",
+            "dime qué hay en la feed {feed}",
+            "dime qué hay",
+            "que me diga qué hay en la feed {feed}",
+            "que me diga qué hay",
+            "que me lea la feed {feed}",
+            "que me lea una feed",
+            "que lea la feed {feed}",
+            "que lea una feed",
+            "qué hay en la feed {feed}",
+            "dame la feed {feed}",
+            "léeme la feed {feed}",
+            "lee la feed {feed}",
+            "léeme una feed",
+            "lee una feed"
+          ]
+        },
+        {
+          "name": "ReadItemIntent",
+          "slots": [],
           "samples": []
         }
       ],
-      "types": []
-    }
-  },
-  "version": "1"
+      "types": [
+        {
+          "name": "FeedName",
+          "values": [
+            {
+              "name": {
+                "value": "test",
+                "synonyms": []
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "ReadIntent",
+          "delegationStrategy": "SKILL_RESPONSE",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "feed",
+              "type": "FeedName",
+              "confirmationRequired": false,
+              "elicitationRequired": true,
+              "prompts": {
+                "elicitation": "Elicit.Slot.249032860686.526588349079"
+              }
+            }
+          ]
+        }
+      ],
+      "delegationStrategy": "ALWAYS"
+    },
+    "prompts": [
+      {
+        "id": "Elicit.Slot.249032860686.526588349079",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "¿Cómo se llama la feed que he de leer?"
+          },
+          {
+            "type": "PlainText",
+            "value": "¿Cuál es el nombre de la feed que debo leer?"
+          },
+          {
+            "type": "PlainText",
+            "value": "Dime la feed que quieres que lea"
+          },
+          {
+            "type": "PlainText",
+            "value": "¿qué feed quieres que lea?"
+          }
+        ]
+      }
+    ]
+  }
 }
