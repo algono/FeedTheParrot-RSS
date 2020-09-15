@@ -15,7 +15,7 @@
     "lint-check": "gts check",
     "lint-clean": "gts clean",
     "lint-fix": "gts fix",
-    "build-ci": "mkdir ../lambda && touch ../lambda/firebaseServiceAccountKey.json && npm run build-no-clean",
+    "build-ci": "touch src/firebaseServiceAccountKey.json && npm run build-no-clean",
     "build-no-clean": "npm run lint-check && npm run compile && npm run build-final",
     "build": "npm run clean && npm run build-no-clean",
     "rebuild": "npm run clean-full && npm run build-no-clean && npm run build-install"
