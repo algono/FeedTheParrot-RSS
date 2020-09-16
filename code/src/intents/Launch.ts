@@ -29,26 +29,30 @@ export const LaunchRequestHandler : RequestHandler = {
 
             const userDataQuery = await DB.collection('users').where('userId', '==', userId).limit(1).get();
 
-            let userData: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData> | FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>;
+            let userData: FirebaseFirestore.DocumentData,
+                userDataRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>;
+            
             if (userDataQuery.empty) {
                 console.log('(LaunchRequest) No user data. Creating new user');
                 // No user data. Create user data in database
-                userData = await DB.collection('users').add({userId: userId});
+                userData = {userId: userId};
+                userDataRef = await DB.collection('users').add(userData);
             } else {
                 console.log('(LaunchRequest) Existing user. Retrieving user data');
                 // Get user data from query
-                userData = userDataQuery.docs[0];
+                const userDataDoc = userDataQuery.docs[0];
+                userDataRef = userDataDoc.ref;
+                //userData = userDataDoc.data(); // TODO: If other data from the user is needed, uncomment this line
             }
             // Get ID from database and store it in session attributes
-            const userIdDB = userData.id;
+            const userIdDB = userDataRef.id;
             sessionAttributes.userIdDB = userIdDB;
 
             console.log('(LaunchRequest) User ID: ' + userIdDB);
 
             const nameField: string = t('FEED_NAME_FIELD');
             const feedNameSnapshots =
-                await DB.collection('feeds')
-                    .where('userId', '==', userIdDB) // Filter documents from the current user
+                await userDataRef.collection('feeds')
                     .orderBy(nameField) // This filters out documents without the field
                     .get();
 
