@@ -10,6 +10,3 @@ lambda/
 # Ask CLI configuration
 .ask/
 ask-resources.json
-
-# VSCode configuration
-.vscode/
