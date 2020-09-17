@@ -10,3 +10,7 @@ lambda/
 # Ask CLI configuration
 .ask/
 ask-resources.json
+
+# Sonarqube configuration
+**/.scannerwork
+code/analyse.js
