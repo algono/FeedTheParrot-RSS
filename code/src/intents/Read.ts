@@ -24,7 +24,7 @@ export const ReadIntentHandler : RequestHandler = {
         const {attributesManager, requestEnvelope, responseBuilder} = handlerInput;
         const requestAttributes = attributesManager.getRequestAttributes();
         
-        let {t} = requestAttributes;
+        const {t} = requestAttributes;
 
         const feedName = getSlotValue(requestEnvelope, feedSlotName);
         console.log('(ReadIntent) Feed name received: ' + feedName);
@@ -61,7 +61,7 @@ export const ReadIntentHandler : RequestHandler = {
         const items = await getItems(feed, locale);
 
         // The translation function has to be updated (it seems like it is singleton)
-        t = await localization.init(locale);
+        await localization.init(locale);
 
         sessionAttributes.readState = {
             reading: true,
