@@ -1,6 +1,6 @@
 import { RequestHandler, getRequestType, getIntentName } from "ask-sdk-core";
 
-import { createHash, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 
 import * as firebaseAdmin from 'firebase-admin';
 
@@ -19,15 +19,11 @@ export const AuthIntentHandler : RequestHandler = {
 
         console.log('(AuthIntent) Generated code: ' + JSON.stringify(code));
 
-        const hashedCode = createHash('md5').update(code).digest('hex');
-
-        console.log('(AuthIntent) Hashed code: ' + JSON.stringify(hashedCode));
-
         const TIME_TO_EXPIRE = 10 * 60 * 1000; // 10 minutes in milliseconds
 
         await DB.collection('auth-codes').add({
             uid: sessionAttributes.userIdDB,
-            code: hashedCode,
+            code: code,
             expirationDate: new Date(Date.now() + TIME_TO_EXPIRE)
         })
         
