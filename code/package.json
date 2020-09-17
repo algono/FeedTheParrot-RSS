@@ -5,11 +5,12 @@
   "main": "index.js",
   "private": "true",
   "scripts": {
-    "clean": "rimraf ../lambda/!(node_modules)",
+    "clean": "rimraf \"../lambda/!(node_modules)\"",
     "clean-full": "rimraf ../lambda",
     "compile": "tsc --build tsconfig.json --pretty",
     "build-final": "cpy package.json ../lambda",
     "build-install": "cd ../lambda/ && npm install --production",
+    "analyse": "node analyse.js",
     "test": "echo \"Test: no test specified\" && exit 0",
     "lint-init": "eslint --init",
     "lint-check": "gts check",
