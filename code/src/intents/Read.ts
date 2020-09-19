@@ -148,7 +148,7 @@ export const ReadContentIntentHandler : RequestHandler = {
             && getIntentName(requestEnvelope) === 'AMAZON.YesIntent';
     },
     handle(handlerInput) {
-        const {attributesManager} = handlerInput;
+        const {attributesManager, responseBuilder} = handlerInput;
 
         const sessionAttributes = attributesManager.getSessionAttributes();
 
@@ -160,6 +160,9 @@ export const ReadContentIntentHandler : RequestHandler = {
         readState.speakQueue = item.alexaReads.content + PAUSE_BETWEEN_ITEMS;
 
         attributesManager.setSessionAttributes(sessionAttributes);
+
+        // Add card to response builder
+        responseBuilder.withStandardCard(item.title, item.cardReads, item.imageUrl);
 
         return ReadItemIntentHandler.handle(handlerInput);
     }
