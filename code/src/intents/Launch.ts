@@ -64,7 +64,7 @@ export const LaunchRequestHandler : RequestHandler = {
                 
                 const name: string = data[nameField];
                 
-                const feed : Feed = new Feed(name, data.url, data.language);
+                const feed : Feed = Object.assign<Feed, FirebaseFirestore.DocumentData>(new Feed(name, data.url, data.language), data);
 
                 feedNames.push(name);
                 feeds[name] = feed;
