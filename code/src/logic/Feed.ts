@@ -102,13 +102,11 @@ export function getItems(feed: Feed, defaultLocale: string, options?: GetItemsOp
                 return cleanedText;
             }
 
-            const cardLinkHeader = t('CARD_LINK_HEADER');
-
             const itemLimit = options?.itemLimit ?? feed.itemLimit;
 
             let item: Item;
             while ((item = stream.read())) {
-                const feedItem = processFeedItem(item, feed, clean, langFormatter, cardLinkHeader);
+                const feedItem = processFeedItem(item, feed, clean, langFormatter);
                 items.push(feedItem);
 
                 // If there is an item limit set and it has been surpassed, consume the stream and break the loop
@@ -138,7 +136,7 @@ export function getItems(feed: Feed, defaultLocale: string, options?: GetItemsOp
 }
 
 // eslint-disable-next-line no-unused-vars
-function processFeedItem(item: Item, feed: Feed, clean: {(text: string): string}, langFormatter: string, cardLinkHeader: string) {
+function processFeedItem(item: Item, feed: Feed, clean: {(text: string): string}, langFormatter: string) {
     //console.log('Get Feed Item = ' + JSON.stringify(item));
 
     /** 
@@ -197,10 +195,6 @@ function processFeedItem(item: Item, feed: Feed, clean: {(text: string): string}
     if (langFormatter) {
         alexaReads.title = util.format(langFormatter, alexaReads.title);
         alexaReads.content = util.format(langFormatter, alexaReads.content);
-    }
-
-    if (feedItem.link) {
-        cardReads += PAUSE_BETWEEN_FIELDS_CARD + cardLinkHeader + feedItem.link;
     }
 
     console.log('Alexa reads: ' + JSON.stringify(alexaReads));

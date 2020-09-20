@@ -24,7 +24,6 @@ const languageStrings = {
       SURPASSED_MAX_CHARACTERS: "Sorry, I am not able to continue reading. You can see the full text in the Alexa app.",
       FEED_NAME_FIELD: "name-en",
       AUTH_MSG: "The code is: ",
-      CARD_LINK_HEADER: "Link: ",
     }
   },
   es: {
@@ -50,7 +49,6 @@ const languageStrings = {
       SURPASSED_MAX_CHARACTERS: "Lo siento, no puedo continuar leyendo. Puedes ver el texto completo en la app de Alexa.",
       FEED_NAME_FIELD: "name-es",
       AUTH_MSG: "El código es el siguiente: ",
-      CARD_LINK_HEADER: "Enlace: ",
     }
   },
 };
