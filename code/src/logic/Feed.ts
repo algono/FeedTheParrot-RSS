@@ -41,6 +41,7 @@ export class Feed {
 
     readFields?: ItemField[];
     truncateSummaryAt?: number;
+    itemLimit?: number;
 
     constructor(name: string, url: string, language?: string) {
         this.name = name;
@@ -101,13 +102,15 @@ export function getItems(feed: Feed, defaultLocale: string, options?: GetItemsOp
 
             const cardLinkHeader = t('CARD_LINK_HEADER');
 
+            const itemLimit = options?.itemLimit ?? feed.itemLimit;
+
             let item: Item;
             while ((item = stream.read())) {
                 const feedItem = processFeedItem(item, feed, clean, langFormatter, cardLinkHeader);
                 items.push(feedItem);
 
                 // If there is an item limit set and it has been surpassed, consume the stream and break the loop
-                if (options && options.itemLimit && items.length >= options.itemLimit) {
+                if (itemLimit && items.length >= itemLimit) {
                     stream.resume(); // It turns out the resume method does the best job at consuming the stream
                     break;
                 }
