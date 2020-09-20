@@ -31,7 +31,9 @@ export interface FeedItem {
     imageUrl?: string,
     
     alexaReads?: FeedItemAlexaReads,
-    cardReads?: string
+    cardReads?: string,
+
+    index?: number
 }
 
 export class Feed {
@@ -119,12 +121,11 @@ export function getItems(feed: Feed, defaultLocale: string, options?: GetItemsOp
 
         // All items parsed. Return them
         feedparser.on('end', function () {
-            let count = 0;
             items.sort(function (a, b) {
                 return new Date(b.date).getTime() - new Date(a.date).getTime();
             });
-            items.forEach(function (feedItem_1) {
-                feedItem_1['count'] = count++;
+            items.forEach(function (item, index) {
+                item.index = index;
             });
 
             resolve(items);
