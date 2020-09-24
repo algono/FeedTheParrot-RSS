@@ -1,7 +1,7 @@
 import { RequestHandler, getRequestType, getIntentName, getSlotValue, getLocale, HandlerInput } from "ask-sdk-core";
 import { IntentRequest } from "ask-sdk-model";
 
-import { feedSlotName, LONG_PAUSE, PAUSE_BETWEEN_ITEMS } from "../util/constants";
+import { feedSlotName, EXTRA_LONG_PAUSE, PAUSE_BETWEEN_ITEMS } from "../util/constants";
 import { Feed, FeedItem, getItems } from "../logic/Feed";
 
 import * as localization from '../util/localization';
@@ -117,7 +117,7 @@ export const ReadItemIntentHandler : RequestHandler = {
             console.log('Read Feed Item: ' + JSON.stringify(item));
 
             // Read only the title
-            speakOutput += item.alexaReads.title + LONG_PAUSE + t('CONFIRMATION_CONTINUE_READING_FEED');
+            speakOutput += item.alexaReads.title + EXTRA_LONG_PAUSE + t('CONFIRMATION_CONTINUE_READING_FEED');
 
             return responseBuilder
                 .speak(speakOutput)

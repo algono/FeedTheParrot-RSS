@@ -3,6 +3,7 @@ import { RequestHandler, getRequestType, getIntentName } from "ask-sdk-core";
 import { randomBytes } from 'crypto';
 
 import * as firebaseAdmin from 'firebase-admin';
+import { LONG_PAUSE } from "../util/constants";
 
 const DB = firebaseAdmin.firestore();
 
@@ -27,7 +28,7 @@ export const AuthIntentHandler : RequestHandler = {
             expirationDate: new Date(Date.now() + TIME_TO_EXPIRE)
         })
         
-        const speakOutput: string = requestAttributes.t('AUTH_MSG') + `<say-as interpret-as="digits">${code}</say-as>`;
+        const speakOutput: string = requestAttributes.t('AUTH_MSG') + code.split('').join(LONG_PAUSE);
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
