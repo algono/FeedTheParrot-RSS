@@ -79,7 +79,7 @@ export function getItems(feed: Feed, defaultLocale: string, options?: GetItemsOp
             const meta = stream.meta;
 
             // Get localization function for the feed's language
-            const locale: string = feed.language || meta['language'];
+            const locale: string = feed.language || meta.language;
             const t = await init(locale);
 
             // If the locale of the feed doesn't match the one on the device, use SSML to change the voice and language
