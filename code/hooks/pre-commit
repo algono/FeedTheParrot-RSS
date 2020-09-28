@@ -1,0 +1,84 @@
+#!/bin/sh
+#
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+
+##########################################################################
+## This hook does multiple things:                                       #
+## - Checks if the commit is being done to the code branch,              #
+##   and rejects it if that is the case.                                 #
+##                                                                       #
+## - Checks if the package.json file exists in the build folder.         #
+##   If it does not, we assume that the build failed at some point.      #
+##                                                                       #
+## - Checks if any changes were made to the code (or package.json)       #
+##   and the build has not changed.                                      #
+##                                                                       #
+##   If that happens, it means that the developer forgot to run a build. #
+##   Throw an error and warn them about it.                              #
+##########################################################################
+
+# Redirect output to stderr.
+exec 1>&2
+
+COLOR_RED="$(tput setaf 1)"
+COLOR_GREY="$(tput setaf 7) $(tput dim)"
+COLOR_RESET="$(tput sgr0)"
+
+CODE_BRANCH="github"
+
+current_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+if [ "$current_branch" = "$CODE_BRANCH" ]; then
+	echo $COLOR_RED
+	cat <<\EOF
+Error (BAD_BRANCH): You tried to commit to the code branch. This could lead to future errors.
+
+Please, commit all changes to the deployment branch instead.
+EOF
+	echo $COLOR_GREY
+	echo "> Only do this if you really know what you are doing, and you meant to do it:"
+	echo "> You can bypass this error by using the --no-verify flag when commiting."
+	echo $COLOR_RESET
+	exit 1
+fi
+
+SRC_PATTERN="code/src/"
+CODE_PKG_JSON_PATTERN="code/package.json"
+
+BUILD_PATTERN="lambda/"
+BUILD_PKG_JSON_PATTERN="lambda/package.json"
+
+if [ ! -f "../$BUILD_PKG_JSON_PATTERN" ]; then
+	echo $COLOR_RED
+	cat <<\EOF
+Error (BUILD_FAILED): The package.json is not present in the build. That probably means that the build failed at some point.
+
+Run "npm run build" at the "code" folder and try again.
+EOF
+	echo $COLOR_RESET
+	exit 1
+fi
+
+git_diff="$(git diff --cached --name-only)"
+
+files_in_dir_changed()
+{
+	echo $git_diff | grep --quiet "$1"
+}
+
+if (files_in_dir_changed "$CODE_PKG_JSON_PATTERN" || files_in_dir_changed "$SRC_PATTERN") && !(files_in_dir_changed "$BUILD_PATTERN")
+then
+	echo $COLOR_RED
+	cat <<\EOF
+Error (BUILD_UNCHANGED): You probably changed something in the code, but forgot to run a build.
+
+Run "npm run build" at the "code" folder and try again.
+
+If you actually run a build, then you probably did not stage its changes.
+In that case, run "git add :/lambda" and try again.
+EOF
+	echo $COLOR_RESET
+	exit 1
+fi

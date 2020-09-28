@@ -43,9 +43,17 @@
     "cpy-cli": "^3.1.1",
     "eslint": "^7.8.1",
     "gts": "^2.0.2",
+    "husky": "^4.3.0",
     "rimraf": "^3.0.2",
     "sonarqube-scanner": "^2.7.0",
     "ts-node": "^9.0.0",
     "typescript": "~3.7.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "echo $HUSKY_GIT_STDIN | ./hooks/pre-commit $HUSKY_GIT_PARAMS",
+      "commit-msg": "echo $HUSKY_GIT_STDIN | ./hooks/commit-msg $HUSKY_GIT_PARAMS",
+      "pre-push": "echo $HUSKY_GIT_STDIN | ./hooks/pre-push $HUSKY_GIT_PARAMS"
+    }
   }
 }

@@ -1,0 +1,57 @@
+#!/bin/bash
+
+################################################################################
+# This hook is called by "git push" after it has checked the remote status,    #
+# but before anything has been pushed.                                         #
+# If this script exits with a non-zero status nothing will be pushed.          #
+#                                                                              #
+# This hook is called with the following parameters:                           #
+#                                                                              #
+# $1 -- Name of the remote to which the push is being done                     #
+# $2 -- URL to which the push is being done                                    #
+#                                                                              #
+# If pushing without using a named remote those arguments will be equal.       #
+#                                                                              #
+# Information about the commits which are being pushed is supplied as lines to #
+# the standard input in the form:                                              #
+#                                                                              #
+#   <local ref> <local sha1> <remote ref> <remote sha1>                        #
+################################################################################
+
+# code repo custom pre-push hook
+
+remote=$1
+
+deploy_branch="master"
+code_branch="github"
+
+code_remote="github"
+
+echo "Pushing to remote: $remote"
+
+while read local_ref local_sha remote_ref remote_sha
+do
+	echo "Pushing branch: $local_ref"
+	if [ "$remote" = "$code_remote" ] && [ "$local_ref" != "refs/heads/$code_branch" ]
+	then
+		# Non-code branch, reject push
+		echo >&2 "Trying to push non-code branch to GitHub repo. Not pushing (rejected)."
+		exit 1
+	fi
+	
+	if [ "$local_ref" = "refs/heads/$deploy_branch" ]
+	then
+		echo "Deploy branch is being pushed. Pushing code branch too."
+		git push $code_remote $code_branch --no-verify
+	fi
+done
+
+# ASK tools pre-push hook
+
+profile=$(tr -d '\n' < ./.ask/ask-states.json | tr -d ' ' | sed -n 's/.*"profiles":{"\([^{]*\)":.*/\1/p' | sed 's/".*//')
+skillId=$(tr -d '\n' < ./.ask/ask-states.json | tr -d ' ' | sed -n 's/.*"profiles":{"[^{]*":{"skillId":"\(.*\)".*/\1/p' | sed 's/".*//')
+locale=$(tr -d '\n' < ./skill-package/skill.json | tr -d ' ' | sed -n 's/.*"locales":{"\([^{]*\)":.*/\1/p' | sed 's/".*//' | sed -n 's/-/_/p' )
+currentBranch=$(git rev-parse --abbrev-ref HEAD)
+customRepo=$2
+
+bash ~/.ask/scripts/ask-pre-push $profile $skillId $locale $currentBranch $customRepo
