@@ -51,9 +51,9 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "echo $HUSKY_GIT_STDIN | ./hooks/pre-commit $HUSKY_GIT_PARAMS",
-      "commit-msg": "echo $HUSKY_GIT_STDIN | ./hooks/commit-msg $HUSKY_GIT_PARAMS",
-      "pre-push": "echo $HUSKY_GIT_STDIN | ./hooks/pre-push $HUSKY_GIT_PARAMS"
+      "pre-commit": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/pre-commit $HUSKY_GIT_PARAMS)",
+      "commit-msg": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/commit-msg $HUSKY_GIT_PARAMS)",
+      "pre-push": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/pre-push $HUSKY_GIT_PARAMS)"
     }
   }
 }

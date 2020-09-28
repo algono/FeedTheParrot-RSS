@@ -12,7 +12,7 @@
 DEPLOY_BRANCH="master"
 CODE_BRANCH="github"
 
-commit_msg="$(cat "../$1")"
+commit_msg="$(cat "$1")"
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 

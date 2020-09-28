@@ -50,7 +50,7 @@ CODE_PKG_JSON_PATTERN="code/package.json"
 BUILD_PATTERN="lambda/"
 BUILD_PKG_JSON_PATTERN="lambda/package.json"
 
-if [ ! -f "../$BUILD_PKG_JSON_PATTERN" ]; then
+if [ ! -f "./$BUILD_PKG_JSON_PATTERN" ]; then
 	echo $COLOR_RED
 	cat <<\EOF
 Error (BUILD_FAILED): The package.json is not present in the build. That probably means that the build failed at some point.
