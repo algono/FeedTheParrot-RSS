@@ -160,8 +160,7 @@ function processFeedItem(item: Item, feed: Feed, clean: {(text: string): string}
         content: ''
     };
 
-    let cardReads = alexaReads.title;
-    cardReads += PAUSE_BETWEEN_FIELDS_CARD;
+    let cardReads = '';
 
     // If the fields to read content are specified, use them
     if (feed.readFields) {
