@@ -10,17 +10,17 @@
     "publishingInformation": {
       "locales": {
         "en-US": {
-          "name": "Feed the Parrot - RSS Feed Manager",
+          "name": "Feed the Parrot - RSS feed reader",
           "smallIconUri": "file://assets/icons/small-icon.png",
           "largeIconUri": "file://assets/icons/large-icon.png"
         },
         "es-ES": {
-          "name": "Al Loro - Maneja tus feeds RSS",
+          "name": "Al Loro - Lector de feeds RSS",
           "smallIconUri": "file://assets/icons/small-icon.png",
           "largeIconUri": "file://assets/icons/large-icon.png"
         },
         "es-US": {
-          "name": "Al Loro - Maneja tus feeds RSS",
+          "name": "Al Loro - Lector de feeds RSS",
           "smallIconUri": "file://assets/icons/small-icon.png",
           "largeIconUri": "file://assets/icons/large-icon.png"
         }
