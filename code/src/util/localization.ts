@@ -6,8 +6,9 @@ const languageStrings = {
     translation: {
       WELCOME_MSG:
         "Welcome, you can ask me to read a feed and to list them. Which would you like to try?",
-      FEED_LIST_MSG: "This is the list of feeds available: ",
-      FEED_LIST_PROMPT_MSG: "What do you want me to do next?",
+      FEED_LIST_MSG: "This is the list of available feeds: ",
+      FEED_LIST_EMPTY_MSG: "There are no available feeds. Add one using the app.",
+      FEED_LIST_REPROMPT_MSG: "What do you want me to do next?",
       NO_FEED_MSG: "Sorry, I don't know about that feed. Let's try again.",
       HELP_MSG: "You can ask me to read a feed and to list them. How can I help?",
       GOODBYE_MSG: "Goodbye!",
@@ -31,7 +32,8 @@ const languageStrings = {
       WELCOME_MSG:
         "Bienvenido, puedes pedirme que te lea una feed o que te diga la lista. ¿Cuál quieres probar?",
       FEED_LIST_MSG: "Esta es la lista de feeds disponibles: ",
-      FEED_LIST_PROMPT_MSG: "¿Qué quieres que haga ahora?",
+      FEED_LIST_EMPTY_MSG: "No hay ninguna feed disponible. Añade una a través de la app.",
+      FEED_LIST_REPROMPT_MSG: "¿Qué quieres que haga ahora?",
       NO_FEED_MSG: "Lo siento, no sé cuál es esa feed. Volvamos a intentarlo.",
       HELP_MSG: "Puedes pedirme que te lea una feed o que te diga la lista de feeds disponibles. ¿Cómo puedo ayudar?",
       GOODBYE_MSG: "¡Hasta pronto!",

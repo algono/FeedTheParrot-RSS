@@ -8,21 +8,20 @@ export const ListIntentHandler : RequestHandler = {
     handle(handlerInput) {
         const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
 
-        const feedListMessage = requestAttributes.t('FEED_LIST_MSG');
-        const feedListReprompt = requestAttributes.t('FEED_LIST_PROMPT_MSG');
+        const feedListMessage: string = requestAttributes.t('FEED_LIST_MSG');
+        const feedListEmptyMessage: string = requestAttributes.t('FEED_LIST_EMPTY_MSG');
+        const feedListReprompt: string = requestAttributes.t('FEED_LIST_REPROMPT_MSG');
 
         const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        const feedNames = sessionAttributes.feedNames;
+        const feedNames: string[] = sessionAttributes.feedNames;
 
         console.log('(ListIntent) Feed names: ' + JSON.stringify(feedNames));
-
-        const feedList = feedNames.join(', ');
         
-        const speakOutput: string = feedListMessage + feedList + '. ' + feedListReprompt;
+        const speakOutput: string = (feedNames.length > 0 ? (feedListMessage + feedNames.join(', ') + '. ') : feedListEmptyMessage) + feedListReprompt;
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            .withSimpleCard(feedListMessage, feedList)
+            .withSimpleCard(feedListMessage, feedNames.length > 0 ? '- ' + feedNames.join('\n- ') : feedListEmptyMessage)
             .reprompt(feedListReprompt)
             .getResponse();
     }
