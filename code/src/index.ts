@@ -29,6 +29,7 @@ import { HelpIntentHandler } from "./intents/Help";
 import { CancelAndStopIntentHandler } from "./intents/Stop";
 import { IntentReflectorHandler } from "./intents/Reflector";
 import { SessionEndedRequestHandler } from "./intents/SessionEnded";
+import { RepeatIntentHandler, SaveResponseForRepeatingInterceptor } from './intents/Repeat';
 
 // Generic error handling to capture any syntax or routing errors. If you receive an error
 // stating the request handler chain is not found, you have not implemented a handler for
@@ -72,10 +73,14 @@ exports.handler = SkillBuilders.custom()
         SkipItemIntentHandler,
         ListIntentHandler,
         SessionEndedRequestHandler,
+        RepeatIntentHandler, // make sure RepeatIntentHandler is after ReadItemIntentHandler so it doesn't override its repeating functionality
         IntentReflectorHandler, // make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
     )
     .addRequestInterceptors(
         localization.localizationRequestInterceptor,
+    )
+    .addResponseInterceptors(
+        SaveResponseForRepeatingInterceptor,
     )
     .addErrorHandlers(
         GenericErrorHandler,

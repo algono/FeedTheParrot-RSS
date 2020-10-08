@@ -13,7 +13,7 @@ export const AuthIntentHandler : RequestHandler = {
             && getIntentName(handlerInput.requestEnvelope) === 'AuthIntent';
     },
     async handle(handlerInput) {
-        const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+        const {t} = handlerInput.attributesManager.getRequestAttributes();
 
         const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
         const code = generateSixDigitCode();
@@ -28,10 +28,11 @@ export const AuthIntentHandler : RequestHandler = {
             expirationDate: new Date(Date.now() + TIME_TO_EXPIRE)
         })
         
-        const speakOutput: string = requestAttributes.t('AUTH_MSG') + code.split('').join(LONG_PAUSE);
+        const speakOutput: string = `${t('AUTH_PRE_CODE_MSG')} ${code.split('').join(LONG_PAUSE)}. ${t('AUTH_EXPLANATION_MSG')} ${t('REPROMPT_MSG')}`;
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
+            .reprompt(speakOutput)
             .getResponse();
     },
 };

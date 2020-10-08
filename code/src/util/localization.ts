@@ -24,7 +24,9 @@ const languageStrings = {
       END_READING_FEED: "And that's all there is at the moment.",
       SURPASSED_MAX_CHARACTERS: "Sorry, I am not able to continue reading. You can see the full text in the Alexa app.",
       FEED_NAME_FIELD: "name-en",
-      AUTH_MSG: "The code is: ",
+      AUTH_PRE_CODE_MSG: "The code is:",
+      AUTH_EXPLANATION_MSG: "Use this code in the app to login.",
+      REPROMPT_MSG: "Is there anything else you need?",
     }
   },
   es: {
@@ -50,7 +52,9 @@ const languageStrings = {
       END_READING_FEED: "Y eso es todo por ahora.",
       SURPASSED_MAX_CHARACTERS: "Lo siento, no puedo continuar leyendo. Puedes ver el texto completo en la app de Alexa.",
       FEED_NAME_FIELD: "name-es",
-      AUTH_MSG: "El código es el siguiente: ",
+      AUTH_PRE_CODE_MSG: "El código es el siguiente:",
+      AUTH_EXPLANATION_MSG: "Utiliza este código en la app para iniciar sesión.",
+      REPROMPT_MSG: "¿Alguna cosa más?",
     }
   },
 };
