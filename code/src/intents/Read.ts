@@ -56,7 +56,7 @@ export const ReadIntentHandler : RequestHandler = {
 
         const locale = getLocale(requestEnvelope);
 
-        const feed = sessionAttributes.feeds[feedName] as Feed;
+        const feed: Feed = sessionAttributes.feeds[feedName];
 
         const items = await getItems(feed, locale);
 
