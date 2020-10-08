@@ -63,13 +63,15 @@ export const ReadIntentHandler : RequestHandler = {
         // The translation function has to be updated (it seems like it is singleton)
         await localization.init(locale);
 
-        sessionAttributes.readState = {
+        const readState : ReadState = {
             reading: true,
             feedName: feedName,
             feed: feed,
             feedItems: items,
-            currentIndex: 0
+            currentIndex: 0,
         };
+
+        sessionAttributes.readState = readState;
 
         attributesManager.setSessionAttributes(sessionAttributes);
 
@@ -101,7 +103,7 @@ export const ReadItemIntentHandler : RequestHandler = {
 
         console.log('(ReadItemIntent) Session attributes: ' + JSON.stringify(sessionAttributes));
 
-        const readState = sessionAttributes.readState as ReadState;
+        const readState: ReadState = sessionAttributes.readState;
 
         const index = readState.currentIndex;
 
@@ -152,7 +154,7 @@ export const ReadContentIntentHandler : RequestHandler = {
 
         const sessionAttributes = attributesManager.getSessionAttributes();
 
-        const readState = sessionAttributes.readState as ReadState;
+        const readState: ReadState = sessionAttributes.readState;
 
         const item = readState.feedItems[readState.currentIndex++];
         
@@ -173,7 +175,7 @@ function moveItemIndex(handlerInput : HandlerInput, n : number) {
 
     const sessionAttributes = attributesManager.getSessionAttributes();
 
-    const readState = sessionAttributes.readState as ReadState;
+    const readState: ReadState = sessionAttributes.readState;
 
     // Move the index n items
     readState.currentIndex += n;
