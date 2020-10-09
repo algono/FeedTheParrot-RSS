@@ -28,5 +28,3 @@ jobs:
       working-directory: ./code
     - run: npm run build-ci --if-present
       working-directory: ./code
-    - run: npm test
-      working-directory: ./code
