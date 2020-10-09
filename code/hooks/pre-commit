@@ -26,7 +26,7 @@ COLOR_RED="$(tput setaf 1)"
 COLOR_GREY="$(tput setaf 7) $(tput dim)"
 COLOR_RESET="$(tput sgr0)"
 
-CODE_BRANCH="github"
+CODE_BRANCH="code"
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 

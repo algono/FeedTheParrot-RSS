@@ -22,27 +22,27 @@
 
 remote=$1
 
-deploy_branch="master"
-code_branch="github"
+DEPLOY_BRANCH="master"
+CODE_BRANCH="code"
 
-code_remote="github"
+CODE_REMOTE="github"
 
 echo "Pushing to remote: $remote"
 
 while read local_ref local_sha remote_ref remote_sha
 do
 	echo "Pushing branch: $local_ref"
-	if [ "$remote" = "$code_remote" ] && [ "$local_ref" != "refs/heads/$code_branch" ]
+	if [ "$remote" = "$CODE_REMOTE" ] && [ "$local_ref" != "refs/heads/$CODE_BRANCH" ]
 	then
 		# Non-code branch, reject push
 		echo >&2 "Trying to push non-code branch to GitHub repo. Not pushing (rejected)."
 		exit 1
 	fi
 	
-	if [ "$local_ref" = "refs/heads/$deploy_branch" ]
+	if [ "$local_ref" = "refs/heads/$DEPLOY_BRANCH" ]
 	then
 		echo "Deploy branch is being pushed. Pushing code branch too."
-		git push $code_remote $code_branch --no-verify
+		git push $CODE_REMOTE $CODE_BRANCH --no-verify
 	fi
 done
 

@@ -9,7 +9,7 @@
 ##################################################################################
 
 DEPLOY_BRANCH="master"
-CODE_BRANCH="github"
+CODE_BRANCH="code"
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 
