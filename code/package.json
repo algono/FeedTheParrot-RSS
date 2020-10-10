@@ -8,8 +8,7 @@
     "clean": "rimraf \"../lambda/!(node_modules)\"",
     "clean-full": "rimraf ../lambda",
     "compile": "tsc --build tsconfig.json --pretty",
-    "build-final": "cpy package.json ../lambda",
-    "build-install": "cd ../lambda/ && npm install --production",
+    "build-final": "cpy package.json ../lambda && cd ../lambda/ && npm install --production",
     "analyse": "node analyse.js",
     "test": "jest",
     "lint-init": "eslint --init",
@@ -19,7 +18,7 @@
     "build-ci": "touch src/firebaseServiceAccountKey.json && npm run build-no-clean",
     "build-no-clean": "npm run test && npm run lint-check && npm run compile && npm run build-final",
     "build": "npm run clean && npm run build-no-clean",
-    "rebuild": "npm run clean-full && npm run build-no-clean && npm run build-install"
+    "rebuild": "npm run clean-full && npm run build-no-clean"
   },
   "author": "algono",
   "license": "ISC",
