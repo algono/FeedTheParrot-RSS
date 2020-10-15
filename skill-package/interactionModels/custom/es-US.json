@@ -128,7 +128,6 @@
       ],
       "types": [
         {
-          "name": "FeedName",
           "values": [
             {
               "name": {
@@ -136,7 +135,8 @@
                 "synonyms": []
               }
             }
-          ]
+          ],
+          "name": "FeedName"
         }
       ]
     },
@@ -144,20 +144,20 @@
       "intents": [
         {
           "name": "ReadIntent",
-          "delegationStrategy": "SKILL_RESPONSE",
           "confirmationRequired": false,
           "prompts": {},
           "slots": [
             {
               "name": "feed",
               "type": "FeedName",
-              "confirmationRequired": false,
               "elicitationRequired": true,
+              "confirmationRequired": false,
               "prompts": {
                 "elicitation": "Elicit.Slot.249032860686.526588349079"
               }
             }
-          ]
+          ],
+          "delegationStrategy": "SKILL_RESPONSE"
         }
       ],
       "delegationStrategy": "ALWAYS"
@@ -185,5 +185,6 @@
         ]
       }
     ]
-  }
+  },
+  "version": "27"
 }

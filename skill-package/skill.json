@@ -1,28 +1,28 @@
 {
   "manifest": {
-    "apis": {
-      "custom": {
-        "endpoint": {
-          "uri": "arn:aws:lambda:us-east-1:968299150356:function:9e1b8357-de97-4e8f-8761-90387c96d746:Release_0"
-        }
-      }
-    },
     "publishingInformation": {
       "locales": {
         "en-US": {
           "name": "Feed the Parrot - RSS feed reader",
-          "smallIconUri": "file://assets/icons/small-icon.png",
-          "largeIconUri": "file://assets/icons/large-icon.png"
+          "smallIconUri": "file://assets/images/en-US_smallIconUri.png",
+          "largeIconUri": "file://assets/images/en-US_largeIconUri.png"
         },
         "es-ES": {
           "name": "Al Loro - Lector de feeds RSS",
-          "smallIconUri": "file://assets/icons/small-icon.png",
-          "largeIconUri": "file://assets/icons/large-icon.png"
+          "smallIconUri": "file://assets/images/es-ES_smallIconUri.png",
+          "largeIconUri": "file://assets/images/es-ES_largeIconUri.png"
         },
         "es-US": {
           "name": "Al Loro - Lector de feeds RSS",
-          "smallIconUri": "file://assets/icons/small-icon.png",
-          "largeIconUri": "file://assets/icons/large-icon.png"
+          "smallIconUri": "file://assets/images/es-US_smallIconUri.png",
+          "largeIconUri": "file://assets/images/es-US_largeIconUri.png"
+        }
+      }
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-1:968299150356:function:9e1b8357-de97-4e8f-8761-90387c96d746:Release_0"
         }
       }
     }

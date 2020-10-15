@@ -98,10 +98,10 @@
             "tell me the news",
             "to tell me the news from the feed {feed}",
             "to tell me the news",
-            "tell me what's up with the feed {feed}",
-            "tell me what's up",
-            "to tell me what's up with the feed {feed}",
-            "to tell me what's up",
+            "tell me what\u0027s up with the feed {feed}",
+            "tell me what\u0027s up",
+            "to tell me what\u0027s up with the feed {feed}",
+            "to tell me what\u0027s up",
             "to read me the feed {feed}",
             "to read me a feed",
             "to read the feed {feed}",
@@ -125,7 +125,6 @@
       ],
       "types": [
         {
-          "name": "FeedName",
           "values": [
             {
               "name": {
@@ -133,7 +132,8 @@
                 "synonyms": []
               }
             }
-          ]
+          ],
+          "name": "FeedName"
         }
       ]
     },
@@ -141,20 +141,20 @@
       "intents": [
         {
           "name": "ReadIntent",
-          "delegationStrategy": "SKILL_RESPONSE",
           "confirmationRequired": false,
           "prompts": {},
           "slots": [
             {
               "name": "feed",
               "type": "FeedName",
-              "confirmationRequired": false,
               "elicitationRequired": true,
+              "confirmationRequired": false,
               "prompts": {
                 "elicitation": "Elicit.Slot.249032860686.526588349079"
               }
             }
-          ]
+          ],
+          "delegationStrategy": "SKILL_RESPONSE"
         }
       ],
       "delegationStrategy": "ALWAYS"
@@ -182,5 +182,6 @@
         ]
       }
     ]
-  }
+  },
+  "version": "34"
 }
