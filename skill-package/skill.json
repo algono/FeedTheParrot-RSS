@@ -1,5 +1,29 @@
 {
   "manifest": {
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:eu-west-1:968299150356:function:242d5366-53d1-4ead-9142-d5f35755a697:Release_0"
+        },
+        "regions": {
+          "EU": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:eu-west-1:968299150356:function:242d5366-53d1-4ead-9142-d5f35755a697:Release_0"
+            }
+          },
+          "NA": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:us-east-1:968299150356:function:242d5366-53d1-4ead-9142-d5f35755a697:Release_0"
+            }
+          },
+          "FE": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:us-west-2:968299150356:function:242d5366-53d1-4ead-9142-d5f35755a697:Release_0"
+            }
+          }
+        }
+      }
+    },
     "publishingInformation": {
       "locales": {
         "en-US": {
@@ -16,13 +40,6 @@
           "name": "Al Loro - Lector de feeds RSS",
           "smallIconUri": "file://assets/images/es-US_smallIconUri.png",
           "largeIconUri": "file://assets/images/es-US_largeIconUri.png"
-        }
-      }
-    },
-    "apis": {
-      "custom": {
-        "endpoint": {
-          "uri": "arn:aws:lambda:us-east-1:968299150356:function:9e1b8357-de97-4e8f-8761-90387c96d746:Release_0"
         }
       }
     }
