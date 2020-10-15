@@ -10,7 +10,7 @@ export const ListIntentHandler : RequestHandler = {
 
         const feedListMessage: string = requestAttributes.t('FEED_LIST_MSG');
         const feedListEmptyMessage: string = requestAttributes.t('FEED_LIST_EMPTY_MSG');
-        const feedListReprompt: string = requestAttributes.t('FEED_LIST_REPROMPT_MSG');
+        const feedListReprompt: string = requestAttributes.t('REPROMPT_MSG');
 
         const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
         const feedNames: string[] = sessionAttributes.feedNames;
