@@ -1,7 +1,7 @@
 import { capture } from 'ts-mockito';
 import { ListIntentHandler } from '../../src/intents/List';
-import { mockHandlerInput } from '../util/HandlerInputMocks';
-import { testInAllLocales, testIntentCanHandle } from '../util/helperTests';
+import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle(ListIntentHandler, 'ListIntent');

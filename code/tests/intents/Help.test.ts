@@ -1,7 +1,7 @@
 import { capture } from 'ts-mockito';
 import { HelpIntentHandler } from '../../src/intents/Help';
-import { mockHandlerInput } from '../util/HandlerInputMocks';
-import { testInAllLocales, testIntentCanHandle } from '../util/helperTests';
+import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle(HelpIntentHandler, 'AMAZON.HelpIntent');
