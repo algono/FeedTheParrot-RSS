@@ -13,7 +13,7 @@ ask-resources.json
 
 # Sonarqube configuration
 **/.scannerwork
-code/analyse.js
+**/sonarqube/*[Tt]oken*
 
 # Generated images from Alexa skill
 skill-package/assets/images/
