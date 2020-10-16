@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "rimraf \"../lambda/!(node_modules)\"",
     "clean-full": "rimraf ../lambda",
-    "compile": "tsc --build tsconfig.json --pretty",
+    "compile": "tsc --build tsconfig.prod.json --pretty",
     "build-final": "cpy package.json ../lambda && cd ../lambda/ && npm install --production",
     "analyse": "node analyse.js",
     "test": "jest",
