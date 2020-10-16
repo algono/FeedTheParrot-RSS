@@ -10,7 +10,7 @@
     "compile": "tsc --build tsconfig.prod.json --pretty",
     "build-final": "cpy package.json ../lambda && cd ../lambda/ && npm install --production",
     "analyse": "node analyse.js",
-    "test": "jest",
+    "test": "jest --coverage --coverageDirectory ./sonarqube/coverage",
     "lint-init": "eslint --init",
     "lint-check": "gts check",
     "lint-clean": "gts clean",

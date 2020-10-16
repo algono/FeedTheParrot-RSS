@@ -11,6 +11,7 @@ scanner(
       'sonar.projectName': 'Feed the Parrot',
       'sonar.sources': 'src/',
       'sonar.tests': 'tests/',
+      'sonar.javascript.lcov.reportPaths': 'sonarqube/coverage/lcov.info',
     },
   },
   () => process.exit()
