@@ -13,7 +13,11 @@ import i18next, { TFunction } from 'i18next';
 
 testInAllLocales('Localization Request Interceptor works', async (locale) => {
   const requestAttributes: { t?: TFunction } = {};
-  const mocks = await mockHandlerInput(locale, {}, requestAttributes, false);
+  const mocks = await mockHandlerInput({
+    locale,
+    requestAttributes,
+    addTFunctionToRequestAttributes: false,
+  });
 
   mocked(getLocale).mockReturnValue(locale);
 

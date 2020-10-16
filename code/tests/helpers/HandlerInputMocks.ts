@@ -15,12 +15,17 @@ export interface HandlerInputMocks {
   t: TFunction;
 }
 
-export async function mockHandlerInput(
-  locale: string,
-  sessionAttributes: { [key: string]: any } = {},
-  requestAttributes: { [key: string]: any } = {},
-  addTFunctionToRequestAttributes: boolean = true
-): Promise<HandlerInputMocks> {
+export async function mockHandlerInput({
+  locale,
+  sessionAttributes = {},
+  requestAttributes = {},
+  addTFunctionToRequestAttributes = true,
+}: {
+  locale: string;
+  sessionAttributes?: { [key: string]: any };
+  requestAttributes?: { [key: string]: any };
+  addTFunctionToRequestAttributes?: boolean;
+}): Promise<HandlerInputMocks> {
   const mockedHandlerInput = mock<HandlerInput>();
 
   const mockedAttributesManager = mock<AttributesManager>();

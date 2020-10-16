@@ -9,7 +9,10 @@ testIntentCanHandle(ListIntentHandler, 'ListIntent');
 testInAllLocales('List intent shows all feeds', async (locale) => {
   const feedNames = ['lorem', 'ipsum'];
 
-  const mocks = await mockHandlerInput(locale, { feedNames: feedNames });
+  const mocks = await mockHandlerInput({
+    locale,
+    sessionAttributes: { feedNames: feedNames },
+  });
 
   ListIntentHandler.handle(mocks.instanceHandlerInput);
 
@@ -31,7 +34,10 @@ testInAllLocales('List intent shows all feeds', async (locale) => {
 testInAllLocales(
   'List intent shows custom message when feeds list is empty',
   async (locale) => {
-    const mocks = await mockHandlerInput(locale, { feedNames: [] });
+    const mocks = await mockHandlerInput({
+      locale,
+      sessionAttributes: { feedNames: [] },
+    });
 
     ListIntentHandler.handle(mocks.instanceHandlerInput);
 
