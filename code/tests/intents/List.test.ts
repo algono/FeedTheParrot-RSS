@@ -1,10 +1,17 @@
-import { capture } from "ts-mockito";
-import { ListIntentHandler } from "../../src/intents/List";
-import { mockHandlerInput } from "../util/HandlerInputMocks";
+import { capture } from 'ts-mockito';
+import { ListIntentHandler } from '../../src/intents/List';
+import {
+  mockHandlerInput,
+  testIntentCanHandle,
+} from '../util/HandlerInputMocks';
+
+jest.mock('ask-sdk-core');
+
+testIntentCanHandle(ListIntentHandler, 'ListIntent');
 
 function testListIntentShowsAllFeeds(locale: string) {
   return async () => {
-    const feedNames = ["lorem", "ipsum"];
+    const feedNames = ['lorem', 'ipsum'];
 
     const mocks = await mockHandlerInput(locale, { feedNames: feedNames });
 
@@ -20,7 +27,7 @@ function testListIntentShowsAllFeeds(locale: string) {
     // The output contains all feed names in order
     // (the 's' flag causes the dot to match all characters - including newlines)
     const containsInOrderRegex = new RegExp(
-      `.*?${feedNames.join(".*?")}.*`,
+      `.*?${feedNames.join('.*?')}.*`,
       's'
     );
 
@@ -29,5 +36,5 @@ function testListIntentShowsAllFeeds(locale: string) {
   };
 }
 
-test("List intent shows all feeds (en)", testListIntentShowsAllFeeds('en'));
-test("List intent shows all feeds (es)", testListIntentShowsAllFeeds('es'));
+test('List intent shows all feeds (en)', testListIntentShowsAllFeeds('en'));
+test('List intent shows all feeds (es)', testListIntentShowsAllFeeds('es'));
