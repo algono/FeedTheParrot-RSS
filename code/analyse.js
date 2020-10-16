@@ -1,7 +1,7 @@
 const fs = require('fs');
 const scanner = require('sonarqube-scanner');
 
-const token = fs.readFileSync('./sonarqube/token.txt', 'utf-8'); // Get token from file
+const token = fs.readFileSync('./sonarqube/token.txt', 'utf-8').trim(); // Get token from file
 
 scanner(
   {
