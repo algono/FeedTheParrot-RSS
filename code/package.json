@@ -48,6 +48,7 @@
     "rimraf": "^3.0.2",
     "sonarqube-scanner": "^2.7.0",
     "ts-jest": "^26.4.1",
+    "ts-mockito": "^2.6.1",
     "ts-node": "^9.0.0",
     "typescript": "^3.9.7"
   },
