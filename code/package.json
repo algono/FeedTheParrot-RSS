@@ -45,6 +45,7 @@
     "gts": "^2.0.2",
     "husky": "^4.3.0",
     "jest": "^26.5.2",
+    "jest-sonar-reporter": "^2.0.0",
     "rimraf": "^3.0.2",
     "sonarqube-scanner": "^2.7.0",
     "ts-jest": "^26.4.1",
@@ -58,5 +59,8 @@
       "post-commit": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/post-commit $HUSKY_GIT_PARAMS)",
       "pre-push": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/pre-push $HUSKY_GIT_PARAMS)"
     }
+  },
+  "jestSonar": {
+    "reportPath": "sonarqube"
   }
 }

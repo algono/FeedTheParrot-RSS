@@ -12,6 +12,7 @@ scanner(
       'sonar.sources': 'src/',
       'sonar.tests': 'tests/',
       'sonar.javascript.lcov.reportPaths': 'sonarqube/coverage/lcov.info',
+      'sonar.testExecutionReportPaths': 'sonarqube/test-report.xml',
     },
   },
   () => process.exit()
