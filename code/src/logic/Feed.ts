@@ -135,7 +135,6 @@ export function getItems(feed: Feed, defaultLocale: string, options?: GetItemsOp
     });
 }
 
-// eslint-disable-next-line no-unused-vars
 function processFeedItem(item: Item, feed: Feed, clean: {(text: string): string}, langFormatter: string) {
     //console.log('Get Feed Item = ' + JSON.stringify(item));
 
