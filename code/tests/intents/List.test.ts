@@ -2,7 +2,7 @@ import { capture } from "ts-mockito";
 import { ListIntentHandler } from "../../src/intents/List";
 import { mockHandlerInput } from "../util/HandlerInputMocks";
 
-function testFeedsListContainsAllFeeds(locale: string) {
+function testListIntentShowsAllFeeds(locale: string) {
   return async () => {
     const feedNames = ["lorem", "ipsum"];
 
@@ -29,5 +29,5 @@ function testFeedsListContainsAllFeeds(locale: string) {
   };
 }
 
-test("Feeds list contains all feeds (en)", testFeedsListContainsAllFeeds('en'));
-test("Feeds list contains all feeds (es)", testFeedsListContainsAllFeeds('es'));
+test("List intent shows all feeds (en)", testListIntentShowsAllFeeds('en'));
+test("List intent shows all feeds (es)", testListIntentShowsAllFeeds('es'));

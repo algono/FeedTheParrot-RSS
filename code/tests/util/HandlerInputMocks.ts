@@ -1,4 +1,5 @@
 import { AttributesManager, HandlerInput, ResponseBuilder } from "ask-sdk-core";
+import { TFunction } from "i18next";
 import { anyString, instance, mock, when } from "ts-mockito";
 import { init } from "../../src/util/localization";
 
@@ -10,6 +11,8 @@ export interface HandlerInputMocks {
   instanceHandlerInput: HandlerInput;
   instanceAttributesManager: AttributesManager;
   instanceResponseBuilder: ResponseBuilder;
+
+  t: TFunction;
 }
 
 export async function mockHandlerInput(
@@ -20,10 +23,12 @@ export async function mockHandlerInput(
 
   const mockedAttributesManager = mock<AttributesManager>();
 
-  when(mockedAttributesManager.getRequestAttributes()).thenReturn({
-    t: await init(locale),
-    ...requestAttributes
-  });
+  const t = await init(locale);
+  requestAttributes.t = t;
+
+  when(mockedAttributesManager.getRequestAttributes()).thenReturn(
+    requestAttributes
+  );
 
   when(
     mockedAttributesManager.getSessionAttributes<{
@@ -63,6 +68,8 @@ export async function mockHandlerInput(
     instanceHandlerInput: instanceHandlerInput,
     instanceAttributesManager: instanceAttributesManager,
     instanceResponseBuilder: instanceResponseBuilder,
+
+    t: t,
   };
 
   return mocks;
