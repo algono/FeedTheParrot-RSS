@@ -17,7 +17,10 @@ export const ListIntentHandler : RequestHandler = {
 
         console.log('(ListIntent) Feed names: ' + JSON.stringify(feedNames));
         
-        const speakOutput: string = (feedNames.length > 0 ? (feedListMessage + feedNames.join(', ') + '. ') : feedListEmptyMessage) + feedListReprompt;
+        const speakOutput: string =
+          (feedNames.length > 0
+            ? feedListMessage + feedNames.join(', ') + '. '
+            : `${feedListEmptyMessage} `) + feedListReprompt;
 
         return handlerInput.responseBuilder
             .speak(speakOutput)

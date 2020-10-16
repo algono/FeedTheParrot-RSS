@@ -27,3 +27,24 @@ testInAllLocales('List intent shows all feeds', async (locale) => {
   expect(responseSpeakOutput).toMatch(containsInOrderRegex);
   expect(responseCardContent).toMatch(containsInOrderRegex);
 });
+
+testInAllLocales(
+  'List intent shows custom message when feeds list is empty',
+  async (locale) => {
+    const mocks = await mockHandlerInput(locale, { feedNames: [] });
+
+    ListIntentHandler.handle(mocks.instanceHandlerInput);
+
+    const [responseSpeakOutput] = capture(
+      mocks.mockedResponseBuilder.speak
+    ).last();
+    const [, responseCardContent] = capture(
+      mocks.mockedResponseBuilder.withSimpleCard
+    ).last();
+
+    const feedListEmptyMessage: string = mocks.t('FEED_LIST_EMPTY_MSG');
+
+    expect(responseSpeakOutput.startsWith(feedListEmptyMessage)).toBe(true);
+    expect(responseCardContent.startsWith(feedListEmptyMessage)).toBe(true);
+  }
+);
