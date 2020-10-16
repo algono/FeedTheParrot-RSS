@@ -1,5 +1,5 @@
 import { getLocale, RequestInterceptor } from "ask-sdk-core";
-import * as i18next from "i18next";
+import i18next from 'i18next';
 
 const languageStrings = {
   en: {
@@ -58,19 +58,18 @@ const languageStrings = {
 };
 
 export function init(locale: string) {
-  return i18next.default.init({
+  return i18next.init({
     lng: locale,
     resources: languageStrings,
   });
 }
 
-export const localizationRequestInterceptor : RequestInterceptor = {
-  process(handlerInput) {
-    init(getLocale(handlerInput.requestEnvelope)).then((t) => {
-      const attributes = handlerInput.attributesManager.getRequestAttributes();
-      attributes.t = function (...args: any[]) {
-        return (<any>t)(...args);
-      }
-    });
+export const localizationRequestInterceptor: RequestInterceptor = {
+  async process(handlerInput) {
+    const t = await init(getLocale(handlerInput.requestEnvelope));
+    const attributes = handlerInput.attributesManager.getRequestAttributes();
+    attributes.t = function (...args: any[]) {
+      return (<any>t)(...args);
+    };
   },
 };
