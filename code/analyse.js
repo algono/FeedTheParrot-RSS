@@ -8,8 +8,7 @@ scanner(
     token: token,
     options: {
       'sonar.login': token,
-      'sonar.projectKey': 'Feed-The-Parrot',
-      'sonar.projectDescription': 'RSS Feed Reader for Alexa',
+      'sonar.projectName': 'Feed the Parrot',
       'sonar.sources': 'src/',
       'sonar.tests': 'tests/',
     },
