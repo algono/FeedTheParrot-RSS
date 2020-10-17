@@ -13,11 +13,9 @@ ask-resources.json
 
 # Sonarqube configuration
 **/.scannerwork
-**/sonarqube/**/*
-
-# keep the Sonarqube docker compose file though (and its readme)
-!code/sonarqube/docker-compose.yml
-!code/sonarqube/docker-readme.md
+**/sonarqube/coverage
+**/sonarqube/test-report.xml
+**/sonarqube/*[Tt]oken*
 
 # Generated images from Alexa skill
 skill-package/assets/images/
