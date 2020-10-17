@@ -4,7 +4,7 @@ import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 
 jest.mock('ask-sdk-core');
-testIntentCanHandle(ListIntentHandler, 'ListIntent');
+testIntentCanHandle({ handler: ListIntentHandler, intentName: 'ListIntent' });
 
 testInAllLocales('List intent shows all feeds', async (locale) => {
   const feedNames = ['lorem', 'ipsum'];

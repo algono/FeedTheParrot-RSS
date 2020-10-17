@@ -21,18 +21,18 @@ export async function mockHandlerInput({
   requestAttributes = {},
   addTFunctionToRequestAttributes = true,
 }: {
-  locale: string;
+  locale?: string;
   sessionAttributes?: { [key: string]: any };
   requestAttributes?: { [key: string]: any };
   addTFunctionToRequestAttributes?: boolean;
-}): Promise<HandlerInputMocks> {
+} = {}): Promise<HandlerInputMocks> {
   const mockedHandlerInput = mock<HandlerInput>();
 
   const mockedAttributesManager = mock<AttributesManager>();
 
-  const t = await init(locale);
+  const t = locale ? await init(locale) : null;
 
-  if (addTFunctionToRequestAttributes) {
+  if (locale && addTFunctionToRequestAttributes) {
     requestAttributes.t = t;
   }
 
@@ -45,6 +45,8 @@ export async function mockHandlerInput({
       [key: string]: any;
     }>()
   ).thenReturn(sessionAttributes);
+
+  when(mockedHandlerInput.requestEnvelope).thenReturn(null);
 
   const instanceAttributesManager = instance(mockedAttributesManager);
 

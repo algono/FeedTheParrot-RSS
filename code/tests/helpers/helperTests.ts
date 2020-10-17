@@ -1,11 +1,10 @@
 import {
   getIntentName,
   getRequestType,
-  HandlerInput,
   RequestHandler,
 } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
-import { mock, when, instance } from 'ts-mockito';
+import { mockHandlerInput } from './HandlerInputMocks';
 
 const availableLocales = ['en', 'es'];
 
@@ -20,24 +19,34 @@ export function testInAllLocales(name: string, fn: { (locale: string): any }) {
  * @example
  * jest.mock('ask-sdk-core'); // You must ALWAYS mock the module first
  * // ...
- * testIntentCanHandle(HelpIntentHandler, 'AMAZON.HelpIntent');
+ * testIntentCanHandle({ handler: HelpIntentHandler, intentName: 'AMAZON.HelpIntent' });
  *
  * @param handler The request handler for the intent
  * @param intentName The intent's name
  */
-export function testIntentCanHandle(
-  handler: RequestHandler,
-  intentName: string
-) {
+export function testIntentCanHandle({
+  handler,
+  intentName,
+  testName,
+}: {
+  handler: RequestHandler;
+  intentName?: string;
+  testName?: string;
+}) {
   const requestType = 'IntentRequest';
 
-  test(`${intentName} intent can be handled when called`, () => {
-    mocked(getRequestType).mockReturnValue(requestType);
-    mocked(getIntentName).mockReturnValue(intentName);
+  test(
+    
+    testName ?? `${intentName} intent can be handled when called`,
+   
+    async () => {
+        mocked(getRequestType).mockReturnValue(requestType);
+        mocked(getIntentName).mockReturnValue(intentName);
 
-    const handlerInput = mock<HandlerInput>();
-    when(handlerInput.requestEnvelope).thenReturn(null);
+        const mocks = await mockHandlerInput();
 
-    expect(handler.canHandle(instance(handlerInput))).toBe(true);
-  });
+        expect(handler.canHandle(mocks.instanceHandlerInput)).toBe(true);
+      }
+  
+  );
 }
