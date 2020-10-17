@@ -7,6 +7,7 @@ jest.mock('ask-sdk-core');
 
 import { getIntentName } from 'ask-sdk-core';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import * as fc from 'fast-check';
 
 testIntentCanHandle({
   handler: IntentReflectorHandler,
@@ -16,17 +17,24 @@ testIntentCanHandle({
 testInAllLocales(
   'Intent reflector response contains the reflected intent',
   async (locale) => {
-    const intentName = 'MyTestIntent';
-    mocked(getIntentName).mockReturnValue(intentName);
-
     const mocks = await mockHandlerInput({ locale });
 
-    IntentReflectorHandler.handle(mocks.instanceHandlerInput);
+    fc.assert(
+      fc.property(
+        // Allow only non-empty strings with alphanumerical characters
+        fc.string({ minLength: 1 }).filter((str) => /^[\w]+$/.test(str)),
+        (intentName) => {
+          mocked(getIntentName).mockReturnValue(intentName);
 
-    const [responseSpeakOutput] = capture(
-      mocks.mockedResponseBuilder.speak
-    ).last();
+          IntentReflectorHandler.handle(mocks.instanceHandlerInput);
 
-    expect(responseSpeakOutput).toContain(intentName);
+          const [responseSpeakOutput] = capture(
+            mocks.mockedResponseBuilder.speak
+          ).last();
+
+          expect(responseSpeakOutput).toContain(intentName);
+        }
+      )
+    );
   }
 );
