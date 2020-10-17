@@ -51,7 +51,7 @@ testInAllLocales('List intent shows all feeds', async (locale) => {
   fc.assert(
     fc.property(
       // Allow only non-empty arrays (we have another test for empty ones)
-      fc.array(fc.string()).filter((arr) => arr.length > 0),
+      fc.array(fc.string(), { minLength: 1 }),
 
       (feedNames) => {
         sessionAttributes.feedNames = feedNames;
