@@ -13,7 +13,7 @@ ask-resources.json
 
 # Sonarqube configuration
 **/.scannerwork
-**/sonarqube
+**/sonarqube/**/*
 
 # keep the Sonarqube docker compose file though (and its readme)
 !code/sonarqube/docker-compose.yml
