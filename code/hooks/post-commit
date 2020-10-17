@@ -18,6 +18,8 @@ if [ "$current_branch" = "$DEPLOY_BRANCH" ]; then
 
 	commit_msg="$(git log -1 --pretty=%B)"
 
+	git stash # Stash changes not added to the commit
+
 	git checkout "$CODE_BRANCH"
 
 	git reset --hard
@@ -33,6 +35,8 @@ if [ "$current_branch" = "$DEPLOY_BRANCH" ]; then
 	git commit -m "$commit_msg" --no-verify
 
 	git checkout "$DEPLOY_BRANCH"
+
+	git stash pop # Recover changes not added to the commit
 fi
 
 exit 0
