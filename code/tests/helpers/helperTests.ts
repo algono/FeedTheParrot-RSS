@@ -1,8 +1,4 @@
-import {
-  getIntentName,
-  getRequestType,
-  RequestHandler,
-} from 'ask-sdk-core';
+import { getIntentName, getRequestType, RequestHandler } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
 import { mockHandlerInput } from './HandlerInputMocks';
 
@@ -21,8 +17,9 @@ export function testInAllLocales(name: string, fn: { (locale: string): any }) {
  * // ...
  * testIntentCanHandle({ handler: HelpIntentHandler, intentName: 'AMAZON.HelpIntent' });
  *
- * @param handler The request handler for the intent
- * @param intentName The intent's name
+ * @param handler The intent request handler we are testing against
+ * @param intentName (optional) If we are testing a particular intent, its name
+ * @param testName (optional) A custom name for the test
  */
 export function testIntentCanHandle({
   handler,
@@ -35,18 +32,56 @@ export function testIntentCanHandle({
 }) {
   const requestType = 'IntentRequest';
 
+  testCanHandle({
+    requestType,
+    handler,
+    testName: testName ?? `${intentName} intent can be handled when called`,
+    testBefore: () => {
+      mocked(getIntentName).mockReturnValue(intentName);
+    },
+  });
+}
+
+/**
+ * Tests if the 'canHandle' function of the handler handles a particular request type successfully
+ * @example
+ * jest.mock('ask-sdk-core'); // You must ALWAYS mock the module first
+ * // ...
+ * testCanHandle({
+ *  requestType: 'SessionEndedRequest',
+ *  handler: SessionEndedRequestHandler,
+ *  testName: 'Session Ended Request Handler can handle any SessionEndedRequest'
+ * });
+ *
+ * @param requestType The type of request we are testing
+ * @param handler The request handler we are testing against
+ * @param testName The test's name (a message displayed when testing)
+ * @param testBefore (optional) A function called just before the test logic
+ */
+export function testCanHandle({
+  requestType,
+  handler,
+  testName,
+  testBefore,
+}: {
+  requestType: string;
+  handler: RequestHandler;
+  testName: string;
+  testBefore?: () => void | Promise<void>;
+}) {
   test(
-    
-    testName ?? `${intentName} intent can be handled when called`,
-   
+    testName,
+
     async () => {
-        mocked(getRequestType).mockReturnValue(requestType);
-        mocked(getIntentName).mockReturnValue(intentName);
-
-        const mocks = await mockHandlerInput();
-
-        expect(handler.canHandle(mocks.instanceHandlerInput)).toBe(true);
+      if (testBefore) {
+        await testBefore();
       }
-  
+
+      mocked(getRequestType).mockReturnValue(requestType);
+
+      const mocks = await mockHandlerInput();
+
+      expect(handler.canHandle(mocks.instanceHandlerInput)).toBe(true);
+    }
   );
 }

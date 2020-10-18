@@ -1,6 +1,6 @@
 import { AttributesManager, HandlerInput, ResponseBuilder } from 'ask-sdk-core';
 import { TFunction } from 'i18next';
-import { anyString, instance, mock, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import { init } from '../../src/util/localization';
 
 export interface HandlerInputMocks {
@@ -64,6 +64,9 @@ export async function mockHandlerInput({
   );
   when(
     mockedResponseBuilder.withSimpleCard(anyString(), anyString())
+  ).thenCall(() => instance(mockedResponseBuilder));
+  when(
+    mockedResponseBuilder.addDirective(anything())
   ).thenCall(() => instance(mockedResponseBuilder));
   when(mockedResponseBuilder.getResponse()).thenCall(() =>
     instance(mockedResponseBuilder)
