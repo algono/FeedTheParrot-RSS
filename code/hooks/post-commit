@@ -24,7 +24,9 @@ if [ "$current_branch" = "$DEPLOY_BRANCH" ]; then
 
 	git reset --hard
 
-	git cherry-pick --no-commit "$DEPLOY_BRANCH"
+	# Get the commit changes from the deploy branch.
+	# In case of merge conflict, always prioritize the deploy branch changes ('theirs')
+	git cherry-pick --no-commit "$DEPLOY_BRANCH" --strategy=recursive --strategy-option=theirs
 
 	git reset --mixed
 
