@@ -21,8 +21,16 @@ testInAllLocales(
 
     fc.assert(
       fc.property(
-        // Allow only non-empty strings with alphanumerical characters
-        fc.string({ minLength: 1 }).filter((str) => /^[\w]+$/.test(str)),
+        /**
+         * Allow only strings that match an Alexa intent name's restrictions:
+         * (the following text was extracted from Alexa prompts, except for the remarks in parenthesis, which are extrapolated from examples)
+         * 
+         * "Intent name cannot be empty, it can only contain case-insensitive alphabetical characters and underscores,
+         * and it must begin and end with an alphabetic character. (also no double underscores)
+         * Numbers, spaces, or other special characters are not allowed."
+         * (built-in intents have letters and a dot prepended to its name)
+         */
+        fc.string({ minLength: 1 }).filter((str) => /^(?:[a-z]+\.)?[a-z]+(?:_[a-z]+)*$/i.test(str)),
         (intentName) => {
           mocked(getIntentName).mockReturnValue(intentName);
 
