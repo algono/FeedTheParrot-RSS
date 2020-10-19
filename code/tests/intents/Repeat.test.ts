@@ -4,49 +4,49 @@ import { SaveResponseForRepeatingInterceptor } from '../../src/intents/Repeat';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 
 async function testSaveResponseForRepeatingInterceptor(
-    outputSpeech: ui.OutputSpeech
+  outputSpeech: ui.OutputSpeech
 ) {
-    const sessionAttributes: { lastResponse?: string } = {};
-    const mocks = await mockHandlerInput({ sessionAttributes, outputSpeech });
+  const sessionAttributes: { lastResponse?: string } = {};
+  const mocks = await mockHandlerInput({ sessionAttributes, outputSpeech });
 
-    SaveResponseForRepeatingInterceptor.process(mocks.instanceHandlerInput);
+  SaveResponseForRepeatingInterceptor.process(mocks.instanceHandlerInput);
 
-    return sessionAttributes.lastResponse;
+  return sessionAttributes.lastResponse;
 }
 
 test('SaveResponseForRepeatingInterceptor works with ssml', async () => {
-    await fc.assert(
-        fc.asyncProperty(
-            fc.string().map((str) => `<ssml>${str}</ssml>`),
-            async (ssmlOutput) => {
-                const ssmlOutputSpeech: ui.SsmlOutputSpeech = {
-                    type: 'SSML',
-                    ssml: ssmlOutput,
-                };
+  await fc.assert(
+    fc.asyncProperty(
+      fc.string().map((str) => `<ssml>${str}</ssml>`),
+      async (ssmlOutput) => {
+        const ssmlOutputSpeech: ui.SsmlOutputSpeech = {
+          type: 'SSML',
+          ssml: ssmlOutput,
+        };
 
-                const lastResponse = await testSaveResponseForRepeatingInterceptor(
-                    ssmlOutputSpeech
-                );
+        const lastResponse = await testSaveResponseForRepeatingInterceptor(
+          ssmlOutputSpeech
+        );
 
-                expect(lastResponse).toEqual(ssmlOutput);
-            }
-        )
-    );
+        expect(lastResponse).toEqual(ssmlOutput);
+      }
+    )
+  );
 });
 
 test('SaveResponseForRepeatingInterceptor works with plain text', async () => {
-    await fc.assert(
-        fc.asyncProperty(fc.string(), async (textOutput) => {
-            const plainTextOutputSpeech: ui.PlainTextOutputSpeech = {
-                type: 'PlainText',
-                text: textOutput,
-            };
+  await fc.assert(
+    fc.asyncProperty(fc.string(), async (textOutput) => {
+      const plainTextOutputSpeech: ui.PlainTextOutputSpeech = {
+        type: 'PlainText',
+        text: textOutput,
+      };
 
-            const lastResponse = await testSaveResponseForRepeatingInterceptor(
-                plainTextOutputSpeech
-            );
+      const lastResponse = await testSaveResponseForRepeatingInterceptor(
+        plainTextOutputSpeech
+      );
 
-            expect(lastResponse).toEqual(textOutput);
-        })
-    );
+      expect(lastResponse).toEqual(textOutput);
+    })
+  );
 });

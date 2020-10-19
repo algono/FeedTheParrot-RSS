@@ -1,35 +1,46 @@
-import { RequestHandler, getRequestType, getIntentName, ResponseInterceptor } from "ask-sdk-core";
-import { getSpeakOutput } from "../util/helpers";
+import {
+  RequestHandler,
+  getRequestType,
+  getIntentName,
+  ResponseInterceptor,
+} from 'ask-sdk-core';
+import { getSpeakOutput } from '../util/helpers';
 
-export const SaveResponseForRepeatingInterceptor : ResponseInterceptor = {
-    process(handlerInput) {
-        const responseOutputSpeech = handlerInput.responseBuilder.getResponse().outputSpeech;
-        
-        if (responseOutputSpeech !== undefined) {
-            const lastResponse = getSpeakOutput(responseOutputSpeech);
+export const SaveResponseForRepeatingInterceptor: ResponseInterceptor = {
+  process(handlerInput) {
+    const responseOutputSpeech = handlerInput.responseBuilder.getResponse()
+      .outputSpeech;
 
-            const {getSessionAttributes, setSessionAttributes} = handlerInput.attributesManager;
+    if (responseOutputSpeech !== undefined) {
+      const lastResponse = getSpeakOutput(responseOutputSpeech);
 
-            const sessionAttributes = getSessionAttributes();
-            sessionAttributes.lastResponse = lastResponse;
-            setSessionAttributes(sessionAttributes);
-        }
+      const {
+        getSessionAttributes,
+        setSessionAttributes,
+      } = handlerInput.attributesManager;
+
+      const sessionAttributes = getSessionAttributes();
+      sessionAttributes.lastResponse = lastResponse;
+      setSessionAttributes(sessionAttributes);
     }
-}
+  },
+};
 
-export const RepeatIntentHandler : RequestHandler = {
-    canHandle(handlerInput) {
-        return getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-            && getIntentName(handlerInput.requestEnvelope) === 'AMAZON.RepeatIntent';
-    },
-    handle(handlerInput) {
-        const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+export const RepeatIntentHandler: RequestHandler = {
+  canHandle(handlerInput) {
+    return (
+      getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
+      getIntentName(handlerInput.requestEnvelope) === 'AMAZON.RepeatIntent'
+    );
+  },
+  handle(handlerInput) {
+    const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
-        const speakOutput: string = sessionAttributes.lastResponse;
+    const speakOutput: string = sessionAttributes.lastResponse;
 
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            .reprompt(speakOutput)
-            .getResponse();
-    }
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
+      .reprompt(speakOutput)
+      .getResponse();
+  },
 };

@@ -38,9 +38,9 @@ testInAllLocales(
          * Numbers, spaces, or other special characters are not allowed."
          * (built-in intents have 'AMAZON' and a dot prepended to its name)
          */
-        alphaAndUnderscoreProperty.filter((str) =>
-          /^[a-z]+(?:_[a-z]+)*$/i.test(str)
-        ).map(name => (Math.random() < 0.5 ? 'AMAZON.' : '') + name), // 50/50 of being a built-in intent
+        alphaAndUnderscoreProperty
+          .filter((str) => /^[a-z]+(?:_[a-z]+)*$/i.test(str))
+          .map((name) => (Math.random() < 0.5 ? 'AMAZON.' : '') + name), // 50/50 of being a built-in intent
         (intentName) => {
           mocked(getIntentName).mockReturnValue(intentName);
 

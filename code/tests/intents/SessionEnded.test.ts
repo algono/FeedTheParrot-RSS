@@ -11,24 +11,35 @@ testCanHandle({
   testName: 'Session Ended Request Handler can handle any SessionEndedRequest',
 });
 
-testInAllLocales('Session ended handler clears dynamic entities', async (locale) => {
-  const mocks = await mockHandlerInput({ locale });
+testInAllLocales(
+  'Session ended handler clears dynamic entities',
+  async (locale) => {
+    const mocks = await mockHandlerInput({ locale });
 
-  SessionEndedRequestHandler.handle(mocks.instanceHandlerInput);
+    SessionEndedRequestHandler.handle(mocks.instanceHandlerInput);
 
-  const [directive] = capture(
-    mocks.mockedResponseBuilder.addDirective
-  ).last();
+    const [directive] = capture(
+      mocks.mockedResponseBuilder.addDirective
+    ).last();
 
-  expect(directive).toHaveProperty('type', 'Dialog.UpdateDynamicEntities');
-  expect(directive).toHaveProperty<er.dynamic.UpdateBehavior>('updateBehavior', 'CLEAR');
-});
+    expect(directive).toHaveProperty('type', 'Dialog.UpdateDynamicEntities');
+    expect(directive).toHaveProperty<er.dynamic.UpdateBehavior>(
+      'updateBehavior',
+      'CLEAR'
+    );
+  }
+);
 
-testInAllLocales('Session ended handler does not speak nor reprompt', async (locale) => {
+testInAllLocales(
+  'Session ended handler does not speak nor reprompt',
+  async (locale) => {
     const mocks = await mockHandlerInput({ locale });
 
     SessionEndedRequestHandler.handle(mocks.instanceHandlerInput);
 
     verify(mocks.mockedResponseBuilder.speak(anyString(), anything())).never();
-    verify(mocks.mockedResponseBuilder.reprompt(anyString(), anything())).never();
-});
+    verify(
+      mocks.mockedResponseBuilder.reprompt(anyString(), anything())
+    ).never();
+  }
+);

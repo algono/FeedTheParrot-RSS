@@ -1,5 +1,5 @@
-import { capture } from "ts-mockito";
-import { CancelAndStopIntentHandler } from "../../src/intents/Stop";
+import { capture } from 'ts-mockito';
+import { CancelAndStopIntentHandler } from '../../src/intents/Stop';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 

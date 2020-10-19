@@ -28,7 +28,7 @@ export async function mockHandlerInput({
   locale?: string;
   sessionAttributes?: { [key: string]: any };
   requestAttributes?: { [key: string]: any };
-  outputSpeech ?: ui.OutputSpeech,
+  outputSpeech?: ui.OutputSpeech;
   addTFunctionToRequestAttributes?: boolean;
 } = {}): Promise<HandlerInputMocks> {
   const mockedHandlerInput = mock<HandlerInput>();
@@ -51,7 +51,9 @@ export async function mockHandlerInput({
     }>()
   ).thenReturn(sessionAttributes);
 
-  when(mockedAttributesManager.setSessionAttributes(anything())).thenCall(() => {});
+  when(
+    mockedAttributesManager.setSessionAttributes(anything())
+  ).thenCall(() => {});
 
   when(mockedHandlerInput.requestEnvelope).thenReturn(null);
 
@@ -72,9 +74,9 @@ export async function mockHandlerInput({
   when(
     mockedResponseBuilder.withSimpleCard(anyString(), anyString())
   ).thenCall(() => instance(mockedResponseBuilder));
-  when(
-    mockedResponseBuilder.addDirective(anything())
-  ).thenCall(() => instance(mockedResponseBuilder));
+  when(mockedResponseBuilder.addDirective(anything())).thenCall(() =>
+    instance(mockedResponseBuilder)
+  );
 
   const mockedResponse = mock<Response>();
 
