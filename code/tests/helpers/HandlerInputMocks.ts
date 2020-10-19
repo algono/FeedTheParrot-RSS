@@ -1,4 +1,5 @@
 import { AttributesManager, HandlerInput, ResponseBuilder } from 'ask-sdk-core';
+import { Response, ui } from 'ask-sdk-model';
 import { TFunction } from 'i18next';
 import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import { init } from '../../src/util/localization';
@@ -7,10 +8,12 @@ export interface HandlerInputMocks {
   mockedHandlerInput: HandlerInput;
   mockedAttributesManager: AttributesManager;
   mockedResponseBuilder: ResponseBuilder;
+  mockedResponse: Response;
 
   instanceHandlerInput: HandlerInput;
   instanceAttributesManager: AttributesManager;
   instanceResponseBuilder: ResponseBuilder;
+  instanceResponse: Response;
 
   t: TFunction;
 }
@@ -19,11 +22,13 @@ export async function mockHandlerInput({
   locale,
   sessionAttributes = {},
   requestAttributes = {},
+  outputSpeech,
   addTFunctionToRequestAttributes = true,
 }: {
   locale?: string;
   sessionAttributes?: { [key: string]: any };
   requestAttributes?: { [key: string]: any };
+  outputSpeech ?: ui.OutputSpeech,
   addTFunctionToRequestAttributes?: boolean;
 } = {}): Promise<HandlerInputMocks> {
   const mockedHandlerInput = mock<HandlerInput>();
@@ -45,6 +50,8 @@ export async function mockHandlerInput({
       [key: string]: any;
     }>()
   ).thenReturn(sessionAttributes);
+
+  when(mockedAttributesManager.setSessionAttributes(anything())).thenCall(() => {});
 
   when(mockedHandlerInput.requestEnvelope).thenReturn(null);
 
@@ -68,9 +75,14 @@ export async function mockHandlerInput({
   when(
     mockedResponseBuilder.addDirective(anything())
   ).thenCall(() => instance(mockedResponseBuilder));
-  when(mockedResponseBuilder.getResponse()).thenCall(() =>
-    instance(mockedResponseBuilder)
-  );
+
+  const mockedResponse = mock<Response>();
+
+  when(mockedResponse.outputSpeech).thenReturn(outputSpeech);
+
+  const instanceResponse = instance(mockedResponse);
+
+  when(mockedResponseBuilder.getResponse()).thenReturn(instanceResponse);
 
   const instanceResponseBuilder = instance(mockedResponseBuilder);
 
@@ -79,13 +91,15 @@ export async function mockHandlerInput({
   const instanceHandlerInput = instance(mockedHandlerInput);
 
   const mocks: HandlerInputMocks = {
-    mockedHandlerInput: mockedHandlerInput,
-    mockedAttributesManager: mockedAttributesManager,
-    mockedResponseBuilder: mockedResponseBuilder,
+    mockedHandlerInput,
+    mockedAttributesManager,
+    mockedResponseBuilder,
+    mockedResponse,
 
-    instanceHandlerInput: instanceHandlerInput,
-    instanceAttributesManager: instanceAttributesManager,
-    instanceResponseBuilder: instanceResponseBuilder,
+    instanceHandlerInput,
+    instanceAttributesManager,
+    instanceResponseBuilder,
+    instanceResponse,
 
     t: t,
   };

@@ -6,21 +6,13 @@ export const SaveResponseForRepeatingInterceptor : ResponseInterceptor = {
         const responseOutputSpeech = handlerInput.responseBuilder.getResponse().outputSpeech;
         
         if (responseOutputSpeech !== undefined) {
-            try {
-                const lastResponse = getSpeakOutput(responseOutputSpeech);
-    
-                const {getSessionAttributes, setSessionAttributes} = handlerInput.attributesManager;
-    
-                const sessionAttributes = getSessionAttributes();
-                sessionAttributes.lastResponse = lastResponse;
-                setSessionAttributes(sessionAttributes);
-            } catch (error) {
-                if (error instanceof TypeError) {
-                    console.log(error.message);
-                } else {
-                    throw error;
-                }
-            }
+            const lastResponse = getSpeakOutput(responseOutputSpeech);
+
+            const {getSessionAttributes, setSessionAttributes} = handlerInput.attributesManager;
+
+            const sessionAttributes = getSessionAttributes();
+            sessionAttributes.lastResponse = lastResponse;
+            setSessionAttributes(sessionAttributes);
         }
     }
 }
