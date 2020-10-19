@@ -1,6 +1,6 @@
 import { getIntentName, getRequestType, RequestHandler } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
-import { mockHandlerInput } from './HandlerInputMocks';
+import { mockHandlerInput, MockHandlerInputOptions } from './HandlerInputMocks';
 
 const availableLocales = ['en', 'es'];
 
@@ -20,15 +20,18 @@ export function testInAllLocales(name: string, fn: { (locale: string): any }) {
  * @param handler The intent request handler we are testing against
  * @param intentName (optional) If we are testing a particular intent, its name
  * @param testName (optional) A custom name for the test
+ * @param mockHandlerInputOptions (optional) Options for the call to 'mockHandlerInput' made inside this function
  */
 export function testIntentCanHandle({
   handler,
   intentName,
   testName,
+  mockHandlerInputOptions,
 }: {
   handler: RequestHandler;
   intentName?: string;
   testName?: string;
+  mockHandlerInputOptions?: MockHandlerInputOptions;
 }) {
   const requestType = 'IntentRequest';
 
@@ -39,6 +42,7 @@ export function testIntentCanHandle({
     testBefore: () => {
       mocked(getIntentName).mockReturnValue(intentName);
     },
+    mockHandlerInputOptions,
   });
 }
 
@@ -57,17 +61,20 @@ export function testIntentCanHandle({
  * @param handler The request handler we are testing against
  * @param testName The test's name (a message displayed when testing)
  * @param testBefore (optional) A function called just before the test logic
+ * @param mockHandlerInputOptions (optional) Options for the call to 'mockHandlerInput' made inside this function
  */
 export function testCanHandle({
   requestType,
   handler,
   testName,
   testBefore,
+  mockHandlerInputOptions,
 }: {
   requestType: string;
   handler: RequestHandler;
   testName: string;
   testBefore?: () => void | Promise<void>;
+  mockHandlerInputOptions?: MockHandlerInputOptions;
 }) {
   test(
     testName,
@@ -79,7 +86,7 @@ export function testCanHandle({
 
       mocked(getRequestType).mockReturnValue(requestType);
 
-      const mocks = await mockHandlerInput();
+      const mocks = await mockHandlerInput(mockHandlerInputOptions);
 
       expect(handler.canHandle(mocks.instanceHandlerInput)).toBe(true);
     }
