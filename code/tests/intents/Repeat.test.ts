@@ -1,7 +1,12 @@
 import { ui } from 'ask-sdk-model';
 import fc from 'fast-check';
-import { SaveResponseForRepeatingInterceptor } from '../../src/intents/Repeat';
+import { capture } from 'ts-mockito';
+import {
+  RepeatIntentHandler,
+  SaveResponseForRepeatingInterceptor,
+} from '../../src/intents/Repeat';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { testIntentCanHandle } from '../helpers/helperTests';
 
 async function testSaveResponseForRepeatingInterceptor(
   outputSpeech: ui.OutputSpeech
@@ -47,6 +52,42 @@ test('SaveResponseForRepeatingInterceptor works with plain text', async () => {
       );
 
       expect(lastResponse).toEqual(textOutput);
+    })
+  );
+});
+
+test('SaveResponseForRepeatingInterceptor does not break with undefined response', async () => {
+  const lastResponse = await testSaveResponseForRepeatingInterceptor(undefined);
+
+  expect(lastResponse).toBeUndefined();
+});
+
+jest.mock('ask-sdk-core');
+testIntentCanHandle({
+  handler: RepeatIntentHandler,
+  intentName: 'AMAZON.RepeatIntent',
+});
+
+test('Repeat intent handler outputs and reprompts last response given', async () => {
+  const sessionAttributes: { lastResponse?: string } = {};
+  const mocks = await mockHandlerInput({ sessionAttributes });
+
+  fc.assert(
+    fc.property(fc.string(), (lastResponse) => {
+      sessionAttributes.lastResponse = lastResponse;
+      RepeatIntentHandler.handle(mocks.instanceHandlerInput);
+
+      const [responseSpeakOutput] = capture(
+        mocks.mockedResponseBuilder.speak
+      ).last();
+
+      expect(responseSpeakOutput).toEqual(lastResponse);
+
+      const [responseReprompt] = capture(
+        mocks.mockedResponseBuilder.reprompt
+      ).last();
+
+      expect(responseReprompt).toEqual(lastResponse);
     })
   );
 });
