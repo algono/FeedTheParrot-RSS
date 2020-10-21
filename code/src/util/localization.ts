@@ -24,6 +24,7 @@ const languageStrings = {
       DEFAULT_VOICE_LOCALE: 'en-US',
       READING_FEED: 'Ok. Now reading the feed "{{feed}}":',
       CONFIRMATION_CONTINUE_READING_FEED: 'Do you want me to continue reading?',
+      CONFIRMATION_GOTO_NEXT_FEED_ITEM: 'Shall I go to the next one?',
       END_READING_FEED: "And that's all there is at the moment.",
       SURPASSED_MAX_CHARACTERS:
         'Sorry, I am not able to continue reading. You can see the full text in the Alexa app.',
@@ -55,6 +56,7 @@ const languageStrings = {
       DEFAULT_VOICE_LOCALE: 'es-ES',
       READING_FEED: 'Vale. Leyendo la feed "{{feed}}":',
       CONFIRMATION_CONTINUE_READING_FEED: '¿Sigo leyendo?',
+      CONFIRMATION_GOTO_NEXT_FEED_ITEM: '¿Paso al siguiente?',
       END_READING_FEED: 'Y eso es todo por ahora.',
       SURPASSED_MAX_CHARACTERS:
         'Lo siento, no puedo continuar leyendo. Puedes ver el texto completo en la app de Alexa.',

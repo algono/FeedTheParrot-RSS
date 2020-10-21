@@ -7,6 +7,7 @@ import { init } from '../util/localization';
 import {
   PAUSE_BETWEEN_FIELDS_CARD,
   PAUSE_BETWEEN_FIELDS,
+  MAX_CHARACTERS,
 } from '../util/constants';
 
 export interface GetItemsOptions {
@@ -182,13 +183,17 @@ function processFeedItem(
   if (feed.readFields) {
     console.log('Fields specified. Using: ' + JSON.stringify(feed.readFields));
 
-    feed.readFields.forEach((field) => {
-      let text = feedItem[field.name];
-      if (field.truncateAt) {
+    feed.readFields.forEach((field, _, arr) => {
+      let text: string = feedItem[field.name];
+      
+      const maxItemCharacters = Math.floor(MAX_CHARACTERS / arr.length);
+
+      if (field.truncateAt || text.length > maxItemCharacters) {
+        const truncateAt = field.truncateAt ?? maxItemCharacters;
         console.log(
-          `Field "${field.name}" truncated at ${field.truncateAt} characters`
+          `Field "${field.name}" truncated at ${truncateAt} characters`
         );
-        text = truncate(text, field.truncateAt);
+        text = truncate(text, truncateAt);
       }
       alexaReads.content += text;
       alexaReads.content += PAUSE_BETWEEN_FIELDS;
@@ -200,7 +205,7 @@ function processFeedItem(
     console.log('No fields specified. Using summary/description by default');
 
     let summary = feedItem.summary || feedItem.description;
-    if (feed.truncateSummaryAt) {
+    if (feed.truncateSummaryAt || summary.length > MAX_CHARACTERS) {
       console.log(`Summary truncated at ${feed.truncateSummaryAt} characters`);
       summary = truncate(summary, feed.truncateSummaryAt);
     }
@@ -241,7 +246,7 @@ function truncate(str: string, n: number) {
     if (lastSpace >= 0) {
       return subString.substr(0, lastSpace) + '...';
     } else {
-      return subString + '...';
+      return subString.substr(0, n - 3) + '...';
     }
   }
 }

@@ -5,6 +5,7 @@ import {
   getSlotValue,
   getLocale,
   HandlerInput,
+  getRequest,
 } from 'ask-sdk-core';
 import { IntentRequest } from 'ask-sdk-model';
 
@@ -12,6 +13,7 @@ import {
   feedSlotName,
   EXTRA_LONG_PAUSE,
   PAUSE_BETWEEN_ITEMS,
+  PAUSE_BETWEEN_FIELDS,
 } from '../util/constants';
 import { Feed, FeedItem, getItems } from '../logic/Feed';
 
@@ -185,17 +187,22 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     const readState: ReadState = sessionAttributes.readState;
 
-    const item = readState.feedItems[readState.currentIndex++];
+    const item = readState.feedItems[readState.currentIndex];
 
-    // Add whole content to the speak queue
-    readState.speakQueue = item.alexaReads.content + PAUSE_BETWEEN_ITEMS;
+    const { t } = attributesManager.getRequestAttributes();
 
-    attributesManager.setSessionAttributes(sessionAttributes);
-
-    // Add card to response builder
-    responseBuilder.withStandardCard(item.title, item.cardReads, item.imageUrl);
-
-    return ReadItemIntentHandler.handle(handlerInput);
+    return responseBuilder
+      .speak(
+        item.alexaReads.content +
+          PAUSE_BETWEEN_FIELDS +
+          t('CONFIRMATION_GOTO_NEXT_FEED_ITEM')
+      )
+      .withStandardCard(item.title, item.cardReads, item.imageUrl)
+      .addConfirmIntentDirective({
+        name: 'AMAZON.NextIntent',
+        confirmationStatus: 'NONE',
+      })
+      .getResponse();
   },
 };
 
@@ -247,5 +254,20 @@ export const SkipItemIntentHandler: RequestHandler = {
         getIntentName(requestEnvelope) === 'AMAZON.NextIntent')
     );
   },
-  handle: (handlerInput) => moveItemIndex(handlerInput, 1),
+  handle: (handlerInput) => {
+    const { requestEnvelope, responseBuilder } = handlerInput;
+
+    const intentRequest = getRequest<IntentRequest>(requestEnvelope);
+
+    if (intentRequest.intent.confirmationStatus == 'DENIED') {
+      return responseBuilder
+        .addDelegateDirective({
+          name: 'AMAZON.CancelIntent',
+          confirmationStatus: 'NONE',
+        })
+        .getResponse();
+    }
+
+    return moveItemIndex(handlerInput, 1);
+  },
 };
