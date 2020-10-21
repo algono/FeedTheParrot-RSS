@@ -9,6 +9,7 @@ import {
   PAUSE_BETWEEN_FIELDS,
   MAX_CHARACTERS,
 } from '../util/constants';
+import { nameof } from '../util/helpers';
 
 export interface GetItemsOptions {
   forceUpdate?: boolean;
@@ -239,6 +240,10 @@ const MAX_LAST_PHRASE_DISTANCE_CHARS = 20;
  * @param {number} n The max number of characters (must be a positive integer)
  */
 function truncate(str: string, n: number) {
+  // Check that 'n' is a valid parameter
+  if (n <= 0) throw new RangeError(`'${nameof(() => n)}' must be greater than zero`);
+  if (!Number.isInteger(n)) throw new RangeError(`'${nameof(() => n)}' must be an integer`);
+
   if (str.length <= n) return str;
   const subString = str.substr(0, n);
   const lastPhraseEnd = subString.lastIndexOf('. ');
@@ -249,7 +254,7 @@ function truncate(str: string, n: number) {
     return subString.substr(0, lastPhraseEnd + 1);
   } else {
     const lastSpace = subString.lastIndexOf(' ');
-    if (lastSpace >= 0) {
+    if (lastSpace >= 0 && lastSpace < n - 3) {
       return subString.substr(0, lastSpace) + '...';
     } else {
       return subString.substr(0, n - 3) + '...';
