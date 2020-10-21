@@ -15,6 +15,15 @@
 			],
 			"label": "npm: build - code",
 			"detail": "Clean, lint, and build code"
+		},
+		{
+			"type": "npm",
+			"script": "build-debug",
+			"path": "code/",
+			"group": "build",
+			"problemMatcher": ["$tsc"],
+			"label": "npm: build - debug",
+			"detail": "Build code quickly for debugging"
 		}
 	]
 }
