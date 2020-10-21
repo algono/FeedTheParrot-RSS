@@ -185,7 +185,7 @@ function processFeedItem(
 
     feed.readFields.forEach((field, _, arr) => {
       let text: string = feedItem[field.name];
-      
+
       const maxItemCharacters = Math.floor(MAX_CHARACTERS / arr.length);
 
       if (field.truncateAt || text.length > maxItemCharacters) {
@@ -229,6 +229,9 @@ function processFeedItem(
 
 // HELPER FUNCTIONS
 
+// Max characters between last phrase end and truncated string end
+const MAX_LAST_PHRASE_DISTANCE_CHARS = 20;
+
 /**
  * It truncates the string to the last phrase in order to not surpass n characters total.
  *
@@ -239,7 +242,10 @@ function truncate(str: string, n: number) {
   if (str.length <= n) return str;
   const subString = str.substr(0, n);
   const lastPhraseEnd = subString.lastIndexOf('. ');
-  if (lastPhraseEnd >= 0) {
+  if (
+    lastPhraseEnd >= 0 &&
+    lastPhraseEnd >= n - MAX_LAST_PHRASE_DISTANCE_CHARS
+  ) {
     return subString.substr(0, lastPhraseEnd + 1);
   } else {
     const lastSpace = subString.lastIndexOf(' ');
