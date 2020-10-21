@@ -4,10 +4,7 @@ import fetch from 'node-fetch';
 import striptags from 'striptags';
 import util from 'util';
 import { init } from '../util/localization';
-import {
-  PAUSE_BETWEEN_FIELDS_CARD,
-  MAX_CHARACTERS,
-} from '../util/constants';
+import { PAUSE_BETWEEN_FIELDS_CARD, MAX_CHARACTERS } from '../util/constants';
 import { nameof } from '../util/helpers';
 
 export interface GetItemsOptions {
@@ -271,7 +268,7 @@ function truncate(str: string, n: number) {
   if (str.length <= n) {
     res = { str, n: str.length };
   } else {
-    const subString = str.substr(0, n);
+    let subString = str.substr(0, n);
     const lastPhraseEnd = subString.lastIndexOf('. ');
     if (
       lastPhraseEnd >= 0 &&
@@ -282,8 +279,9 @@ function truncate(str: string, n: number) {
         n: lastPhraseEnd + 1,
       };
     } else {
+      subString = subString.substr(0, n - 2);
       const lastSpace = subString.lastIndexOf(' ');
-      if (lastSpace >= 0 && lastSpace < n - 3) {
+      if (lastSpace >= 0) {
         res = {
           str: subString.substr(0, lastSpace) + '...',
           n: lastSpace,
