@@ -19,3 +19,6 @@ ask-resources.json
 
 # Generated images from Alexa skill
 skill-package/assets/images/
+
+# Session replays for local debugging
+session-replays/
