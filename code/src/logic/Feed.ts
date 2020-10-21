@@ -6,7 +6,6 @@ import util from 'util';
 import { init } from '../util/localization';
 import {
   PAUSE_BETWEEN_FIELDS_CARD,
-  PAUSE_BETWEEN_FIELDS,
   MAX_CHARACTERS,
 } from '../util/constants';
 import { nameof } from '../util/helpers';
@@ -23,7 +22,7 @@ export interface ItemField {
 
 interface FeedItemAlexaReads {
   title: string;
-  content: string;
+  content: string[];
 }
 
 export interface FeedItem {
@@ -175,7 +174,7 @@ function processFeedItem(
 
   const alexaReads: FeedItemAlexaReads = {
     title: feedItem.title,
-    content: '',
+    content: [],
   };
 
   let cardReads = '';
@@ -185,19 +184,22 @@ function processFeedItem(
     console.log('Fields specified. Using: ' + JSON.stringify(feed.readFields));
 
     feed.readFields.forEach((field, _, arr) => {
-      let text: string = feedItem[field.name];
+      const text: string = feedItem[field.name];
 
       const maxItemCharacters = Math.floor(MAX_CHARACTERS / arr.length);
+
+      let truncatedText: string[];
 
       if (field.truncateAt || text.length > maxItemCharacters) {
         const truncateAt = field.truncateAt ?? maxItemCharacters;
         console.log(
           `Field "${field.name}" truncated at ${truncateAt} characters`
         );
-        text = truncate(text, truncateAt);
+        truncatedText = truncateAll(text, truncateAt);
+        alexaReads.content.concat(truncatedText);
+      } else {
+        alexaReads.content.push(text);
       }
-      alexaReads.content += text;
-      alexaReads.content += PAUSE_BETWEEN_FIELDS;
 
       cardReads += text;
       cardReads += PAUSE_BETWEEN_FIELDS_CARD;
@@ -205,18 +207,24 @@ function processFeedItem(
   } else {
     console.log('No fields specified. Using summary/description by default');
 
-    let summary = feedItem.summary || feedItem.description;
+    const summary = feedItem.summary || feedItem.description;
+    let truncatedSummary: string[];
     if (feed.truncateSummaryAt || summary.length > MAX_CHARACTERS) {
+      truncatedSummary = truncateAll(summary, feed.truncateSummaryAt);
       console.log(`Summary truncated at ${feed.truncateSummaryAt} characters`);
-      summary = truncate(summary, feed.truncateSummaryAt);
+      alexaReads.content = truncatedSummary;
+    } else {
+      alexaReads.content = [summary];
     }
-    alexaReads.content = summary;
+
     cardReads += summary;
   }
 
   if (langFormatter) {
     alexaReads.title = util.format(langFormatter, alexaReads.title);
-    alexaReads.content = util.format(langFormatter, alexaReads.content);
+    alexaReads.content = alexaReads.content.map((value) =>
+      util.format(langFormatter, value)
+    );
   }
 
   console.log('Alexa reads: ' + JSON.stringify(alexaReads));
@@ -233,6 +241,18 @@ function processFeedItem(
 // Max characters between last phrase end and truncated string end
 const MAX_LAST_PHRASE_DISTANCE_CHARS = 20;
 
+function truncateAll(str: string, n: number) {
+  const res: string[] = [];
+  let remaining = str;
+  while (remaining) {
+    const current = truncate(remaining, n);
+    res.push(current.str);
+    remaining = remaining.substring(current.n);
+  }
+
+  return res;
+}
+
 /**
  * It truncates the string to the last phrase in order to not surpass n characters total.
  *
@@ -241,23 +261,41 @@ const MAX_LAST_PHRASE_DISTANCE_CHARS = 20;
  */
 function truncate(str: string, n: number) {
   // Check that 'n' is a valid parameter
-  if (n <= 0) throw new RangeError(`'${nameof(() => n)}' must be greater than zero`);
-  if (!Number.isInteger(n)) throw new RangeError(`'${nameof(() => n)}' must be an integer`);
+  if (n <= 0)
+    throw new RangeError(`'${nameof(() => n)}' must be greater than zero`);
+  if (!Number.isInteger(n))
+    throw new RangeError(`'${nameof(() => n)}' must be an integer`);
 
-  if (str.length <= n) return str;
-  const subString = str.substr(0, n);
-  const lastPhraseEnd = subString.lastIndexOf('. ');
-  if (
-    lastPhraseEnd >= 0 &&
-    lastPhraseEnd >= n - MAX_LAST_PHRASE_DISTANCE_CHARS
-  ) {
-    return subString.substr(0, lastPhraseEnd + 1);
+  let res: { str: string; n: number };
+
+  if (str.length <= n) {
+    res = { str, n: str.length };
   } else {
-    const lastSpace = subString.lastIndexOf(' ');
-    if (lastSpace >= 0 && lastSpace < n - 3) {
-      return subString.substr(0, lastSpace) + '...';
+    const subString = str.substr(0, n);
+    const lastPhraseEnd = subString.lastIndexOf('. ');
+    if (
+      lastPhraseEnd >= 0 &&
+      lastPhraseEnd >= n - MAX_LAST_PHRASE_DISTANCE_CHARS
+    ) {
+      res = {
+        str: subString.substr(0, lastPhraseEnd + 1),
+        n: lastPhraseEnd + 1,
+      };
     } else {
-      return subString.substr(0, n - 3) + '...';
+      const lastSpace = subString.lastIndexOf(' ');
+      if (lastSpace >= 0 && lastSpace < n - 3) {
+        res = {
+          str: subString.substr(0, lastSpace) + '...',
+          n: lastSpace,
+        };
+      } else {
+        res = {
+          str: subString.substr(0, n - 3) + '...',
+          n: n - 3,
+        };
+      }
     }
   }
+
+  return res;
 }

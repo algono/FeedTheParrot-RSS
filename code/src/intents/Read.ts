@@ -13,7 +13,7 @@ import {
   feedSlotName,
   EXTRA_LONG_PAUSE,
   PAUSE_BETWEEN_ITEMS,
-  PAUSE_BETWEEN_FIELDS,
+  LONG_PAUSE,
 } from '../util/constants';
 import { Feed, FeedItem, getItems } from '../logic/Feed';
 
@@ -25,6 +25,7 @@ export interface ReadState {
   feed: Feed;
   feedItems: FeedItem[];
   currentIndex: number;
+  currentContentIndex?: number;
   speakQueue?: string;
 }
 
@@ -181,25 +182,62 @@ export const ReadContentIntentHandler: RequestHandler = {
     );
   },
   handle(handlerInput) {
-    const { attributesManager, responseBuilder } = handlerInput;
+    const { attributesManager, requestEnvelope, responseBuilder } = handlerInput;
+
+    const intentRequest = getRequest<IntentRequest>(requestEnvelope);
 
     const sessionAttributes = attributesManager.getSessionAttributes();
 
     const readState: ReadState = sessionAttributes.readState;
 
+    if (intentRequest.intent.confirmationStatus == 'DENIED') {
+      delete readState.currentContentIndex;
+      attributesManager.setSessionAttributes(sessionAttributes);
+      
+      return responseBuilder
+        .addDelegateDirective({
+          name: 'AMAZON.NextIntent',
+          confirmationStatus: 'CONFIRMED',
+        })
+        .getResponse();
+    }
+
     const item = readState.feedItems[readState.currentIndex];
 
     const { t } = attributesManager.getRequestAttributes();
 
+    const index = readState.currentContentIndex ?? 0;
+
+    const content = item.alexaReads.content;
+
+    // The card has to be shown in all cases
+    responseBuilder.withStandardCard(item.title, item.cardReads, item.imageUrl);
+
+    let speakOutputItem: string, confirmationMsg: string, nextIntentName: string;
+
+    // If it is any content item but the last one, prompt for continue reading the next
+    if (index >= 0 && index < content.length - 1) {
+      confirmationMsg = t('CONFIRMATION_CONTINUE_READING_FEED');
+      nextIntentName = 'AMAZON.YesIntent';
+
+      readState.currentContentIndex = index + 1;
+      speakOutputItem = content[index];
+    } else {
+      confirmationMsg = t('CONFIRMATION_GOTO_NEXT_FEED_ITEM');
+      nextIntentName = 'AMAZON.NextIntent';
+
+      delete readState.currentContentIndex;
+      speakOutputItem = (index == content.length - 1) ? content[index] : '';
+    }
+
+    if (speakOutputItem) speakOutputItem += LONG_PAUSE;
+
+    attributesManager.setSessionAttributes(sessionAttributes);
+
     return responseBuilder
-      .speak(
-        item.alexaReads.content +
-          PAUSE_BETWEEN_FIELDS +
-          t('CONFIRMATION_GOTO_NEXT_FEED_ITEM')
-      )
-      .withStandardCard(item.title, item.cardReads, item.imageUrl)
+      .speak(speakOutputItem + confirmationMsg)
       .addConfirmIntentDirective({
-        name: 'AMAZON.NextIntent',
+        name: nextIntentName,
         confirmationStatus: 'NONE',
       })
       .getResponse();
