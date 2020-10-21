@@ -5,10 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Alexa Skill (Node.js)",
+            "name": "Debug Alexa Skill",
             "type": "node",
             "request": "launch",
             "preLaunchTask": "npm: build - debug",
+            "program": "${command:ask.debugAdapterPath}",
+            "args": [
+                "--accessToken",
+                "${command:ask.accessToken}",
+                "--skillId",
+                "${command:ask.skillIdFromWorkspace}",
+                "--handlerName",
+                "handler",
+                "--skillEntryFile",
+                "${workspaceFolder}/lambda/index.js"
+            ],
+            "outFiles": ["${workspaceFolder}/lambda/**/*.js", "!${workspaceFolder}/lambda/node_modules/**/*"],
+            "smartStep": true
+        },
+        {
+            "name": "Debug Alexa Skill (no build)",
+            "type": "node",
+            "request": "launch",
             "program": "${command:ask.debugAdapterPath}",
             "args": [
                 "--accessToken",
