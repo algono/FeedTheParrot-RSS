@@ -132,6 +132,11 @@ export const ReadItemIntentHandler: RequestHandler = {
 
     const readState: ReadState = sessionAttributes.readState;
 
+    if (readState.currentContentIndex) {
+      delete readState.currentContentIndex;
+      attributesManager.setSessionAttributes(sessionAttributes);
+    }
+
     const index = readState.currentIndex;
 
     const items = readState.feedItems;
@@ -191,9 +196,6 @@ export const ReadContentIntentHandler: RequestHandler = {
     const readState: ReadState = sessionAttributes.readState;
 
     if (intentRequest.intent.confirmationStatus == 'DENIED') {
-      delete readState.currentContentIndex;
-      attributesManager.setSessionAttributes(sessionAttributes);
-      
       return responseBuilder
         .addDelegateDirective({
           name: 'AMAZON.NextIntent',
