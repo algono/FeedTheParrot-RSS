@@ -30,7 +30,7 @@ const languageStrings = {
         'Sorry, I am not able to continue reading. You can see the full text in the Alexa app.',
       FEED_NAME_FIELD: 'name-en',
       AUTH_PRE_CODE_MSG: 'The code is:',
-      AUTH_EXPLANATION_MSG: 'Use this code in the app to login.',
+      AUTH_EXPLANATION_MSG: 'Use this code in the feed the parrot app to login.',
     },
   },
   es: {
@@ -63,7 +63,7 @@ const languageStrings = {
       FEED_NAME_FIELD: 'name-es',
       AUTH_PRE_CODE_MSG: 'El código es el siguiente:',
       AUTH_EXPLANATION_MSG:
-        'Utiliza este código en la app para iniciar sesión.',
+        'Utiliza este código en la app de al loro para iniciar sesión.',
     },
   },
 };
