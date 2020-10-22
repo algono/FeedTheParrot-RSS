@@ -41,9 +41,9 @@ export async function mockHandlerInput({
 
   const mockedAttributesManager = mock<AttributesManager>();
 
-  const t = locale ? await init(locale) : null;
+  const t = locale ? await init(locale) : () => '';
 
-  if (locale && addTFunctionToRequestAttributes) {
+  if (addTFunctionToRequestAttributes) {
     requestAttributes.t = t;
   }
 

@@ -3,7 +3,7 @@ import * as localization from './util/localization';
 
 // Database init
 
-import { Database } from './database/Database';
+import Database from './database/Database';
 Database.init();
 
 // Intents

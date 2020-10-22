@@ -2,7 +2,7 @@ import * as firebaseAdmin from 'firebase-admin';
 import { Feed } from '../logic/Feed';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
-export namespace Database {
+namespace Database {
   /**
    * Initializes the Database.
    * Must be called once at application start.
@@ -16,7 +16,7 @@ export namespace Database {
     });
   }
 
-  const firestore = firebaseAdmin.firestore();
+  const firestore = () => firebaseAdmin.firestore();
 
   export interface AuthCode {
     uid: string;
@@ -27,7 +27,7 @@ export namespace Database {
   const AuthCodesCollectionName = 'auth-codes';
 
   export function addAuthCode(code: AuthCode) {
-    return firestore.collection(AuthCodesCollectionName).add(code);
+    return firestore().collection(AuthCodesCollectionName).add(code);
   }
 
   export interface UserData {
@@ -38,7 +38,7 @@ export namespace Database {
     userId: string,
     createIfNotFound: boolean = true
   ) {
-    const userDataQuery = await firestore
+    const userDataQuery = await firestore()
       .collection('users')
       .where('userId', '==', userId)
       .limit(1)
@@ -67,7 +67,7 @@ export namespace Database {
   }
 
   export function createNewUser(userData: UserData) {
-    return firestore.collection('users').add(userData);
+    return firestore().collection('users').add(userData);
   }
 
   export async function getFeedsFromUser(
@@ -101,3 +101,5 @@ export namespace Database {
     return { feeds, feedNames };
   }
 }
+
+export default Database;

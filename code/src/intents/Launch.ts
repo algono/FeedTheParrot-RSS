@@ -1,6 +1,6 @@
 import { RequestHandler, getRequestType, getUserId } from 'ask-sdk-core';
 import { dialog } from 'ask-sdk-model';
-import { Database } from '../database/Database';
+import Database from '../database/Database';
 
 import { Feed } from '../logic/Feed';
 

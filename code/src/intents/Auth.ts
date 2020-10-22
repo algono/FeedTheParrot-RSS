@@ -1,7 +1,7 @@
 import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
 
 import { randomBytes } from 'crypto';
-import { Database } from '../database/Database';
+import Database from '../database/Database';
 
 import { LONG_PAUSE } from '../util/constants';
 
