@@ -36,7 +36,7 @@ export namespace Database {
 
   export async function getUserData(
     userId: string,
-    createIfNotFound?: boolean
+    createIfNotFound: boolean = true
   ) {
     const userDataQuery = await firestore
       .collection('users')
