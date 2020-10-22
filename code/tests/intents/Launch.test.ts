@@ -1,9 +1,7 @@
 import { LaunchRequestHandler } from '../../src/intents/Launch';
 import { testCanHandle } from '../helpers/helperTests';
 
-jest.mock('firebase-admin', () => ({
-  firestore: () => null,
-}));
+jest.mock('../../src/database/Database', () => {});
 
 jest.mock('ask-sdk-core');
 testCanHandle({

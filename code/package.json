@@ -17,7 +17,7 @@
     "lint:check": "gts check",
     "lint:clean": "gts clean",
     "lint:fix": "gts fix",
-    "build-ci": "touch src/database/firebaseServiceAccountKey.json && npm run build-no-clean",
+    "build-ci": "echo \"{}\" > src/database/firebaseServiceAccountKey.json && npm run build-no-clean",
     "build-debug": "npm run clean && npm run compile && npm run build:final",
     "build-no-clean": "npm run test && npm run lint:check && npm run compile && npm run build:final && npm run build:install",
     "build": "npm run clean && npm run build-no-clean",
