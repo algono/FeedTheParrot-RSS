@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import striptags from 'striptags';
 import util from 'util';
 import { init } from '../util/localization';
-import { PAUSE_BETWEEN_FIELDS_CARD, MAX_CHARACTERS } from '../util/constants';
+import { MAX_CHARACTERS } from '../util/constants';
 import { nameof } from '../util/helpers';
 
 export interface GetItemsOptions {
@@ -31,7 +31,7 @@ export interface FeedItem {
   imageUrl?: string;
 
   alexaReads?: FeedItemAlexaReads;
-  cardReads?: string;
+  cardReads?: string[];
 
   index?: number;
 }
@@ -174,8 +174,6 @@ function processFeedItem(
     content: [],
   };
 
-  let cardReads = '';
-
   // If the fields to read content are specified, use them
   if (feed.readFields) {
     console.log('Fields specified. Using: ' + JSON.stringify(feed.readFields));
@@ -197,9 +195,6 @@ function processFeedItem(
       } else {
         alexaReads.content.push(text);
       }
-
-      cardReads += text;
-      cardReads += PAUSE_BETWEEN_FIELDS_CARD;
     });
   } else {
     console.log('No fields specified. Using summary/description by default');
@@ -213,9 +208,9 @@ function processFeedItem(
     } else {
       alexaReads.content = [summary];
     }
-
-    cardReads += summary;
   }
+
+  const cardReads = alexaReads.content;
 
   if (langFormatter) {
     alexaReads.title = util.format(langFormatter, alexaReads.title);

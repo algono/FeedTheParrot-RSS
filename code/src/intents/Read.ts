@@ -212,25 +212,27 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     const content = item.alexaReads.content;
 
-    // The card has to be shown in all cases
-    responseBuilder.withStandardCard(item.title, item.cardReads, item.imageUrl);
+    let speakOutputItem: string, cardOutputItem: string, confirmationMsg: string, nextIntentName: string;
 
-    let speakOutputItem: string, confirmationMsg: string, nextIntentName: string;
-
-    // If it is any content item but the last one, prompt for continue reading the next
-    if (index >= 0 && index < content.length - 1) {
-      confirmationMsg = t('CONFIRMATION_CONTINUE_READING_FEED');
-      nextIntentName = 'AMAZON.YesIntent';
-
-      readState.currentContentIndex = index + 1;
+    if (index >= 0 && index < content.length) {
       speakOutputItem = content[index];
-    } else {
-      confirmationMsg = t('CONFIRMATION_GOTO_NEXT_FEED_ITEM');
-      nextIntentName = 'AMAZON.NextIntent';
+      cardOutputItem = item.cardReads[index];
+      
+      // If it is any content item but the last one, prompt for continue reading the next
+      if (index < content.length - 1) {
+        confirmationMsg = t('CONFIRMATION_CONTINUE_READING_FEED');
+        nextIntentName = 'AMAZON.YesIntent';
 
-      delete readState.currentContentIndex;
-      speakOutputItem = (index == content.length - 1) ? content[index] : '';
+        readState.currentContentIndex = index + 1;
+      }
+    } else {
+      speakOutputItem = '';
+      cardOutputItem = '';
     }
+
+    // If there are no other items to continue to, go to the next item
+    if (!confirmationMsg) confirmationMsg = t('CONFIRMATION_GOTO_NEXT_FEED_ITEM');
+    if (!nextIntentName) nextIntentName = 'AMAZON.NextIntent';
 
     if (speakOutputItem) speakOutputItem += LONG_PAUSE;
 
@@ -238,6 +240,7 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     return responseBuilder
       .speak(speakOutputItem + confirmationMsg)
+      .withStandardCard(item.title, cardOutputItem, item.imageUrl)
       .addConfirmIntentDirective({
         name: nextIntentName,
         confirmationStatus: 'NONE',
