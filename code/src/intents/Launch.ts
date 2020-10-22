@@ -4,6 +4,12 @@ import Database from '../database/Database';
 
 import { Feed } from '../logic/Feed';
 
+export interface LaunchSessionAttributes {
+  feeds ?: { [x: string]: Feed },
+  feedNames?: string[],
+  userIdDB?: string,
+}
+
 export const LaunchRequestHandler: RequestHandler = {
   canHandle(handlerInput) {
     return getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
@@ -15,7 +21,7 @@ export const LaunchRequestHandler: RequestHandler = {
 
     const speakOutput: string = t('WELCOME_MSG');
 
-    const sessionAttributes = attributesManager.getSessionAttributes() || {};
+    const sessionAttributes: LaunchSessionAttributes = attributesManager.getSessionAttributes() || {};
 
     console.log(
       '(LaunchRequest) Session Attributes: ' + JSON.stringify(sessionAttributes)
