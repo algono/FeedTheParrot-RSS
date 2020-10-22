@@ -12,7 +12,11 @@ async function testSaveResponseForRepeatingInterceptor(
   outputSpeech: ui.OutputSpeech
 ) {
   const sessionAttributes: { lastResponse?: string } = {};
-  const mocks = await mockHandlerInput({ sessionAttributes, outputSpeech });
+  const mocks = await mockHandlerInput({
+    sessionAttributes,
+    outputSpeech,
+    mockResponse: true,
+  });
 
   SaveResponseForRepeatingInterceptor.process(mocks.instanceHandlerInput);
 

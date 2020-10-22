@@ -8,12 +8,12 @@ export interface HandlerInputMocks {
   mockedHandlerInput: HandlerInput;
   mockedAttributesManager: AttributesManager;
   mockedResponseBuilder: ResponseBuilder;
-  mockedResponse: Response;
+  mockedResponse?: Response;
 
   instanceHandlerInput: HandlerInput;
   instanceAttributesManager: AttributesManager;
   instanceResponseBuilder: ResponseBuilder;
-  instanceResponse: Response;
+  instanceResponse?: Response;
 
   t: TFunction;
 }
@@ -28,14 +28,22 @@ export interface MockHandlerInputOptions {
   };
   outputSpeech?: ui.OutputSpeech;
   addTFunctionToRequestAttributes?: boolean;
+  mockResponse?: boolean;
 }
 
+/**
+ * 
+ * @param mockResponse (boolean) (optional) Whether or not we want to mock the response from 'getResponse()'.
+ * WARNING: If using async method, this should ONLY be true when NOT returning a response
+ * (if you absolutely must, then never use 'await' on it. Use 'then(...)' instead.)
+ */
 export async function mockHandlerInput({
   locale,
   sessionAttributes = {},
   requestAttributes = {},
   outputSpeech,
   addTFunctionToRequestAttributes = true,
+  mockResponse,
 }: MockHandlerInputOptions = {}): Promise<HandlerInputMocks> {
   const mockedHandlerInput = mock<HandlerInput>();
 
@@ -84,13 +92,21 @@ export async function mockHandlerInput({
     instance(mockedResponseBuilder)
   );
 
-  const mockedResponse = mock<Response>();
+  let mockedResponse: Response, instanceResponse: Response;
+  if (mockResponse) {
+    mockedResponse = mock<Response>();
 
-  when(mockedResponse.outputSpeech).thenReturn(outputSpeech);
+    when(mockedResponse.outputSpeech).thenReturn(outputSpeech);
 
-  const instanceResponse = instance(mockedResponse);
+    instanceResponse = instance(mockedResponse);
 
-  when(mockedResponseBuilder.getResponse()).thenReturn(instanceResponse);
+    // WATCH OUT WITH THIS ONE:
+    // Awaiting a mock instance (which is a proxy) leads to an infinite loop
+    // For this reason this is optional, and we should only use it (if using async method) when not returning a response
+    // (if you absolutely must, then never use 'await' on it. Use 'then(...)' instead.)
+    // More details here: https://stackoverflow.com/questions/48338721/await-for-proxy-leads-to-get-of-then-property-what-should-i-return
+    when(mockedResponseBuilder.getResponse()).thenReturn(instanceResponse);
+  }
 
   const instanceResponseBuilder = instance(mockedResponseBuilder);
 
