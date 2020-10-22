@@ -1,10 +1,8 @@
 import { RequestHandler, getRequestType, getUserId } from 'ask-sdk-core';
 import { dialog } from 'ask-sdk-model';
+import { Database } from '../database/Database';
 
-import * as firebaseAdmin from 'firebase-admin';
 import { Feed } from '../logic/Feed';
-
-const DB = firebaseAdmin.firestore();
 
 export const LaunchRequestHandler: RequestHandler = {
   canHandle(handlerInput) {
@@ -29,26 +27,8 @@ export const LaunchRequestHandler: RequestHandler = {
 
       const userId = getUserId(handlerInput.requestEnvelope);
 
-      const userDataQuery = await DB.collection('users')
-        .where('userId', '==', userId)
-        .limit(1)
-        .get();
+      const {userDataRef} = await Database.getUserData(userId);
 
-      let userData: FirebaseFirestore.DocumentData,
-        userDataRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>;
-
-      if (userDataQuery.empty) {
-        console.log('(LaunchRequest) No user data. Creating new user');
-        // No user data. Create user data in database
-        userData = { userId: userId };
-        userDataRef = await DB.collection('users').add(userData);
-      } else {
-        console.log('(LaunchRequest) Existing user. Retrieving user data');
-        // Get user data from query
-        const userDataDoc = userDataQuery.docs[0];
-        userDataRef = userDataDoc.ref;
-        //userData = userDataDoc.data(); // TODO: If other data from the user is needed, uncomment this line
-      }
       // Get ID from database and store it in session attributes
       const userIdDB = userDataRef.id;
       sessionAttributes.userIdDB = userIdDB;
@@ -56,27 +36,10 @@ export const LaunchRequestHandler: RequestHandler = {
       console.log('(LaunchRequest) User ID: ' + userIdDB);
 
       const nameField: string = t('FEED_NAME_FIELD');
-      const feedNameSnapshots = await userDataRef
-        .collection('feeds')
-        .orderBy(nameField) // This filters out documents without the field
-        .get();
+      const feedsAndFeedNames = await Database.getFeedsFromUser(userDataRef, nameField);
 
-      feeds = {};
-      feedNames = [];
-
-      feedNameSnapshots.forEach((snapshot) => {
-        const data = snapshot.data();
-
-        const name: string = data[nameField];
-
-        const feed: Feed = Object.assign<Feed, FirebaseFirestore.DocumentData>(
-          new Feed(name, data.url, data.language),
-          data
-        );
-
-        feedNames.push(name);
-        feeds[name] = feed;
-      });
+      feeds = feedsAndFeedNames.feeds;
+      feedNames = feedsAndFeedNames.feedNames;
 
       sessionAttributes.feeds = feeds;
       sessionAttributes.feedNames = feedNames;

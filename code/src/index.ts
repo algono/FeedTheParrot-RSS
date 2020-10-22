@@ -3,15 +3,8 @@ import * as localization from './util/localization';
 
 // Database init
 
-import * as firebaseAdmin from 'firebase-admin';
-import * as firebaseCredentials from './firebaseServiceAccountKey.json';
-
-firebaseAdmin.initializeApp({
-  credential: firebaseAdmin.credential.cert(
-    firebaseCredentials as firebaseAdmin.ServiceAccount
-  ),
-  databaseURL: 'https://feedtheparrot-rss.firebaseio.com',
-});
+import { Database } from './database/Database';
+Database.init();
 
 // Intents
 

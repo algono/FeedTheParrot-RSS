@@ -1,11 +1,9 @@
 import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
 
 import { randomBytes } from 'crypto';
+import { Database } from '../database/Database';
 
-import * as firebaseAdmin from 'firebase-admin';
 import { LONG_PAUSE } from '../util/constants';
-
-const DB = firebaseAdmin.firestore();
 
 export const AuthIntentHandler: RequestHandler = {
   canHandle(handlerInput) {
@@ -24,7 +22,7 @@ export const AuthIntentHandler: RequestHandler = {
 
     const TIME_TO_EXPIRE = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-    await DB.collection('auth-codes').add({
+    await Database.addAuthCode({
       uid: sessionAttributes.userIdDB,
       code: code,
       expirationDate: new Date(Date.now() + TIME_TO_EXPIRE),
