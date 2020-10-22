@@ -190,7 +190,7 @@ function processFeedItem(
           `Field "${field.name}" truncated at ${truncateAt} characters`
         );
         truncatedText = truncateAll(text, truncateAt);
-        alexaReads.content.concat(truncatedText);
+        alexaReads.content.push(...truncatedText);
       } else {
         alexaReads.content.push(text);
       }
