@@ -40,6 +40,20 @@
             ],
             "outFiles": ["${workspaceFolder}/lambda/**/*.js", "!${workspaceFolder}/lambda/node_modules/**/*"],
             "smartStep": true
+        },
+        {
+            "name": "Debug Jest Tests",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/code",
+            "runtimeArgs": [
+                "--inspect-brk",
+                "${workspaceFolder}/code/node_modules/.bin/jest",
+                "--runInBand"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "port": 9229
         }
     ]
 }
