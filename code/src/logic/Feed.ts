@@ -5,7 +5,6 @@ import striptags from 'striptags';
 import util from 'util';
 import { init } from '../util/localization';
 import { MAX_CHARACTERS } from '../util/constants';
-import { nameof } from '../util/helpers';
 
 export interface GetItemsOptions {
   forceUpdate?: boolean;
@@ -239,7 +238,7 @@ function truncateAll(str: string, n: number) {
   while (remaining) {
     const current = truncate(remaining, n);
     res.push(current.str);
-    remaining = remaining.substring(current.n);
+    remaining = remaining.substring(current.len);
   }
 
   return res;
@@ -249,42 +248,42 @@ function truncateAll(str: string, n: number) {
  * It truncates the string to the last phrase in order to not surpass n characters total.
  *
  * @param {string} str The original string
- * @param {number} n The max number of characters (must be a positive integer)
+ * @param {number} len The max number of characters (must be a positive integer)
  */
-function truncate(str: string, n: number) {
-  // Check that 'n' is a valid parameter
-  if (n <= 0)
-    throw new RangeError(`'${nameof(() => n)}' must be greater than zero`);
-  if (!Number.isInteger(n))
-    throw new RangeError(`'${nameof(() => n)}' must be an integer`);
+function truncate(str: string, len: number) {
+  // Check that the length is valid
+  if (len <= 0)
+    throw new RangeError('The truncate length must be greater than zero');
+  if (!Number.isInteger(len))
+    throw new RangeError('The truncate length must be an integer');
 
-  let res: { str: string; n: number };
+  let res: { str: string; len: number };
 
-  if (str.length <= n) {
-    res = { str, n: str.length };
+  if (str.length <= len) {
+    res = { str, len: str.length };
   } else {
-    let subString = str.substr(0, n);
+    let subString = str.substr(0, len);
     const lastPhraseEnd = subString.lastIndexOf('. ');
     if (
       lastPhraseEnd >= 0 &&
-      lastPhraseEnd >= n - MAX_LAST_PHRASE_DISTANCE_CHARS
+      lastPhraseEnd >= len - MAX_LAST_PHRASE_DISTANCE_CHARS
     ) {
       res = {
         str: subString.substr(0, lastPhraseEnd + 1),
-        n: lastPhraseEnd + 1,
+        len: lastPhraseEnd + 1,
       };
     } else {
-      subString = subString.substr(0, n - 2);
+      subString = subString.substr(0, len - 2);
       const lastSpace = subString.lastIndexOf(' ');
       if (lastSpace >= 0) {
         res = {
           str: subString.substr(0, lastSpace) + '...',
-          n: lastSpace,
+          len: lastSpace,
         };
       } else {
         res = {
-          str: subString.substr(0, n - 3) + '...',
-          n: n - 3,
+          str: subString.substr(0, len - 3) + '...',
+          len: len - 3,
         };
       }
     }
