@@ -39,8 +39,8 @@ export interface MockHandlerInputOptions {
  */
 export async function mockHandlerInput({
   locale,
-  sessionAttributes = {},
-  requestAttributes = {},
+  sessionAttributes,
+  requestAttributes,
   outputSpeech,
   addTFunctionToRequestAttributes = true,
   mockResponse,
@@ -52,7 +52,8 @@ export async function mockHandlerInput({
   const t = locale ? await init(locale) : () => '';
 
   if (addTFunctionToRequestAttributes) {
-    requestAttributes.t = t;
+    if (requestAttributes) requestAttributes.t = t;
+    else requestAttributes = { t };
   }
 
   when(mockedAttributesManager.getRequestAttributes()).thenReturn(

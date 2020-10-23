@@ -5,9 +5,9 @@ import Database from '../database/Database';
 import { Feed } from '../logic/Feed';
 
 export interface LaunchSessionAttributes {
-  feeds ?: { [x: string]: Feed },
-  feedNames?: string[],
-  userIdDB?: string,
+  feeds?: { [x: string]: Feed };
+  feedNames?: string[];
+  userIdDB?: string;
 }
 
 export const LaunchRequestHandler: RequestHandler = {
@@ -21,19 +21,20 @@ export const LaunchRequestHandler: RequestHandler = {
 
     const speakOutput: string = t('WELCOME_MSG');
 
-    const sessionAttributes: LaunchSessionAttributes = attributesManager.getSessionAttributes() || {};
+    const sessionAttributes: LaunchSessionAttributes =
+      attributesManager.getSessionAttributes() || {};
 
     console.log(
       '(LaunchRequest) Session Attributes: ' + JSON.stringify(sessionAttributes)
     );
 
-    let feeds: { [x: string]: Feed }, feedNames: string[];
+    let feedNames: string[];
     if (!(sessionAttributes.feeds && sessionAttributes.feedNames)) {
       console.log('(LaunchRequest) Retrieving feeds data from database');
 
       const userId = getUserId(handlerInput.requestEnvelope);
 
-      const {userDataRef} = await Database.getUserData(userId);
+      const { userDataRef } = await Database.getUserData(userId);
 
       // Get ID from database and store it in session attributes
       const userIdDB = userDataRef.id;
@@ -42,9 +43,12 @@ export const LaunchRequestHandler: RequestHandler = {
       console.log('(LaunchRequest) User ID: ' + userIdDB);
 
       const nameField: string = t('FEED_NAME_FIELD');
-      const feedsAndFeedNames = await Database.getFeedsFromUser(userDataRef, nameField);
+      const feedsAndFeedNames = await Database.getFeedsFromUser(
+        userDataRef,
+        nameField
+      );
 
-      feeds = feedsAndFeedNames.feeds;
+      const feeds = feedsAndFeedNames.feeds;
       feedNames = feedsAndFeedNames.feedNames;
 
       sessionAttributes.feeds = feeds;
@@ -55,21 +59,17 @@ export const LaunchRequestHandler: RequestHandler = {
       console.log(
         '(LaunchRequest) Feeds data was already in session attributes'
       );
-      feeds = sessionAttributes.feeds;
       feedNames = sessionAttributes.feedNames;
     }
 
     console.log('(LaunchRequest) Feed names: ' + JSON.stringify(feedNames));
-    console.log('(LaunchRequest) Feeds (data): ' + JSON.stringify(feeds));
 
     // Use the map function to have the names in the correct format (as slot values)
-    const feedNamesAsSlotValues = feedNames.map((value) => {
-      return {
-        name: {
-          value: value,
-        },
-      };
-    });
+    const feedNamesAsSlotValues = feedNames.map((value) => ({
+      name: {
+        value: value,
+      },
+    }));
 
     console.log(
       '(LaunchRequest) Feed names (as slot values): ' +
