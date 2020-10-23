@@ -5,15 +5,15 @@ import {
 import { testCanHandle } from '../helpers/helperTests';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { mocked } from 'ts-jest/utils';
-import { capture, instance, mock, when } from 'ts-mockito';
+import { anyString, anything, capture, instance, mock, when } from 'ts-mockito';
 
-jest.mock('../../src/database/Database');
-import Database from '../../src/database/Database';
+import { UserData } from '../../src/database/Database';
 
 jest.mock('ask-sdk-core');
 import { getUserId } from 'ask-sdk-core';
 import { dialog, Directive } from 'ask-sdk-model';
 import fc from 'fast-check';
+import { mockDatabase } from '../helpers/mockDatabase';
 
 testCanHandle({
   handler: LaunchRequestHandler,
@@ -28,7 +28,7 @@ test('Launch intent saves userId from database in session attributes', async () 
 
       mocked(getUserId).mockReturnValue(userId);
 
-      const mockUserData = mock<Database.UserData>();
+      const mockUserData = mock<UserData>();
       when(mockUserData.userId).thenReturn(userId);
 
       const mockUserDataRef = mock<
@@ -37,18 +37,21 @@ test('Launch intent saves userId from database in session attributes', async () 
 
       when(mockUserDataRef.id).thenReturn(refId);
 
-      mocked(Database.getUserData).mockResolvedValue({
+      const mockedDatabase = mockDatabase();
+
+      when(mockedDatabase.getUserData(anyString())).thenResolve({
         userData: instance(mockUserData),
         userDataRef: instance(mockUserDataRef),
       });
 
-      mocked(Database.getFeedsFromUser).mockResolvedValue({
+      when(
+        mockedDatabase.getFeedsFromUser(anything(), anyString())
+      ).thenResolve({
         feeds: {},
         feedNames: [],
       });
 
       await LaunchRequestHandler.handle(mocks.instanceHandlerInput);
-
 
       // We could have also passed a sessionAttributes object before and used it,
       // but this way we also check that it still works when there are no session attributes at first

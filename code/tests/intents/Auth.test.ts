@@ -1,11 +1,9 @@
-import { mocked } from 'ts-jest/utils';
 import { AuthIntentHandler } from '../../src/intents/Auth';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { testIntentCanHandle } from '../helpers/helperTests';
 
-jest.mock('../../src/database/Database');
-
-import Database from '../../src/database/Database';
+import { capture } from 'ts-mockito';
+import { mockDatabase } from '../helpers/mockDatabase';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle({
@@ -17,12 +15,11 @@ test('Auth intent generates a 6 digit code', async () => {
   const sessionAttributes = {};
   const mocks = await mockHandlerInput({ sessionAttributes });
 
-  const mockAddAuthCode = mocked(Database.addAuthCode);
+  const mockedDatabase = mockDatabase();
 
   AuthIntentHandler.handle(mocks.instanceHandlerInput);
 
-  const authCode =
-    mockAddAuthCode.mock.calls[mockAddAuthCode.mock.calls.length - 1][0];
+  const [authCode] = capture(mockedDatabase.addAuthCode).last();
 
   expect(authCode.code).toMatch(/[0-9]{6}/);
 });

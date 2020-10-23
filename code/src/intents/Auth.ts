@@ -1,7 +1,7 @@
 import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
 
 import { randomBytes } from 'crypto';
-import Database from '../database/Database';
+import { Database } from '../database/Database';
 
 import { LONG_PAUSE } from '../util/constants';
 
@@ -22,7 +22,7 @@ export const AuthIntentHandler: RequestHandler = {
 
     const TIME_TO_EXPIRE = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-    await Database.addAuthCode({
+    await Database.instance.addAuthCode({
       uid: sessionAttributes.userIdDB,
       code: code,
       expirationDate: new Date(Date.now() + TIME_TO_EXPIRE),

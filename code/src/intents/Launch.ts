@@ -1,6 +1,6 @@
 import { RequestHandler, getRequestType, getUserId } from 'ask-sdk-core';
 import { dialog } from 'ask-sdk-model';
-import Database from '../database/Database';
+import { Database } from '../database/Database';
 
 import { Feed } from '../logic/Feed';
 
@@ -34,7 +34,7 @@ export const LaunchRequestHandler: RequestHandler = {
 
       const userId = getUserId(handlerInput.requestEnvelope);
 
-      const { userDataRef } = await Database.getUserData(userId);
+      const { userDataRef } = await Database.instance.getUserData(userId);
 
       // Get ID from database and store it in session attributes
       const userIdDB = userDataRef.id;
@@ -43,7 +43,7 @@ export const LaunchRequestHandler: RequestHandler = {
       console.log('(LaunchRequest) User ID: ' + userIdDB);
 
       const nameField: string = t('FEED_NAME_FIELD');
-      const feedsAndFeedNames = await Database.getFeedsFromUser(
+      const feedsAndFeedNames = await Database.instance.getFeedsFromUser(
         userDataRef,
         nameField
       );

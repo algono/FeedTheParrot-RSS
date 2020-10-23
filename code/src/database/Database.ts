@@ -2,12 +2,37 @@ import * as firebaseAdmin from 'firebase-admin';
 import { Feed } from '../logic/Feed';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
-namespace Database {
+const AuthCodesCollectionName = 'auth-codes';
+
+export interface AuthCode {
+  uid: string;
+  code: string;
+  expirationDate: Date;
+}
+
+export interface UserData {
+  userId: string;
+}
+
+export class Database {
+  private static _instance: Database;
+
+  private readonly _firestore: FirebaseFirestore.Firestore;
+
+  private constructor() {
+    Database.init();
+    this._firestore = firebaseAdmin.firestore();
+  }
+
+  public static get instance() {
+    return this._instance || (this._instance = new this());
+  }
+
   /**
    * Initializes the Database.
-   * Must be called once at application start.
+   * Must be called before using any database methods.
    */
-  export function init() {
+  private static init() {
     return firebaseAdmin.initializeApp({
       credential: firebaseAdmin.credential.cert(
         firebaseCredentials as firebaseAdmin.ServiceAccount
@@ -16,29 +41,14 @@ namespace Database {
     });
   }
 
-  const firestore = () => firebaseAdmin.firestore();
-
-  export interface AuthCode {
-    uid: string;
-    code: string;
-    expirationDate: Date;
+  public addAuthCode(code: AuthCode) {
+    return this._firestore
+      .collection(AuthCodesCollectionName)
+      .add(code);
   }
 
-  const AuthCodesCollectionName = 'auth-codes';
-
-  export function addAuthCode(code: AuthCode) {
-    return firestore().collection(AuthCodesCollectionName).add(code);
-  }
-
-  export interface UserData {
-    userId: string;
-  }
-
-  export async function getUserData(
-    userId: string,
-    createIfNotFound: boolean = true
-  ) {
-    const userDataQuery = await firestore()
+  public async getUserData(userId: string, createIfNotFound: boolean = true) {
+    const userDataQuery = await this._firestore
       .collection('users')
       .where('userId', '==', userId)
       .limit(1)
@@ -51,7 +61,7 @@ namespace Database {
       if (createIfNotFound) {
         userData = { userId: userId };
         console.log('(Database) No user data. Creating new user');
-        userDataRef = await createNewUser(userData);
+        userDataRef = await this.createNewUser(userData);
       } else {
         return null;
       }
@@ -66,11 +76,11 @@ namespace Database {
     return { userData, userDataRef };
   }
 
-  export function createNewUser(userData: UserData) {
-    return firestore().collection('users').add(userData);
+  public createNewUser(userData: UserData) {
+    return this._firestore.collection('users').add(userData);
   }
 
-  export async function getFeedsFromUser(
+  public async getFeedsFromUser(
     userDataRef: FirebaseFirestore.DocumentReference<
       FirebaseFirestore.DocumentData
     >,
@@ -101,5 +111,3 @@ namespace Database {
     return { feeds, feedNames };
   }
 }
-
-export default Database;

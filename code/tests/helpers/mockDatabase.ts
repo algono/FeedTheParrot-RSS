@@ -1,10 +1,10 @@
-import { Database } from '../../src/database/Database';
 import { instance, mock } from 'ts-mockito';
+import { Database } from '../../src/database/Database';
 
 export function mockDatabase() {
-  const mockDatabase = mock(Database);
+  const mockedDatabase = mock(Database);
   jest
     .spyOn(Database, 'instance', 'get')
-    .mockImplementation(() => instance(mockDatabase));
-  return mockDatabase;
+    .mockImplementation(() => instance(mockedDatabase));
+  return mockedDatabase;
 }

@@ -1,11 +1,6 @@
 import { ErrorHandler, SkillBuilders } from 'ask-sdk-core';
 import * as localization from './util/localization';
 
-// Database init
-
-import Database from './database/Database';
-Database.init();
-
 // Intents
 
 import { LaunchRequestHandler } from './intents/Launch';
@@ -58,7 +53,7 @@ const GenericErrorHandler: ErrorHandler = {
 // The SkillBuilder acts as the entry point for your skill, routing all request and response
 // payloads to the handlers above. Make sure any new handlers or interceptors you've
 // defined are included below. The order matters - they're processed top to bottom.
-exports.handler = SkillBuilders.custom()
+export const handler = SkillBuilders.custom()
   .addRequestHandlers(
     LaunchRequestHandler,
     CancelAndStopIntentHandler,
