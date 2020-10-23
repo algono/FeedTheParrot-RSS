@@ -1,5 +1,5 @@
-import { ErrorHandler, SkillBuilders } from 'ask-sdk-core';
-import * as localization from './util/localization';
+import { SkillBuilders } from 'ask-sdk-core';
+import { localizationRequestInterceptor } from './util/localization';
 
 // Intents
 
@@ -23,32 +23,7 @@ import {
   RepeatIntentHandler,
   SaveResponseForRepeatingInterceptor,
 } from './intents/Repeat';
-
-// Generic error handling to capture any syntax or routing errors. If you receive an error
-// stating the request handler chain is not found, you have not implemented a handler for
-// the intent being invoked or included it in the skill builder below.
-const GenericErrorHandler: ErrorHandler = {
-  canHandle() {
-    return true;
-  },
-  handle(handlerInput, error) {
-    console.log(`~~~~ Error handled: ${error.stack}`);
-
-    // It turns out that the error handler doesn't call the localization interceptor
-    // And the ReadIntent may change the localization language
-    // So we have to call it again manually to ensure that the language is correctly set
-    localization.localizationRequestInterceptor.process(handlerInput);
-
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-
-    const speakOutput: string = requestAttributes.t('ERROR_MSG');
-
-    return handlerInput.responseBuilder
-      .speak(speakOutput)
-      .reprompt(speakOutput)
-      .getResponse();
-  },
-};
+import { GenericErrorHandler } from './intents/Error';
 
 // The SkillBuilder acts as the entry point for your skill, routing all request and response
 // payloads to the handlers above. Make sure any new handlers or interceptors you've
@@ -69,7 +44,7 @@ export const handler = SkillBuilders.custom()
     RepeatIntentHandler, // make sure RepeatIntentHandler is after ReadItemIntentHandler so it doesn't override its repeating functionality
     IntentReflectorHandler // make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
   )
-  .addRequestInterceptors(localization.localizationRequestInterceptor)
+  .addRequestInterceptors(localizationRequestInterceptor)
   .addResponseInterceptors(SaveResponseForRepeatingInterceptor)
   .addErrorHandlers(GenericErrorHandler)
   .lambda();
