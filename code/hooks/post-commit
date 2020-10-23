@@ -18,7 +18,7 @@ if [ "$current_branch" = "$DEPLOY_BRANCH" ]; then
 
 	commit_msg="$(git log -1 --pretty=%B)"
 
-	git stash # Stash changes not added to the commit
+	git stash --include-untracked # Stash changes not added to the commit
 
 	git checkout "$CODE_BRANCH"
 
