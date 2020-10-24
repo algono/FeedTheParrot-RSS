@@ -8,13 +8,13 @@ export const GenericErrorHandler: ErrorHandler = {
   canHandle() {
     return true;
   },
-  handle(handlerInput, error) {
+  async handle(handlerInput, error) {
     console.log(`~~~~ Error handled: ${error.stack}`);
 
     // It turns out that the error handler doesn't call the localization interceptor
     // And the ReadIntent may change the localization language
     // So we have to call it again manually to ensure that the language is correctly set
-    localizationRequestInterceptor.process(handlerInput);
+    await localizationRequestInterceptor.process(handlerInput);
 
     const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
 

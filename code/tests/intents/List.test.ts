@@ -7,13 +7,8 @@ import * as fc from 'fast-check';
 jest.mock('ask-sdk-core');
 testIntentCanHandle({ handler: ListIntentHandler, intentName: 'ListIntent' });
 
-let logSpy: jest.SpyInstance;
-
-// Silence console.log for all tests in this suite
-beforeAll(() => (logSpy = jest.spyOn(console, 'log').mockImplementation()));
-
 testInAllLocales(
-  'List intent shows custom message when feeds list is empty',
+  'List intent speaks and shows card with custom message when feeds list is empty',
   async (locale) => {
     const mocks = await mockHandlerInput({
       locale,
@@ -82,6 +77,3 @@ testInAllLocales('List intent shows all feeds', async (locale) => {
     )
   );
 });
-
-// Restore the original console.log
-afterAll(() => logSpy.mockRestore());

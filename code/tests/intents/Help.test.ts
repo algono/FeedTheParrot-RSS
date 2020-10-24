@@ -9,7 +9,7 @@ testIntentCanHandle({
   intentName: 'AMAZON.HelpIntent',
 });
 
-testInAllLocales('Help intent shows help message', async (locale) => {
+testInAllLocales('Help intent speaks help message', async (locale) => {
   const mocks = await mockHandlerInput({ locale });
 
   HelpIntentHandler.handle(mocks.instanceHandlerInput);
