@@ -18,7 +18,7 @@
 		},
 		{
 			"type": "npm",
-			"script": "build-debug",
+			"script": "build:debug",
 			"path": "code/",
 			"group": "build",
 			"problemMatcher": ["$tsc"],
