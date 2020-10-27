@@ -15,7 +15,6 @@ async function testSaveResponseForRepeatingInterceptor(
   const mocks = await mockHandlerInput({
     sessionAttributes,
     outputSpeech,
-    mockResponse: true,
   });
 
   SaveResponseForRepeatingInterceptor.process(mocks.instanceHandlerInput);

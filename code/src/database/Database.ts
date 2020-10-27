@@ -4,7 +4,7 @@ import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
 export const collectionNames = {
   authCodes: 'auth-codes',
-  users: 'users'
+  users: 'users',
 };
 
 export interface AuthCode {
@@ -45,12 +45,10 @@ export class Database {
   }
 
   public addAuthCode(code: AuthCode) {
-    return this._firestore
-      .collection(collectionNames.authCodes)
-      .add(code);
+    return this._firestore.collection(collectionNames.authCodes).add(code);
   }
 
-  public async getUserData(userId: string, createIfNotFound: boolean = true) {
+  public async getUserData(userId: string) {
     const userDataQuery = await this._firestore
       .collection('users')
       .where('userId', '==', userId)
@@ -61,13 +59,9 @@ export class Database {
       userDataRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>;
 
     if (userDataQuery.empty) {
-      if (createIfNotFound) {
-        userData = { userId: userId };
-        console.log('(Database) No user data. Creating new user');
-        userDataRef = await this.createNewUser(userData);
-      } else {
-        return null;
-      }
+      userData = { userId: userId };
+      console.log('(Database) No user data. Creating new user');
+      userDataRef = await this.createNewUser(userData);
     } else {
       console.log('(Database) Existing user. Retrieving user data');
       // Get user data from query
