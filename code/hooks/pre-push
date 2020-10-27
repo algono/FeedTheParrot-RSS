@@ -23,7 +23,7 @@
 remote=$1
 
 DEPLOY_BRANCH="master"
-CODE_BRANCH="code"
+CODE_BRANCH="codebase"
 
 CODE_REMOTE="github"
 
