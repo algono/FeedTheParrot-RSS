@@ -2,7 +2,10 @@ import * as firebaseAdmin from 'firebase-admin';
 import { Feed } from '../logic/Feed';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
-const AuthCodesCollectionName = 'auth-codes';
+export const collectionNames = {
+  authCodes: 'auth-codes',
+  users: 'users'
+};
 
 export interface AuthCode {
   uid: string;
@@ -43,7 +46,7 @@ export class Database {
 
   public addAuthCode(code: AuthCode) {
     return this._firestore
-      .collection(AuthCodesCollectionName)
+      .collection(collectionNames.authCodes)
       .add(code);
   }
 
@@ -77,7 +80,7 @@ export class Database {
   }
 
   public createNewUser(userData: UserData) {
-    return this._firestore.collection('users').add(userData);
+    return this._firestore.collection(collectionNames.users).add(userData);
   }
 
   public async getFeedsFromUser(
