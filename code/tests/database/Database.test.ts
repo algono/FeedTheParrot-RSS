@@ -16,6 +16,8 @@ import {
   Database,
   UserData,
 } from '../../src/database/Database';
+import { Feed, ItemField } from '../../src/logic/Feed';
+import { allTranslationsFrom } from '../helpers/allTranslationsFrom';
 import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
 
 jest.mock('firebase-admin', () => ({
@@ -48,22 +50,52 @@ function mockCollection() {
 
   when(collectionMock.add(anything())).thenResolve(null);
 
+  return collectionMock;
+}
+
+function mockCollectionFirestore() {
+  const collectionMock = mockCollection();
+
   const firestoreMock = mock<FirebaseFirestore.Firestore>();
 
   when(firestoreMock.collection(anyString())).thenCall(() =>
-    instance(collectionMock)
+    resolvableInstance(collectionMock)
   );
 
   mocked(firestore).mockImplementation(() => instance(firestoreMock));
   return { firestoreMock, collectionMock };
 }
 
-function mockQuery({ empty }: { empty: boolean }) {
-  const queryMock = mock<
-    FirebaseFirestore.Query<FirebaseFirestore.DocumentData>
+function mockCollectionFromRef() {
+  const collectionMock = mockCollection();
+
+  const refMock = mock<
+    FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
   >();
 
-  when(queryMock.limit(anyNumber())).thenCall(() => instance(queryMock));
+  when(refMock.collection(anyString())).thenCall(() =>
+    resolvableInstance(collectionMock)
+  );
+
+  return { refMock, collectionMock };
+}
+
+function mockQuery({
+  empty,
+  collectionMock,
+}: {
+  empty: boolean;
+  collectionMock: FirebaseFirestore.CollectionReference<
+    FirebaseFirestore.DocumentData
+  >;
+}) {
+  when(collectionMock.limit(anyNumber())).thenCall(() =>
+    resolvableInstance(collectionMock)
+  );
+
+  when(collectionMock.orderBy(anyString())).thenCall(() =>
+    resolvableInstance(collectionMock)
+  );
 
   const querySnapshotMock = mock<
     FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>
@@ -71,17 +103,15 @@ function mockQuery({ empty }: { empty: boolean }) {
 
   when(querySnapshotMock.empty).thenReturn(empty);
 
-  when(queryMock.get()).thenCall(() =>
+  when(collectionMock.get()).thenCall(() =>
     Promise.resolve(resolvableInstance(querySnapshotMock))
   );
 
-  const { firestoreMock, collectionMock } = mockCollection();
-
   when(collectionMock.where(anything(), anything(), anything())).thenCall(() =>
-    instance(queryMock)
+    instance(collectionMock)
   );
 
-  return { firestoreMock, collectionMock, queryMock, querySnapshotMock };
+  return { queryMock: collectionMock, querySnapshotMock };
 }
 
 function testIfAddedToCollectionFn<T>(
@@ -94,7 +124,7 @@ function testIfAddedToCollectionFn<T>(
       fc.asyncProperty(fc.record<T>(recordModel), async (data) => {
         clearState();
 
-        const { firestoreMock, collectionMock } = mockCollection();
+        const { firestoreMock, collectionMock } = mockCollectionFirestore();
 
         await method(data as T);
 
@@ -127,7 +157,10 @@ test('getUserData creates a new user if it does not exist', async () => {
   await fc.assert(
     fc.asyncProperty(fc.string(), async (userId) => {
       clearState();
-      mockQuery({ empty: true });
+      mockQuery({
+        empty: true,
+        collectionMock: mockCollectionFirestore().collectionMock,
+      });
 
       const spyCreateNewUser = jest
         .spyOn(Database.instance, 'createNewUser')
@@ -149,7 +182,10 @@ test('getUserData retrieves user data and ref if it exists', async () => {
       async (expectedUserData) => {
         clearState();
 
-        const { querySnapshotMock } = mockQuery({ empty: false });
+        const { querySnapshotMock } = mockQuery({
+          empty: false,
+          collectionMock: mockCollectionFirestore().collectionMock,
+        });
 
         const queryDocumentSnapshotMock = mock<
           FirebaseFirestore.QueryDocumentSnapshot<
@@ -195,3 +231,80 @@ test(
     { userId: fc.string() }
   )
 );
+
+test('getFeedsFromUser gets feeds and feedNames based on the name field', async () => {
+  await fc.assert(
+    fc.asyncProperty(
+      fc.constantFrom(
+        ...(await allTranslationsFrom<string>('FEED_NAME_FIELD'))
+      ),
+      fc.array(
+        fc.record<Feed>({
+          name: fc.lorem(),
+          url: fc.webUrl(),
+          language: fc.oneof(fc.string(), fc.constant(undefined)),
+          itemLimit: fc.oneof(fc.integer(), fc.constant(undefined)),
+          truncateSummaryAt: fc.oneof(fc.integer(), fc.constant(undefined)),
+          readFields: fc.oneof(
+            fc.array(
+              fc.record<ItemField>({
+                name: fc.string(),
+                truncateAt: fc.integer(),
+              })
+            ),
+            fc.constant(undefined)
+          ),
+        })
+      ),
+      async (nameField, expectedFeeds) => {
+        clearState();
+
+        const feedSnapshots = expectedFeeds.map((feed) => {
+          const { name, ...data } = feed;
+          data[nameField] = name;
+
+          const snapshot = mock<
+            FirebaseFirestore.QueryDocumentSnapshot<
+              FirebaseFirestore.DocumentData
+            >
+          >();
+
+          when(snapshot.data()).thenReturn(data);
+
+          return instance(snapshot);
+        });
+
+        const { refMock, collectionMock } = mockCollectionFromRef();
+
+        const { queryMock, querySnapshotMock } = mockQuery({
+          empty: false,
+          collectionMock,
+        });
+
+        when(querySnapshotMock.forEach(anything())).thenCall((callback) =>
+          feedSnapshots.forEach(callback)
+        );
+
+        const { feeds, feedNames } = await Database.instance.getFeedsFromUser(
+          resolvableInstance(refMock),
+          nameField
+        );
+
+        const [collectionName] = capture(refMock.collection).last();
+        expect(collectionName).toEqual(collectionNames.feeds);
+
+        const [orderByField] = capture(queryMock.orderBy).last();
+        expect(orderByField).toEqual(nameField);
+
+        expect(feeds).toMatchObject(
+          // object with properties like {"feed.name": "feed"}
+          expectedFeeds.reduce((acc, value) => {
+            acc[value.name] = value;
+            return acc;
+          }, {})
+        );
+        expect(feedNames).toEqual(expectedFeeds.map((feed) => feed.name));
+      }
+    )
+  );
+});

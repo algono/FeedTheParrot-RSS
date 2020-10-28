@@ -1,7 +1,7 @@
 import { getLocale, RequestInterceptor } from 'ask-sdk-core';
 import i18next from 'i18next';
 
-const languageStrings = {
+export const languageStrings = {
   en: {
     translation: {
       WELCOME_MSG:

@@ -1,10 +1,11 @@
 import * as firebaseAdmin from 'firebase-admin';
-import { Feed } from '../logic/Feed';
+import { Feed, FeedData } from '../logic/Feed';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
 export const collectionNames = {
   authCodes: 'auth-codes',
   users: 'users',
+  feeds: 'feeds',
 };
 
 export interface AuthCode {
@@ -50,7 +51,7 @@ export class Database {
 
   public async getUserData(userId: string) {
     const userDataQuery = await this._firestore
-      .collection('users')
+      .collection(collectionNames.users)
       .where('userId', '==', userId)
       .limit(1)
       .get();
@@ -84,7 +85,7 @@ export class Database {
     nameField: string
   ) {
     const feedSnapshots = await userDataRef
-      .collection('feeds')
+      .collection(collectionNames.feeds)
       .orderBy(nameField) // This filters out documents without the field
       .get();
 
@@ -96,10 +97,7 @@ export class Database {
 
       const name: string = data[nameField];
 
-      const feed: Feed = Object.assign<Feed, FirebaseFirestore.DocumentData>(
-        new Feed(name, data.url, data.language),
-        data
-      );
+      const feed: Feed = { name, ...(data as FeedData) };
 
       feedNames.push(name);
       feeds[name] = feed;

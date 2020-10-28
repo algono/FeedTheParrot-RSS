@@ -35,22 +35,17 @@ export interface FeedItem {
   index?: number;
 }
 
-export class Feed {
-  name: string;
+export interface FeedData {
   readonly url: string;
   language?: string;
 
   readFields?: ItemField[];
   truncateSummaryAt?: number;
   itemLimit?: number;
+}
 
-  constructor(name: string, url: string, language?: string) {
-    this.name = name;
-    this.url = url;
-    this.language = language;
-  }
-
-  // NOTE: Cannot have methods within the class because sessionAttributes messes with them and makes them disappear from the object
+export interface Feed extends FeedData {
+  name: string;
 }
 
 export function getItems(
