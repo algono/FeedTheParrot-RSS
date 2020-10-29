@@ -3,7 +3,7 @@ import { AllHtmlEntities as entities } from 'html-entities';
 import fetch from 'node-fetch';
 import striptags from 'striptags';
 import util from 'util';
-import { init } from '../util/localization';
+import { initNewInstance } from '../util/localization';
 import { MAX_CHARACTERS } from '../util/constants';
 
 export interface GetItemsOptions {
@@ -80,7 +80,7 @@ export function getItems(
 
       // Get localization function for the feed's language
       const locale: string = feed.language || meta.language;
-      const t = await init(locale);
+      const t = await initNewInstance(locale);
 
       // If the locale of the feed doesn't match the one on the device, use SSML to change the voice and language
       let langFormatter: string;

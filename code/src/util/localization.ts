@@ -79,6 +79,15 @@ export function init(locale: string) {
   });
 }
 
+export function initNewInstance(locale: string) {
+  return i18next
+    .createInstance({
+      lng: locale,
+      resources: languageStrings,
+    })
+    .init();
+}
+
 export const localizationRequestInterceptor: RequestInterceptor = {
   async process(handlerInput) {
     const t = await init(getLocale(handlerInput.requestEnvelope));

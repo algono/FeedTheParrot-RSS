@@ -17,7 +17,7 @@ import {
 } from '../util/constants';
 import { Feed, FeedItem, getItems } from '../logic/Feed';
 
-import { init, TFunction } from '../util/localization';
+import { TFunction } from '../util/localization';
 
 export interface ReadState {
   reading: boolean;
@@ -78,9 +78,6 @@ export const ReadIntentHandler: RequestHandler = {
     const feed: Feed = sessionAttributes.feeds[feedName];
 
     const items = await getItems(feed, locale);
-
-    // The translation function has to be updated (it seems like it is singleton)
-    await init(locale);
 
     const readState: ReadState = {
       reading: false,
