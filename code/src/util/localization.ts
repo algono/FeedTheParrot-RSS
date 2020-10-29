@@ -1,5 +1,8 @@
 import { getLocale, RequestInterceptor } from 'ask-sdk-core';
-import i18next from 'i18next';
+import i18next, { TFunction } from 'i18next';
+
+// Export this interface to abstract the localization library from the rest of the code
+export { TFunction };
 
 export const languageStrings = {
   en: {
@@ -30,7 +33,8 @@ export const languageStrings = {
         'Sorry, I am not able to continue reading. You can see the full text in the Alexa app.',
       FEED_NAME_FIELD: 'name-en',
       AUTH_PRE_CODE_MSG: 'The code is:',
-      AUTH_EXPLANATION_MSG: 'Use this code in the feed the parrot app to login.',
+      AUTH_EXPLANATION_MSG:
+        'Use this code in the feed the parrot app to login.',
     },
   },
   es: {

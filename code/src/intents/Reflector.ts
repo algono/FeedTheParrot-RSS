@@ -1,4 +1,5 @@
 import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
+import { TFunction } from '../util/localization';
 
 // The intent reflector is used for interaction model testing and debugging.
 // It will simply repeat the intent the user said. You can create custom handlers
@@ -12,9 +13,13 @@ export const IntentReflectorHandler: RequestHandler = {
   handle(handlerInput) {
     const intentName = getIntentName(handlerInput.requestEnvelope);
 
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+    const {
+      t,
+    }: {
+      t?: TFunction;
+    } = handlerInput.attributesManager.getRequestAttributes();
 
-    const speakOutput: string = requestAttributes.t('REFLECTOR_MSG', {
+    const speakOutput = t('REFLECTOR_MSG', {
       intent: intentName,
     });
 

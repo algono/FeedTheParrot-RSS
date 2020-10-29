@@ -17,7 +17,7 @@ import {
 } from '../util/constants';
 import { Feed, FeedItem, getItems } from '../logic/Feed';
 
-import * as localization from '../util/localization';
+import { init, TFunction } from '../util/localization';
 
 export interface ReadState {
   reading: boolean;
@@ -44,7 +44,7 @@ export const ReadIntentHandler: RequestHandler = {
     } = handlerInput;
     const requestAttributes = attributesManager.getRequestAttributes();
 
-    const { t } = requestAttributes;
+    const { t }: { t?: TFunction } = requestAttributes;
 
     const feedName = getSlotValue(requestEnvelope, feedSlotName);
     console.log('(ReadIntent) Feed name received: ' + feedName);
@@ -58,7 +58,7 @@ export const ReadIntentHandler: RequestHandler = {
 
     const sessionAttributes = attributesManager.getSessionAttributes();
 
-    const feedNames = sessionAttributes.feedNames;
+    const feedNames: string[] = sessionAttributes.feedNames;
 
     console.log('(ReadIntent) Feed names: ' + JSON.stringify(feedNames));
 
@@ -81,7 +81,7 @@ export const ReadIntentHandler: RequestHandler = {
     const items = await getItems(feed, locale);
 
     // The translation function has to be updated (it seems like it is singleton)
-    await localization.init(locale);
+    await init(locale);
 
     const readState: ReadState = {
       reading: true,
@@ -121,7 +121,7 @@ export const ReadItemIntentHandler: RequestHandler = {
     const { attributesManager, responseBuilder } = handlerInput;
 
     const requestAttributes = attributesManager.getRequestAttributes();
-    const { t } = requestAttributes;
+    const { t }: { t?: TFunction } = requestAttributes;
 
     const sessionAttributes = attributesManager.getSessionAttributes();
 
@@ -187,7 +187,11 @@ export const ReadContentIntentHandler: RequestHandler = {
     );
   },
   handle(handlerInput) {
-    const { attributesManager, requestEnvelope, responseBuilder } = handlerInput;
+    const {
+      attributesManager,
+      requestEnvelope,
+      responseBuilder,
+    } = handlerInput;
 
     const intentRequest = getRequest<IntentRequest>(requestEnvelope);
 
@@ -206,18 +210,21 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     const item = readState.feedItems[readState.currentIndex];
 
-    const { t } = attributesManager.getRequestAttributes();
+    const { t }: { t?: TFunction } = attributesManager.getRequestAttributes();
 
     const index = readState.currentContentIndex ?? 0;
 
     const content = item.alexaReads.content;
 
-    let speakOutputItem: string, cardOutputItem: string, confirmationMsg: string, nextIntentName: string;
+    let speakOutputItem: string,
+      cardOutputItem: string,
+      confirmationMsg: string,
+      nextIntentName: string;
 
     if (index >= 0 && index < content.length) {
       speakOutputItem = content[index];
       cardOutputItem = item.cardReads[index];
-      
+
       // If it is any content item but the last one, prompt for continue reading the next
       if (index < content.length - 1) {
         confirmationMsg = t('CONFIRMATION_CONTINUE_READING_FEED');
@@ -231,7 +238,8 @@ export const ReadContentIntentHandler: RequestHandler = {
     }
 
     // If there are no other items to continue to, go to the next item
-    if (!confirmationMsg) confirmationMsg = t('CONFIRMATION_GOTO_NEXT_FEED_ITEM');
+    if (!confirmationMsg)
+      confirmationMsg = t('CONFIRMATION_GOTO_NEXT_FEED_ITEM');
     if (!nextIntentName) nextIntentName = 'AMAZON.NextIntent';
 
     if (speakOutputItem) speakOutputItem += LONG_PAUSE;

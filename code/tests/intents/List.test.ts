@@ -24,7 +24,7 @@ testInAllLocales(
       mocks.mockedResponseBuilder.withSimpleCard
     ).last();
 
-    const feedListEmptyMessage: string = mocks.t('FEED_LIST_EMPTY_MSG');
+    const feedListEmptyMessage = mocks.t('FEED_LIST_EMPTY_MSG');
 
     expect(responseSpeakOutput.startsWith(feedListEmptyMessage)).toBe(true);
     expect(responseCardContent.startsWith(feedListEmptyMessage)).toBe(true);

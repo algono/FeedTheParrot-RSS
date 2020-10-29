@@ -1,4 +1,5 @@
 import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
+import { TFunction } from '../util/localization';
 
 export const CancelAndStopIntentHandler: RequestHandler = {
   canHandle(handlerInput) {
@@ -9,8 +10,12 @@ export const CancelAndStopIntentHandler: RequestHandler = {
     );
   },
   handle(handlerInput) {
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-    const speakOutput: string = requestAttributes.t('GOODBYE_MSG');
+    const {
+      t,
+    }: {
+      t?: TFunction;
+    } = handlerInput.attributesManager.getRequestAttributes();
+    const speakOutput = t('GOODBYE_MSG');
     return handlerInput.responseBuilder.speak(speakOutput).getResponse();
   },
 };

@@ -1,5 +1,8 @@
 import { ErrorHandler } from 'ask-sdk-core';
-import { localizationRequestInterceptor } from '../util/localization';
+import {
+  localizationRequestInterceptor,
+  TFunction,
+} from '../util/localization';
 
 // Generic error handling to capture any syntax or routing errors. If you receive an error
 // stating the request handler chain is not found, you have not implemented a handler for
@@ -16,9 +19,13 @@ export const GenericErrorHandler: ErrorHandler = {
     // So we have to call it again manually to ensure that the language is correctly set
     await localizationRequestInterceptor.process(handlerInput);
 
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+    const {
+      t,
+    }: {
+      t?: TFunction;
+    } = handlerInput.attributesManager.getRequestAttributes();
 
-    const speakOutput: string = requestAttributes.t('ERROR_MSG');
+    const speakOutput = t('ERROR_MSG');
 
     return handlerInput.responseBuilder
       .speak(speakOutput)

@@ -1,4 +1,5 @@
 import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
+import { TFunction } from '../util/localization';
 
 export const ListIntentHandler: RequestHandler = {
   canHandle(handlerInput) {
@@ -8,13 +9,15 @@ export const ListIntentHandler: RequestHandler = {
     );
   },
   handle(handlerInput) {
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
+    const {
+      t,
+    }: {
+      t?: TFunction;
+    } = handlerInput.attributesManager.getRequestAttributes();
 
-    const feedListMessage: string = requestAttributes.t('FEED_LIST_MSG');
-    const feedListEmptyMessage: string = requestAttributes.t(
-      'FEED_LIST_EMPTY_MSG'
-    );
-    const feedListReprompt: string = requestAttributes.t('REPROMPT_MSG');
+    const feedListMessage = t('FEED_LIST_MSG');
+    const feedListEmptyMessage = t('FEED_LIST_EMPTY_MSG');
+    const feedListReprompt = t('REPROMPT_MSG');
 
     const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
     const feedNames: string[] = sessionAttributes.feedNames;

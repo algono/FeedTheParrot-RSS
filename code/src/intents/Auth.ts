@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto';
 import { Database } from '../database/Database';
 
 import { LONG_PAUSE } from '../util/constants';
+import { TFunction } from '../util/localization';
 
 export const AuthIntentHandler: RequestHandler = {
   canHandle(handlerInput) {
@@ -13,7 +14,11 @@ export const AuthIntentHandler: RequestHandler = {
     );
   },
   async handle(handlerInput) {
-    const { t } = handlerInput.attributesManager.getRequestAttributes();
+    const {
+      t,
+    }: {
+      t?: TFunction;
+    } = handlerInput.attributesManager.getRequestAttributes();
 
     const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
     const code = generateSixDigitCode();

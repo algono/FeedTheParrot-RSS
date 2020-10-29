@@ -1,8 +1,7 @@
 import { AttributesManager, HandlerInput, ResponseBuilder } from 'ask-sdk-core';
 import { Response, ui } from 'ask-sdk-model';
-import { TFunction } from 'i18next';
 import { anyString, anything, instance, mock, when } from 'ts-mockito';
-import { init } from '../../src/util/localization';
+import { init, TFunction } from '../../src/util/localization';
 import { resolvableInstance } from './ts-mockito/resolvableInstance';
 
 export interface HandlerInputMocks {

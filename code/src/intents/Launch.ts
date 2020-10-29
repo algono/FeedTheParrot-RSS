@@ -3,6 +3,7 @@ import { dialog } from 'ask-sdk-model';
 import { Database } from '../database/Database';
 
 import { Feed } from '../logic/Feed';
+import { TFunction } from '../util/localization';
 
 export interface LaunchSessionAttributes {
   feeds?: { [x: string]: Feed };
@@ -17,7 +18,7 @@ export const LaunchRequestHandler: RequestHandler = {
   async handle(handlerInput) {
     const { attributesManager, responseBuilder } = handlerInput;
     const requestAttributes = attributesManager.getRequestAttributes();
-    const { t } = requestAttributes;
+    const { t }: { t?: TFunction } = requestAttributes;
 
     const speakOutput: string = t('WELCOME_MSG');
 

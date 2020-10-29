@@ -1,4 +1,7 @@
-import { localizationRequestInterceptor } from '../../src/util/localization';
+import {
+  localizationRequestInterceptor,
+  TFunction,
+} from '../../src/util/localization';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { testInAllLocales } from '../helpers/helperTests';
 
@@ -9,7 +12,7 @@ import { mocked } from 'ts-jest/utils';
 
 jest.mock('i18next');
 
-import i18next, { TFunction } from 'i18next';
+import i18next from 'i18next';
 
 testInAllLocales('Localization Request Interceptor works', async (locale) => {
   const requestAttributes: { t?: TFunction } = {};
