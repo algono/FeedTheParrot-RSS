@@ -29,6 +29,7 @@ import { GenericErrorHandler } from './intents/Error';
 // payloads to the handlers above. Make sure any new handlers or interceptors you've
 // defined are included below. The order matters - they're processed top to bottom.
 export const handler = SkillBuilders.custom()
+  .withSkillId('amzn1.ask.skill.ad75c16d-e3d6-4e9e-ba98-43ec1843b3d6')
   .addRequestHandlers(
     LaunchRequestHandler,
     CancelAndStopIntentHandler,
