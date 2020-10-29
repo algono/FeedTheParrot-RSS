@@ -15,6 +15,18 @@ testIntentCanHandle({
   intentName: 'ReadIntent',
 });
 
+test.todo(
+  'ReadIntent - If the feed name has not been received yet, let Alexa continue the dialogue'
+);
+
+test.todo(
+  'ReadIntent - If the feed is not on our list, return and warn the user'
+);
+
+test.todo(
+  "ReadIntent - Gets items from feed with Alexa's locale, stores a ReadState and starts reading items"
+);
+
 const mockReadState = mock<ReadState>();
 when(mockReadState.reading).thenReturn(true);
 
