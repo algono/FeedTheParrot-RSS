@@ -26,7 +26,6 @@ export interface ReadState {
   feedItems: FeedItem[];
   currentIndex: number;
   currentContentIndex?: number;
-  speakQueue?: string;
 }
 
 export const ReadIntentHandler: RequestHandler = {
@@ -84,7 +83,7 @@ export const ReadIntentHandler: RequestHandler = {
     await init(locale);
 
     const readState: ReadState = {
-      reading: true,
+      reading: false,
       feedName: feedName,
       feed: feed,
       feedItems: items,
@@ -141,8 +140,16 @@ export const ReadItemIntentHandler: RequestHandler = {
 
     const items = readState.feedItems;
 
-    // If there was something in the speak queue, output it now
-    let speakOutput: string = readState.speakQueue || '';
+    let speakOutput: string;
+
+    // If it was reading before, add a pause before reading the item
+    // If not, don't and mark that you started reading
+    if (readState.reading) {
+      speakOutput = PAUSE_BETWEEN_ITEMS;
+    } else {
+      speakOutput = '';
+      readState.reading = true;
+    }
 
     // If the index is within the items length, continue
     if (index >= 0 && index < items.length) {
@@ -165,7 +172,7 @@ export const ReadItemIntentHandler: RequestHandler = {
 
       responseBuilder.speak(speakOutput);
 
-      sessionAttributes.readState.reading = false;
+      readState.reading = false;
       attributesManager.setSessionAttributes(sessionAttributes);
     }
 
@@ -266,9 +273,6 @@ function moveItemIndex(handlerInput: HandlerInput, n: number) {
 
   // Move the index n items
   readState.currentIndex += n;
-
-  // Add pause to the speak queue
-  readState.speakQueue = PAUSE_BETWEEN_ITEMS;
 
   attributesManager.setSessionAttributes(sessionAttributes);
 
