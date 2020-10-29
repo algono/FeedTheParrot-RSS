@@ -17,7 +17,7 @@ async function testSaveResponseForRepeatingInterceptor(
     outputSpeech,
   });
 
-  SaveResponseForRepeatingInterceptor.process(mocks.instanceHandlerInput);
+  SaveResponseForRepeatingInterceptor.process(mocks.instanceHandlerInput, mocks.instanceResponse);
 
   return sessionAttributes.lastResponse;
 }

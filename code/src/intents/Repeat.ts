@@ -7,9 +7,8 @@ import {
 import { getSpeakOutput } from '../util/helpers';
 
 export const SaveResponseForRepeatingInterceptor: ResponseInterceptor = {
-  process(handlerInput) {
-    const responseOutputSpeech = handlerInput.responseBuilder.getResponse()
-      .outputSpeech;
+  process(handlerInput, response) {
+    const responseOutputSpeech = response.outputSpeech;
 
     if (responseOutputSpeech !== undefined) {
       const lastResponse = getSpeakOutput(responseOutputSpeech);
