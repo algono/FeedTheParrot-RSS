@@ -5,7 +5,7 @@ import { GenericErrorHandler } from '../../src/intents/Error';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { testInAllLocales } from '../helpers/helperTests';
 
-test('Error handler can handle anything', () => {
+test('Generic error handler can handle anything', () => {
   // Returns true when passing null values
   expect(GenericErrorHandler.canHandle(null, null)).toBe(true);
 
@@ -18,11 +18,7 @@ test('Error handler can handle anything', () => {
   ).toBe(true);
 });
 
-import { localizationRequestInterceptor } from '../../src/util/localization';
-
-jest.spyOn(localizationRequestInterceptor, 'process').mockImplementation();
-
-test('Error handler shows error stack in console', async () => {
+test('Generic error handler shows error stack in console', async () => {
   await fc.assert(
     fc.asyncProperty(fc.string(), async (stack) => {
       const mockError = mock<Error>();
@@ -42,7 +38,7 @@ test('Error handler shows error stack in console', async () => {
   );
 });
 
-testInAllLocales('Error handler speaks error message', async (locale) => {
+testInAllLocales('Generic error handler speaks error message', async (locale) => {
   const mocks = await mockHandlerInput({ locale });
 
   const mockError = mock<Error>();
