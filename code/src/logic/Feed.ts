@@ -268,18 +268,25 @@ function truncate(str: string, len: number) {
         len: lastPhraseEnd + 1,
       };
     } else {
-      subString = subString.substr(0, len - 2);
+      if (len > 2) subString = subString.substr(0, len - 2);
       const lastSpace = subString.lastIndexOf(' ');
-      if (lastSpace >= 0) {
+      if (lastSpace > 0) {
         res = {
           str: subString.substr(0, lastSpace) + '...',
           len: lastSpace,
         };
       } else {
-        res = {
-          str: subString.substr(0, len - 3) + '...',
-          len: len - 3,
-        };
+        if (len > 3) {
+          res = {
+            str: subString.substr(0, len - 3) + '...',
+            len: len - 3,
+          };
+        } else {
+          res = {
+            str: subString,
+            len: len > 2 ? len - 2 : len,
+          };
+        }
       }
     }
   }
