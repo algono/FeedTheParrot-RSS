@@ -1,9 +1,53 @@
 import { HandlerInput } from 'ask-sdk-core';
 import fc from 'fast-check';
 import { capture, instance, mock, spy, when } from 'ts-mockito';
-import { GenericErrorHandler } from '../../src/intents/Error';
+import {
+  FeedIsTooLongError,
+  FeedIsTooLongErrorHandler,
+  GenericErrorHandler,
+} from '../../src/intents/Error';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { testInAllLocales } from '../helpers/helperTests';
+
+test('Feed is too long error handler can handle only FeedIsToLongErrors', () => {
+  const handlerInputMock = mock<HandlerInput>();
+
+  // Returns true when passing FeedIsTooLongError
+  expect(
+    FeedIsTooLongErrorHandler.canHandle(
+      instance(handlerInputMock),
+      new FeedIsTooLongError()
+    )
+  ).toBe(true);
+
+  // Returns true when passing any error
+  expect(
+    FeedIsTooLongErrorHandler.canHandle(
+      instance(handlerInputMock),
+      instance(new Error())
+    )
+  ).toBe(false);
+});
+
+testInAllLocales(
+  'Feed is too long error handler speaks error message',
+  async (locale) => {
+    const mocks = await mockHandlerInput({ locale });
+
+    const errorMock = mock<FeedIsTooLongError>();
+
+    await FeedIsTooLongErrorHandler.handle(
+      mocks.instanceHandlerInput,
+      instance(errorMock)
+    );
+
+    const [responseSpeakOutput] = capture(
+      mocks.mockedResponseBuilder.speak
+    ).last();
+
+    expect(responseSpeakOutput).toContain(mocks.t('FEED_TOO_LONG_ERROR_MSG'));
+  }
+);
 
 test('Generic error handler can handle anything', () => {
   // Returns true when passing null values
@@ -13,7 +57,7 @@ test('Generic error handler can handle anything', () => {
   expect(
     GenericErrorHandler.canHandle(
       instance(mock<HandlerInput>()),
-      instance(mock<Error>())
+      instance(new Error())
     )
   ).toBe(true);
 });
@@ -38,19 +82,22 @@ test('Generic error handler shows error stack in console', async () => {
   );
 });
 
-testInAllLocales('Generic error handler speaks error message', async (locale) => {
-  const mocks = await mockHandlerInput({ locale });
+testInAllLocales(
+  'Generic error handler speaks error message',
+  async (locale) => {
+    const mocks = await mockHandlerInput({ locale });
 
-  const mockError = mock<Error>();
+    const mockError = mock<Error>();
 
-  await GenericErrorHandler.handle(
-    mocks.instanceHandlerInput,
-    instance(mockError)
-  );
+    await GenericErrorHandler.handle(
+      mocks.instanceHandlerInput,
+      instance(mockError)
+    );
 
-  const [responseSpeakOutput] = capture(
-    mocks.mockedResponseBuilder.speak
-  ).last();
+    const [responseSpeakOutput] = capture(
+      mocks.mockedResponseBuilder.speak
+    ).last();
 
-  expect(responseSpeakOutput).toEqual(mocks.t('ERROR_MSG'));
-});
+    expect(responseSpeakOutput).toEqual(mocks.t('ERROR_MSG'));
+  }
+);
