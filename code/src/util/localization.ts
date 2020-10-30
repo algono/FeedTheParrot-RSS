@@ -20,6 +20,8 @@ export const languageStrings = {
       REFLECTOR_MSG: 'You just triggered {{intent}}',
       FALLBACK_MSG: "Sorry, I don't know about that. Please try again.",
       ERROR_MSG: 'Sorry, I had trouble doing what you asked. Please try again.',
+      FEED_TOO_LONG_ERROR_MSG:
+        "Sorry, the feed is too long; I haven't been able to process it. Please, set an item limit for the feed in the Feed the Parrot app to make it shorter.",
       NOT_IMPLEMENTED_MSG:
         'Sorry, this feature is yet to be implemented. Try again later.',
       AMPERSAND: 'and',
@@ -29,8 +31,6 @@ export const languageStrings = {
       CONFIRMATION_CONTINUE_READING_FEED: 'Do you want me to continue reading?',
       CONFIRMATION_GOTO_NEXT_FEED_ITEM: 'Shall I go to the next one?',
       END_READING_FEED: "And that's all there is at the moment.",
-      SURPASSED_MAX_CHARACTERS:
-        'Sorry, I am not able to continue reading. You can see the full text in the Alexa app.',
       FEED_NAME_FIELD: 'name-en',
       AUTH_PRE_CODE_MSG: 'The code is:',
       AUTH_EXPLANATION_MSG:
@@ -53,6 +53,8 @@ export const languageStrings = {
       FALLBACK_MSG: 'Lo siento, no lo sé. Por favor, vuelva a intentarlo.',
       ERROR_MSG:
         'Lo siento, ha habido un error. Por favor, vuelva a intentarlo.',
+      FEED_TOO_LONG_ERROR_MSG:
+        'Lo siento, la feed es demasiado larga; no he podido procesarla. Por favor, indica un límite de elementos para la feed en la app de al loro para acortarla.',
       NOT_IMPLEMENTED_MSG:
         'Lo siento, esta función aún no ha sido implementada. Inténtalo de nuevo más tarde.',
       AMPERSAND: 'y',
@@ -62,8 +64,6 @@ export const languageStrings = {
       CONFIRMATION_CONTINUE_READING_FEED: '¿Sigo leyendo?',
       CONFIRMATION_GOTO_NEXT_FEED_ITEM: '¿Paso al siguiente?',
       END_READING_FEED: 'Y eso es todo por ahora.',
-      SURPASSED_MAX_CHARACTERS:
-        'Lo siento, no puedo continuar leyendo. Puedes ver el texto completo en la app de Alexa.',
       FEED_NAME_FIELD: 'name-es',
       AUTH_PRE_CODE_MSG: 'El código es el siguiente:',
       AUTH_EXPLANATION_MSG:
@@ -88,7 +88,7 @@ export function initNewInstance(locale: string) {
     .init();
 }
 
-export const localizationRequestInterceptor: RequestInterceptor = {
+export const LocalizationRequestInterceptor: RequestInterceptor = {
   async process(handlerInput) {
     const t = await init(getLocale(handlerInput.requestEnvelope));
     const attributes = handlerInput.attributesManager.getRequestAttributes();

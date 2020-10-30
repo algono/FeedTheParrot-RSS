@@ -1,5 +1,5 @@
 import { SkillBuilders } from 'ask-sdk-core';
-import { localizationRequestInterceptor } from './util/localization';
+import { LocalizationRequestInterceptor } from './util/localization';
 
 // Intents
 
@@ -23,7 +23,10 @@ import {
   RepeatIntentHandler,
   SaveResponseForRepeatingInterceptor,
 } from './intents/Repeat';
-import { GenericErrorHandler } from './intents/Error';
+import {
+  FeedIsTooLongErrorHandler,
+  GenericErrorHandler,
+} from './intents/Error';
 
 // The SkillBuilder acts as the entry point for your skill, routing all request and response
 // payloads to the handlers above. Make sure any new handlers or interceptors you've
@@ -45,7 +48,7 @@ export const handler = SkillBuilders.custom()
     RepeatIntentHandler, // make sure RepeatIntentHandler is after ReadItemIntentHandler so it doesn't override its repeating functionality
     IntentReflectorHandler // make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
   )
-  .addRequestInterceptors(localizationRequestInterceptor)
+  .addRequestInterceptors(LocalizationRequestInterceptor)
   .addResponseInterceptors(SaveResponseForRepeatingInterceptor)
-  .addErrorHandlers(GenericErrorHandler)
+  .addErrorHandlers(FeedIsTooLongErrorHandler, GenericErrorHandler)
   .lambda();

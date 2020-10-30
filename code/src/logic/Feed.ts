@@ -4,7 +4,8 @@ import fetch from 'node-fetch';
 import striptags from 'striptags';
 import util from 'util';
 import { initNewInstance } from '../util/localization';
-import { MAX_CHARACTERS } from '../util/constants';
+import { MAX_CHARACTERS_SPEECH, MAX_RESPONSE_LENGTH } from '../util/constants';
+import { FeedIsTooLongError } from '../intents/Error';
 
 export interface GetItemsOptions {
   forceUpdate?: boolean;
@@ -121,8 +122,22 @@ export function getItems(
       }
     });
 
-    // All items parsed. Return them
+    // All items have been parsed.
     feedparser.on('end', function () {
+      const feedSize = JSON.stringify(items).length;
+
+      console.log('Feed size: ' + feedSize);
+
+      if (
+        feedSize >
+        calculateMaxFeedSize(
+          calculateMaxCharactersInFeedContent(items, feed.truncateSummaryAt)
+        )
+      ) {
+        console.log('Feed is too large for max size calculation');
+        reject(new FeedIsTooLongError());
+      }
+
       items.sort(function (a, b) {
         return new Date(b.date).getTime() - new Date(a.date).getTime();
       });
@@ -137,6 +152,45 @@ export function getItems(
       reject(err);
     });
   });
+}
+
+// This value will probably be tweaked in the future
+const CHARACTER_MARGIN = 0;
+
+function calculateMaxFeedSize(...maxCharacters: number[]): number {
+  const res = Math.max(
+    0,
+    maxCharacters.reduce(
+      (acc, max) => acc - max,
+      MAX_RESPONSE_LENGTH - CHARACTER_MARGIN
+    )
+  );
+
+  console.log('Max feed size: ' + res);
+  return res;
+}
+
+function calculateMaxCharactersInFeedContent(
+  items: FeedItem[],
+  truncateAt?: number
+): number {
+  let res = 0;
+  for (const item of items) {
+    let max = 0;
+    for (const speech of item.alexaReads.content) {
+      if (truncateAt && speech.length >= truncateAt) {
+        return truncateAt;
+      } else if (speech.length > max) {
+        max = speech.length;
+      }
+    }
+    if (max > res) {
+      res = max;
+    }
+  }
+
+  console.log('Max characters in feed content: ' + res);
+  return res;
 }
 
 function processFeedItem(
@@ -175,7 +229,7 @@ function processFeedItem(
     feed.readFields.forEach((field, _, arr) => {
       const text: string = feedItem[field.name];
 
-      const maxItemCharacters = Math.floor(MAX_CHARACTERS / arr.length);
+      const maxItemCharacters = Math.floor(MAX_CHARACTERS_SPEECH / arr.length);
 
       let truncatedText: string[];
 
@@ -195,7 +249,7 @@ function processFeedItem(
 
     const summary = feedItem.summary || feedItem.description;
     let truncatedSummary: string[];
-    if (feed.truncateSummaryAt || summary.length > MAX_CHARACTERS) {
+    if (feed.truncateSummaryAt || summary.length > MAX_CHARACTERS_SPEECH) {
       truncatedSummary = truncateAll(summary, feed.truncateSummaryAt);
       console.log(`Summary truncated at ${feed.truncateSummaryAt} characters`);
       alexaReads.content = truncatedSummary;
@@ -221,8 +275,6 @@ function processFeedItem(
 
   return feedItem;
 }
-
-// HELPER FUNCTIONS
 
 // Max characters between last phrase end and truncated string end
 const MAX_LAST_PHRASE_DISTANCE_CHARS = 20;

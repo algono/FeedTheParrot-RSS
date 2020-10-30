@@ -1,5 +1,5 @@
 import {
-  localizationRequestInterceptor,
+  LocalizationRequestInterceptor,
   TFunction,
 } from '../../src/util/localization';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
@@ -28,7 +28,7 @@ testInAllLocales('Localization Request Interceptor works', async (locale) => {
 
   mocked(i18next.init).mockResolvedValue(() => tMocked());
 
-  await localizationRequestInterceptor.process(mocks.instanceHandlerInput);
+  await LocalizationRequestInterceptor.process(mocks.instanceHandlerInput);
 
   expect(tMocked).toBeCalledTimes(0);
 
