@@ -10,6 +10,14 @@ export function testInAllLocales(name: string, fn: { (locale: string): any }) {
   });
 }
 
+export namespace testInAllLocales {
+  export function todo(name: string) {
+    availableLocales.forEach((locale) => {
+      test.todo(`${name} (${locale})`);
+    });
+  }
+}
+
 /**
  * Tests if the 'canHandle' function of the handler handles the intent successfully
  * @example
