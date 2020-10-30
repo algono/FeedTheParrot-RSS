@@ -124,6 +124,8 @@ export function getItems(
 
     // All items have been parsed.
     feedparser.on('end', function () {
+      console.log('Checking feed size...') // Not sure why, but it seems to only work if there is something before checking the feed size
+
       const feedSize = JSON.stringify(items).length;
 
       console.log('Feed size: ' + feedSize);
