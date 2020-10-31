@@ -50,6 +50,22 @@ testIntentCanHandle({
   },
 });
 
+test.todo(
+  'ReadItemIntent - If there are items to read, start reading, read the item title and ask for confirmation to continue reading'
+);
+
+test.todo(
+  'ReadItemIntent - If it was reading content before, delete its temp data from session attributes'
+);
+
+test.todo(
+  'ReadItemIntent - If it was reading before, add a pause before reading the current item'
+);
+
+test.todo(
+  'ReadItemIntent - If there are no items left, tell the user and stop reading'
+);
+
 testIntentCanHandle({
   handler: ReadContentIntentHandler,
   intentName: 'AMAZON.YesIntent',
@@ -58,6 +74,18 @@ testIntentCanHandle({
   },
 });
 
+test.todo(
+  'ReadContentIntent - If it is any content item but the last one, prompt for continue reading the next'
+);
+
+test.todo(
+  'ReadContentIntent - If there are no other items to continue to, go to the next item'
+);
+
+test.todo(
+  'ReadContentIntent - If the intent was denied, go to the next item'
+);
+
 testIntentCanHandle({
   handler: GoToPreviousItemIntentHandler,
   intentName: 'AMAZON.PreviousIntent',
@@ -65,6 +93,10 @@ testIntentCanHandle({
     sessionAttributes: sessionAttributesWhenReading,
   },
 });
+
+test.todo(
+  'PreviousIntent (item) - Go to the previous item and read it'
+);
 
 testIntentCanHandle({
   handler: SkipItemIntentHandler,
@@ -81,3 +113,11 @@ testIntentCanHandle({
     sessionAttributes: sessionAttributesWhenReading,
   },
 });
+
+test.todo(
+  'NextIntent (item) - Go to the next item and read it'
+);
+
+test.todo(
+  'NextIntent (item) - If the intent was denied, cancel reading'
+);
