@@ -13,6 +13,7 @@ import {
 } from '../../src/intents/Read';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { testIntentCanHandle } from '../helpers/helperTests';
+import { mockProperty } from '../helpers/ts-mockito/mockProperty';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle({
@@ -33,17 +34,17 @@ test.todo(
 );
 
 describe('Read intents when reading', () => {
-  const readStateTemplate: ReadState = Object.freeze({
-    reading: true,
-    feed: null,
-    feedItems: null,
-    feedName: null,
-    currentIndex: 0,
+  const readStateMock = mock<ReadState>();
+  when(readStateMock.reading).thenReturn(true);
+
+  beforeEach(() => {
+    reset(readStateMock);
+    when(readStateMock.reading).thenReturn(true);
   });
 
   const sessionAttributesWhenReading: {
     readState: ReadState;
-  } = { readState: readStateTemplate };
+  } = { readState: instance(readStateMock) };
 
   testIntentCanHandle({
     handler: ReadItemIntentHandler,
@@ -106,7 +107,7 @@ describe('Read intents when reading', () => {
   });
 
   async function checkIfItReadsItemAfterMovingIndexBy(
-    fn: { (handlerInput: HandlerInput): any },
+    fn: { (handlerInput: HandlerInput): any | Promise<any> },
     n: number,
     shouldBeTrue = true
   ) {
@@ -115,13 +116,25 @@ describe('Read intents when reading', () => {
         // min value so that initial AND final indexes are never negative
         fc.integer({ min: n < 0 ? Math.abs(n) : 0 }),
         async (index) => {
+          const readState = instance(readStateMock);
+
+          mockProperty(
+            readState,
+            'currentIndex',
+            () => index,
+            (value) => {
+              if (shouldBeTrue) {
+                expect(value).toEqual(index + n);
+              } else {
+                fail('currentIndex should not have been changed');
+              }
+            }
+          );
+
           const sessionAttributes: {
             readState: ReadState;
           } = {
-            readState: {
-              ...readStateTemplate,
-              currentIndex: index,
-            },
+            readState,
           };
 
           const mocks = await mockHandlerInput({
@@ -131,16 +144,12 @@ describe('Read intents when reading', () => {
           const readItemSpy = spy(ReadItemIntentHandler);
           when(readItemSpy.handle(anything())).thenCall(() => {});
 
-          fn(mocks.instanceHandlerInput);
+          await fn(mocks.instanceHandlerInput);
 
           if (shouldBeTrue) {
             verify(readItemSpy.handle(anything())).once();
-            expect(sessionAttributes.readState.currentIndex).toEqual(index + n);
           } else {
             verify(readItemSpy.handle(anything())).never();
-            expect(sessionAttributes.readState.currentIndex).not.toEqual(
-              index + n
-            );
           }
         }
       )
