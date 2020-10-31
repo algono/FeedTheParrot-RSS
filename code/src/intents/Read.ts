@@ -261,7 +261,7 @@ export const ReadContentIntentHandler: RequestHandler = {
   },
 };
 
-function moveItemIndex(handlerInput: HandlerInput, n: number) {
+function moveItemIndexBy(handlerInput: HandlerInput, n: number) {
   const { attributesManager } = handlerInput;
 
   const sessionAttributes = attributesManager.getSessionAttributes();
@@ -289,7 +289,7 @@ export const GoToPreviousItemIntentHandler: RequestHandler = {
       getIntentName(requestEnvelope) === 'AMAZON.PreviousIntent'
     );
   },
-  handle: (handlerInput) => moveItemIndex(handlerInput, -1),
+  handle: (handlerInput) => moveItemIndexBy(handlerInput, -1),
 };
 
 export const SkipItemIntentHandler: RequestHandler = {
@@ -320,6 +320,6 @@ export const SkipItemIntentHandler: RequestHandler = {
         .getResponse();
     }
 
-    return moveItemIndex(handlerInput, 1);
+    return moveItemIndexBy(handlerInput, 1);
   },
 };
