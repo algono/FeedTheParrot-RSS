@@ -243,13 +243,13 @@ test('getFeedsFromUser gets feeds and feedNames based on the name field', async 
           name: fc.lorem(),
           url: fc.webUrl(),
           language: fc.oneof(fc.string(), fc.constant(undefined)),
-          itemLimit: fc.oneof(fc.integer(), fc.constant(undefined)),
-          truncateSummaryAt: fc.oneof(fc.integer(), fc.constant(undefined)),
+          itemLimit: fc.oneof(fc.nat(), fc.constant(undefined)),
+          truncateSummaryAt: fc.oneof(fc.nat(), fc.constant(undefined)),
           readFields: fc.oneof(
             fc.array(
               fc.record<ItemField>({
                 name: fc.string(),
-                truncateAt: fc.integer(),
+                truncateAt: fc.nat(),
               })
             ),
             fc.constant(undefined)
