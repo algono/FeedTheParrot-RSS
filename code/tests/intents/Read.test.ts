@@ -2,7 +2,17 @@ import { getRequest, HandlerInput } from 'ask-sdk-core';
 import { Intent, IntentConfirmationStatus, IntentRequest } from 'ask-sdk-model';
 import fc from 'fast-check';
 import { mocked } from 'ts-jest/utils';
-import { anything, instance, mock, reset, spy, verify, when } from 'ts-mockito';
+import {
+  anyString,
+  anything,
+  deepEqual,
+  instance,
+  mock,
+  reset,
+  spy,
+  verify,
+  when,
+} from 'ts-mockito';
 import {
   GoToPreviousItemIntentHandler,
   ReadContentIntentHandler,
@@ -87,16 +97,39 @@ describe('Read intents when reading', () => {
   });
 
   test.todo(
-    'ReadContentIntent - If it is any content item but the last one, prompt for continue reading the next'
+    'ReadContentIntent - If it is any content item but the last one, prompt for continuing reading the next'
   );
 
   test.todo(
-    'ReadContentIntent - If there are no other items to continue to, go to the next item'
+    'ReadContentIntent - If there are no other items to continue to, prompt for going to the next item'
   );
 
-  test.todo(
-    'ReadContentIntent - If the intent was denied, go to the next item'
-  );
+  test('ReadContentIntent - If the intent was denied, go to the next item', () =>
+    checkIfOnConfirmationStatus(
+      {
+        DENIED: true,
+      },
+      async (shouldBeTrue) => {
+        const mocks = await mockHandlerInput({ sessionAttributes: {} });
+
+        await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
+
+        const verificator = verify(
+          mocks.mockedResponseBuilder.addDelegateDirective(
+            deepEqual({
+              name: 'AMAZON.NextIntent',
+              confirmationStatus: 'CONFIRMED',
+            })
+          )
+        );
+
+        if (shouldBeTrue) {
+          verificator.once();
+        } else {
+          verificator.never();
+        }
+      }
+    ));
 
   testIntentCanHandle({
     handler: GoToPreviousItemIntentHandler,
@@ -107,7 +140,7 @@ describe('Read intents when reading', () => {
   });
 
   async function checkIfItReadsItemAfterMovingIndexBy(
-    fn: { (handlerInput: HandlerInput): any | Promise<any> },
+    fn: { (handlerInput: HandlerInput): unknown | Promise<unknown> },
     n: number,
     shouldBeTrue = true
   ) {
@@ -138,7 +171,7 @@ describe('Read intents when reading', () => {
           };
 
           const mocks = await mockHandlerInput({
-            sessionAttributes: sessionAttributes,
+            sessionAttributes,
           });
 
           const readItemSpy = spy(ReadItemIntentHandler);
@@ -178,39 +211,78 @@ describe('Read intents when reading', () => {
     },
   });
 
-  test('NextIntent (item) - If the intent was not denied, go to the next item and read it', async () => {
-    const allowedConfirmationStatuses: {
-      [key in IntentConfirmationStatus]: boolean;
-    } = {
-      NONE: true,
-      CONFIRMED: true,
-      DENIED: false,
-    };
+  test('NextIntent (item) - If the intent was not denied, go to the next item and read it', () =>
+    checkIfOnConfirmationStatus(
+      {
+        NONE: true,
+        CONFIRMED: true,
+      },
+      (shouldBeTrue) =>
+        checkIfItReadsItemAfterMovingIndexBy(
+          SkipItemIntentHandler.handle,
+          1,
+          shouldBeTrue
+        )
+    ));
 
-    const intentRequestMock = mock<IntentRequest>();
+  test('NextIntent (item) - If the intent was denied, cancel reading', () =>
+    checkIfOnConfirmationStatus(
+      {
+        DENIED: true,
+      },
+      async (shouldBeTrue) => {
+        const mocks = await mockHandlerInput({
+          sessionAttributes: {
+            readState: instance(readStateMock),
+          },
+        });
 
-    const intentMock = mock<Intent>();
+        const readItemSpy = spy(ReadItemIntentHandler);
+        when(readItemSpy.handle(anything())).thenCall(() => {});
 
-    when(intentRequestMock.intent).thenCall(() => instance(intentMock));
+        await SkipItemIntentHandler.handle(mocks.instanceHandlerInput);
 
-    mocked(getRequest).mockImplementation(() => instance(intentRequestMock));
+        const verificator = verify(
+          mocks.mockedResponseBuilder.addDelegateDirective(
+            deepEqual({
+              name: 'AMAZON.CancelIntent',
+              confirmationStatus: anyString(),
+            })
+          )
+        );
 
-    for (const confirmationStatus in allowedConfirmationStatuses) {
-      reset(intentMock);
-      when(intentMock.confirmationStatus).thenReturn(
-        confirmationStatus as IntentConfirmationStatus
-      );
-
-      const shouldBeTrue: boolean =
-        allowedConfirmationStatuses[confirmationStatus];
-
-      await checkIfItReadsItemAfterMovingIndexBy(
-        SkipItemIntentHandler.handle,
-        1,
-        shouldBeTrue
-      );
-    }
-  });
-
-  test.todo('NextIntent (item) - If the intent was denied, cancel reading');
+        if (shouldBeTrue) {
+          verificator.once();
+        } else {
+          verificator.never();
+        }
+      }
+    ));
 });
+
+async function checkIfOnConfirmationStatus(
+  allowedConfirmationStatuses: {
+    [key in IntentConfirmationStatus]?: boolean;
+  },
+  fn: (shouldBeTrue?: boolean) => unknown | Promise<unknown>
+) {
+  const intentRequestMock = mock<IntentRequest>();
+
+  const intentMock = mock<Intent>();
+
+  when(intentRequestMock.intent).thenCall(() => instance(intentMock));
+
+  mocked(getRequest).mockImplementation(() => instance(intentRequestMock));
+
+  for (const confirmationStatus in allowedConfirmationStatuses) {
+    reset(intentMock);
+    when(intentMock.confirmationStatus).thenReturn(
+      confirmationStatus as IntentConfirmationStatus
+    );
+
+    const shouldBeTrue: boolean =
+      allowedConfirmationStatuses[confirmationStatus];
+
+    await fn(shouldBeTrue);
+  }
+}
