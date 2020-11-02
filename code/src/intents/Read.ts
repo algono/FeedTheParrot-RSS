@@ -41,9 +41,8 @@ export const ReadIntentHandler: RequestHandler = {
       requestEnvelope,
       responseBuilder,
     } = handlerInput;
-    const requestAttributes = attributesManager.getRequestAttributes();
 
-    const { t }: { t?: TFunction } = requestAttributes;
+    const { t }: { t?: TFunction } = attributesManager.getRequestAttributes();
 
     const feedName = getSlotValue(requestEnvelope, feedSlotName);
     console.log('(ReadIntent) Feed name received: ' + feedName);
@@ -51,7 +50,7 @@ export const ReadIntentHandler: RequestHandler = {
     // If the feed name has not been received yet, let Alexa continue the dialogue
     if (!feedName) {
       return responseBuilder
-        .addDelegateDirective((requestEnvelope.request as IntentRequest).intent)
+        .addDelegateDirective(getRequest<IntentRequest>(requestEnvelope).intent)
         .getResponse();
     }
 
@@ -63,7 +62,7 @@ export const ReadIntentHandler: RequestHandler = {
 
     // If the feed is not on our list, return and warn the user
     if (!(feedNames && feedNames.includes(feedName))) {
-      const nextIntent = (requestEnvelope.request as IntentRequest).intent;
+      const nextIntent = getRequest<IntentRequest>(requestEnvelope).intent;
       nextIntent.slots[feedSlotName].confirmationStatus = 'DENIED'; // Invalidate the feed name given
 
       const noFeedMsg = t('NO_FEED_MSG');

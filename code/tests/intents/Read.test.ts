@@ -1,5 +1,9 @@
-import { getRequest, HandlerInput } from 'ask-sdk-core';
-import { Intent, IntentConfirmationStatus, IntentRequest } from 'ask-sdk-model';
+import { getSlotValue, HandlerInput } from 'ask-sdk-core';
+import {
+  IntentConfirmationStatus,
+  Slot,
+  SlotConfirmationStatus,
+} from 'ask-sdk-model';
 import fc from 'fast-check';
 import { mocked } from 'ts-jest/utils';
 import {
@@ -24,6 +28,9 @@ import {
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import { testIntentCanHandle } from '../helpers/helperTests';
 import { mockProperty } from '../helpers/ts-mockito/mockProperty';
+import { mockIntent } from '../helpers/mockIntent';
+import { feedSlotName } from '../../src/util/constants';
+import { getItems } from '../../src/logic/Feed';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle({
@@ -31,13 +38,71 @@ testIntentCanHandle({
   intentName: 'ReadIntent',
 });
 
-test.todo(
-  'ReadIntent - If the feed name has not been received yet, let Alexa continue the dialogue'
-);
+test('ReadIntent - If the feed name has not been received yet, let Alexa continue the dialogue', async () => {
+  const mocks = await mockHandlerInput();
 
-test.todo(
-  'ReadIntent - If the feed is not on our list, return and warn the user'
-);
+  mocked(getSlotValue).mockReturnValue(undefined);
+
+  const { intentMock } = mockIntent();
+
+  await ReadIntentHandler.handle(mocks.instanceHandlerInput);
+
+  verify(mocks.mockedResponseBuilder.speak(anyString())).never();
+
+  verify(
+    mocks.mockedResponseBuilder.addDelegateDirective(instance(intentMock))
+  ).once();
+});
+
+jest.mock('../../src/logic/Feed');
+
+test('ReadIntent - If the feed is not on our list, invalidate the feed name given, warn the user and try again', () =>
+  fc.assert(
+    fc.asyncProperty(
+      fc.string({ minLength: 1 }),
+      fc.array(fc.string()),
+      async (feedName, feedNames) => {
+        fc.pre(!feedNames.includes(feedName));
+
+        const mocks = await mockHandlerInput({
+          sessionAttributes: {
+            feedNames,
+          },
+        });
+
+        mocked(getSlotValue).mockReturnValue(feedName);
+
+        const { intentMock } = mockIntent();
+
+        const feedSlot: Slot = {
+          name: feedName,
+          confirmationStatus: 'NONE',
+        };
+
+        when(intentMock.slots).thenReturn({
+          [feedSlotName]: feedSlot,
+        });
+
+        mocked(getItems).mockImplementation(() => {
+          throw new Error('Should not be trying to get any items');
+        });
+
+        await ReadIntentHandler.handle(mocks.instanceHandlerInput);
+
+        expect(feedSlot.confirmationStatus).toEqual<SlotConfirmationStatus>(
+          'DENIED'
+        );
+
+        verify(
+          mocks.mockedResponseBuilder.speak(mocks.t('NO_FEED_MSG'))
+        ).once();
+
+        verify(
+          mocks.mockedResponseBuilder.addDelegateDirective(instance(intentMock))
+        ).once();
+      }
+    )
+  ));
 
 test.todo(
   "ReadIntent - Gets items from feed with Alexa's locale, stores a ReadState and starts reading items"
@@ -266,13 +331,7 @@ async function checkIfOnConfirmationStatus(
   },
   fn: (shouldBeTrue?: boolean) => unknown | Promise<unknown>
 ) {
-  const intentRequestMock = mock<IntentRequest>();
-
-  const intentMock = mock<Intent>();
-
-  when(intentRequestMock.intent).thenCall(() => instance(intentMock));
-
-  mocked(getRequest).mockImplementation(() => instance(intentRequestMock));
+  const { intentMock } = mockIntent();
 
   for (const confirmationStatus in allowedConfirmationStatuses) {
     reset(intentMock);
