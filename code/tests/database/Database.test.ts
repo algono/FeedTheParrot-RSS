@@ -16,8 +16,8 @@ import {
   Database,
   UserData,
 } from '../../src/database/Database';
-import { Feed, ItemField } from '../../src/logic/Feed';
 import { allTranslationsFrom } from '../helpers/allTranslationsFrom';
+import { feedRecord } from '../helpers/fast-check/arbitraries';
 import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
 
 jest.mock('firebase-admin', () => ({
@@ -238,24 +238,7 @@ test('getFeedsFromUser gets feeds and feedNames based on the name field', async 
       fc.constantFrom(
         ...(await allTranslationsFrom<string>('FEED_NAME_FIELD'))
       ),
-      fc.array(
-        fc.record<Feed>({
-          name: fc.lorem(),
-          url: fc.webUrl(),
-          language: fc.oneof(fc.string(), fc.constant(undefined)),
-          itemLimit: fc.oneof(fc.nat(), fc.constant(undefined)),
-          truncateSummaryAt: fc.oneof(fc.nat(), fc.constant(undefined)),
-          readFields: fc.oneof(
-            fc.array(
-              fc.record<ItemField>({
-                name: fc.string(),
-                truncateAt: fc.nat(),
-              })
-            ),
-            fc.constant(undefined)
-          ),
-        })
-      ),
+      fc.array(feedRecord),
       async (nameField, expectedFeeds) => {
         clearState();
 

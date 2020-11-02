@@ -8,19 +8,12 @@ jest.mock('ask-sdk-core');
 import { getIntentName } from 'ask-sdk-core';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
 import * as fc from 'fast-check';
+import { alphaAndUnderscoreString } from '../helpers/fast-check/arbitraries';
 
 testIntentCanHandle({
   handler: IntentReflectorHandler,
   testName: 'Intent reflector can handle any IntentRequest',
 });
-
-const alphaAndUnderscoreProperty = fc.stringOf(
-  fc.mapToConstant(
-    { num: 26, build: (v) => String.fromCharCode(v + 0x41) }, // A-Z
-    { num: 26, build: (v) => String.fromCharCode(v + 0x61) }, // a-z
-    { num: 1, build: () => '_' } // _
-  )
-);
 
 testInAllLocales(
   'Intent reflector response contains the reflected intent',
@@ -38,7 +31,7 @@ testInAllLocales(
          * Numbers, spaces, or other special characters are not allowed."
          * (built-in intents have 'AMAZON' and a dot prepended to its name)
          */
-        alphaAndUnderscoreProperty
+        alphaAndUnderscoreString
           .filter((str) => /^[a-z]+(?:_[a-z]+)*$/i.test(str))
           .map((name) => (Math.random() < 0.5 ? 'AMAZON.' : '') + name), // 50/50 of being a built-in intent
         (intentName) => {

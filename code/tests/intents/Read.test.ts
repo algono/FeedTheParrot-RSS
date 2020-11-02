@@ -1,4 +1,4 @@
-import { getSlotValue, HandlerInput } from 'ask-sdk-core';
+import { getLocale, getSlotValue, HandlerInput } from 'ask-sdk-core';
 import {
   IntentConfirmationStatus,
   Slot,
@@ -26,11 +26,12 @@ import {
   SkipItemIntentHandler,
 } from '../../src/intents/Read';
 import { mockHandlerInput } from '../helpers/HandlerInputMocks';
-import { testIntentCanHandle } from '../helpers/helperTests';
+import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 import { mockProperty } from '../helpers/ts-mockito/mockProperty';
 import { mockIntent } from '../helpers/mockIntent';
 import { feedSlotName } from '../../src/util/constants';
-import { getItems } from '../../src/logic/Feed';
+import { Feed, FeedItem, getItems } from '../../src/logic/Feed';
+import { feedItemRecord, feedRecord } from '../helpers/fast-check/arbitraries';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle({
@@ -59,9 +60,9 @@ jest.mock('../../src/logic/Feed');
 test('ReadIntent - If the feed is not on our list, invalidate the feed name given, warn the user and try again', () =>
   fc.assert(
     fc.asyncProperty(
-      fc.string({ minLength: 1 }),
       fc.array(fc.string()),
-      async (feedName, feedNames) => {
+      fc.string({ minLength: 1 }),
+      async (feedNames, feedName) => {
         fc.pre(!feedNames.includes(feedName));
 
         const mocks = await mockHandlerInput({
@@ -104,8 +105,76 @@ test('ReadIntent - If the feed is not on our list, invalidate the feed name give
     )
   ));
 
-test.todo(
-  "ReadIntent - Gets items from feed with Alexa's locale, stores a ReadState and starts reading items"
+testInAllLocales(
+  "ReadIntent - Gets items from feed with Alexa's locale, stores a ReadState and starts reading items",
+  (locale) =>
+    fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            fc.set(feedRecord, {
+              minLength: 1,
+              compare: (a, b) => a.name === b.name,
+            }),
+            fc.nat()
+          )
+          .map(([feeds, index]) => {
+            const feedNames = feeds.map((feed) => feed.name);
+            return {
+              feeds: feeds.reduce<{ [x: string]: Feed }>((feeds, feed) => {
+                feeds[feed.name] = feed as Feed;
+                return feeds;
+              }, {}),
+              feedNames,
+              feed: feeds[index % feeds.length],
+            };
+          }),
+        fc.array(feedItemRecord),
+        async (
+          {
+            feeds,
+            feedNames,
+            feed,
+          }: { feeds: { [x: string]: Feed }; feedNames: string[]; feed: Feed },
+          feedItems: FeedItem[]
+        ) => {
+          const sessionAttributes: {
+            feeds: { [x: string]: Feed };
+            feedNames: string[];
+            readState?: ReadState;
+          } = {
+            feeds,
+            feedNames,
+          };
+
+          const mocks = await mockHandlerInput({
+            locale,
+            sessionAttributes,
+          });
+
+          mocked(getLocale).mockReturnValue(locale);
+
+          mocked(getSlotValue).mockReturnValue(feed.name);
+
+          mocked(getItems).mockResolvedValue(feedItems);
+
+          const readItemSpy = spy(ReadItemIntentHandler);
+          when(readItemSpy.handle(anything())).thenCall(() => {});
+
+          await ReadIntentHandler.handle(mocks.instanceHandlerInput);
+
+          expect(getItems).toHaveBeenLastCalledWith(feed, locale);
+
+          expect(sessionAttributes.readState).toMatchObject({
+            feedName: feed.name,
+            feed,
+            feedItems,
+          });
+
+          verify(readItemSpy.handle(mocks.instanceHandlerInput)).once();
+        }
+      )
+    )
 );
 
 describe('Read intents when reading', () => {
@@ -245,9 +314,9 @@ describe('Read intents when reading', () => {
           await fn(mocks.instanceHandlerInput);
 
           if (shouldBeTrue) {
-            verify(readItemSpy.handle(anything())).once();
+            verify(readItemSpy.handle(mocks.instanceHandlerInput)).once();
           } else {
-            verify(readItemSpy.handle(anything())).never();
+            verify(readItemSpy.handle(mocks.instanceHandlerInput)).never();
           }
         }
       )

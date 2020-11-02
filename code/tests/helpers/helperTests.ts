@@ -4,16 +4,35 @@ import { mockHandlerInput, MockHandlerInputOptions } from './HandlerInputMocks';
 
 const availableLocales = ['en', 'es'];
 
-export function testInAllLocales(name: string, fn: { (locale: string): any }) {
+function genTestName(name: string, locale: string): string {
+  return `${name} (${locale})`;
+}
+
+export function testInAllLocales(
+  name: string,
+  fn: { (locale: string): unknown }
+) {
   availableLocales.forEach((locale) => {
-    test(`${name} (${locale})`, () => fn(locale));
+    test(genTestName(name, locale), () => fn(locale));
   });
 }
 
 export namespace testInAllLocales {
   export function todo(name: string) {
     availableLocales.forEach((locale) => {
-      test.todo(`${name} (${locale})`);
+      test.todo(genTestName(name, locale));
+    });
+  }
+
+  export function only(name: string, fn: { (locale: string): unknown }) {
+    availableLocales.forEach((locale) => {
+      test.only(genTestName(name, locale), () => fn(locale));
+    });
+  }
+
+  export function skip(name: string, fn?: { (locale: string): unknown }) {
+    availableLocales.forEach((locale) => {
+      test.skip(genTestName(name, locale), () => fn(locale));
     });
   }
 }
