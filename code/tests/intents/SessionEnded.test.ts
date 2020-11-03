@@ -1,6 +1,6 @@
 import { anyString, anything, capture, verify } from 'ts-mockito';
 import { SessionEndedRequestHandler } from '../../src/intents/SessionEnded';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testCanHandle, testInAllLocales } from '../helpers/helperTests';
 import { er } from 'ask-sdk-model';
 

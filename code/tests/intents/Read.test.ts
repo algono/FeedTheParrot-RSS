@@ -25,10 +25,10 @@ import {
   ReadState,
   SkipItemIntentHandler,
 } from '../../src/intents/Read';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 import { mockProperty } from '../helpers/ts-mockito/mockProperty';
-import { mockIntent } from '../helpers/mockIntent';
+import { mockIntent } from '../helpers/mocks/mockIntent';
 import { feedSlotName } from '../../src/util/constants';
 import { Feed, FeedItem, getItems } from '../../src/logic/Feed';
 import { feedItemRecord, feedRecord } from '../helpers/fast-check/arbitraries';

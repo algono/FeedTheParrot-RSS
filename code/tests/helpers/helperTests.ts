@@ -1,6 +1,6 @@
 import { getIntentName, getRequestType, RequestHandler } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
-import { mockHandlerInput, MockHandlerInputOptions } from './HandlerInputMocks';
+import { mockHandlerInput, MockHandlerInputOptions } from './mocks/HandlerInputMocks';
 
 const availableLocales = ['en', 'es'];
 

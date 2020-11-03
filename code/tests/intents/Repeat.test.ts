@@ -5,7 +5,7 @@ import {
   RepeatIntentHandler,
   SaveResponseForRepeatingInterceptor,
 } from '../../src/intents/Repeat';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testIntentCanHandle } from '../helpers/helperTests';
 
 async function testSaveResponseForRepeatingInterceptor(

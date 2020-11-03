@@ -4,7 +4,7 @@ import {
   LocalizationRequestInterceptor,
   TFunction,
 } from '../../src/util/localization';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales } from '../helpers/helperTests';
 
 jest.mock('ask-sdk-core');

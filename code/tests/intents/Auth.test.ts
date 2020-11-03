@@ -1,9 +1,9 @@
 import { AuthIntentHandler } from '../../src/intents/Auth';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testIntentCanHandle } from '../helpers/helperTests';
 
 import { capture } from 'ts-mockito';
-import { mockDatabase } from '../helpers/mockDatabase';
+import { mockDatabase } from '../helpers/mocks/mockDatabase';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle({

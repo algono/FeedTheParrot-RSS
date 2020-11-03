@@ -3,7 +3,7 @@ import {
   LaunchSessionAttributes,
 } from '../../src/intents/Launch';
 import { testCanHandle } from '../helpers/helperTests';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { mocked } from 'ts-jest/utils';
 import { anyString, anything, capture, instance, mock, when } from 'ts-mockito';
 
@@ -13,7 +13,7 @@ jest.mock('ask-sdk-core');
 import { getUserId } from 'ask-sdk-core';
 import { dialog, Directive } from 'ask-sdk-model';
 import fc from 'fast-check';
-import { mockDatabase } from '../helpers/mockDatabase';
+import { mockDatabase } from '../helpers/mocks/mockDatabase';
 
 testCanHandle({
   handler: LaunchRequestHandler,

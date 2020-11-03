@@ -1,6 +1,6 @@
 import { capture } from 'ts-mockito';
 import { CancelAndStopIntentHandler } from '../../src/intents/Stop';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 
 jest.mock('ask-sdk-core');

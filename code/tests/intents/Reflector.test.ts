@@ -6,7 +6,7 @@ import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 jest.mock('ask-sdk-core');
 
 import { getIntentName } from 'ask-sdk-core';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import * as fc from 'fast-check';
 import { alphaAndUnderscoreString } from '../helpers/fast-check/arbitraries';
 

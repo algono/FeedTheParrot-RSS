@@ -1,6 +1,6 @@
 import { capture } from 'ts-mockito';
 import { ListIntentHandler } from '../../src/intents/List';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 import * as fc from 'fast-check';
 

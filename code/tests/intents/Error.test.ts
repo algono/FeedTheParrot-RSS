@@ -6,7 +6,7 @@ import {
   FeedIsTooLongErrorHandler,
   GenericErrorHandler,
 } from '../../src/intents/Error';
-import { mockHandlerInput } from '../helpers/HandlerInputMocks';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales } from '../helpers/helperTests';
 
 test('Feed is too long error handler can handle only FeedIsToLongErrors', () => {
