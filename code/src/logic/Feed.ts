@@ -17,7 +17,7 @@ export interface ItemField {
   truncateAt: number;
 }
 
-interface FeedItemAlexaReads {
+export interface FeedItemAlexaReads {
   title: string;
   content: string[];
 }

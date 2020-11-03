@@ -1,5 +1,10 @@
 import fc from 'fast-check';
-import { Feed, FeedItem, ItemField } from '../../../src/logic/Feed';
+import {
+  Feed,
+  FeedItem,
+  FeedItemAlexaReads,
+  ItemField,
+} from '../../../src/logic/Feed';
 
 export const feedRecord = fc.record<Feed>({
   name: fc.lorem(),
@@ -18,14 +23,31 @@ export const feedRecord = fc.record<Feed>({
   ),
 });
 
-export const feedItemRecord = fc.record<FeedItem>({
+export const alexaReadsRecord = fc.record<FeedItemAlexaReads>({
   title: fc.lorem(),
-  description: fc.lorem({ mode: 'sentences' }),
-  summary: fc.lorem({ mode: 'sentences' }),
-  date: fc.date().map((date) => date.toUTCString()),
-  link: fc.webUrl(),
-  imageUrl: fc.webUrl(),
+  content: fc.array(fc.lorem({ mode: 'sentences' })),
 });
+
+export function feedItemRecord({ readingIt = false } = {}) {
+  return fc.record<FeedItem>({
+    title: fc.lorem(),
+    description: fc.lorem({ mode: 'sentences' }),
+    summary: fc.lorem({ mode: 'sentences' }),
+    date: fc.date().map((date) => date.toUTCString()),
+    link: fc.webUrl(),
+    imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
+    alexaReads: readingIt
+      ? alexaReadsRecord
+      : fc.oneof(alexaReadsRecord, fc.constant(undefined)),
+    cardReads: readingIt
+      ? fc.array(fc.lorem({ mode: 'sentences' }))
+      : fc.oneof(
+          fc.array(fc.lorem({ mode: 'sentences' })),
+          fc.constant(undefined)
+        ),
+    index: readingIt ? fc.nat() : fc.oneof(fc.nat(), fc.constant(undefined)),
+  });
+}
 
 export const alphaAndUnderscoreString = fc.stringOf(
   fc.mapToConstant(

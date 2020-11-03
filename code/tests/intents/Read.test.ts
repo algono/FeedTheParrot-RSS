@@ -129,7 +129,7 @@ testInAllLocales(
               feed: feeds[index % feeds.length],
             };
           }),
-        fc.array(feedItemRecord),
+        fc.array(feedItemRecord()),
         async (
           {
             feeds,
@@ -178,17 +178,16 @@ testInAllLocales(
 );
 
 describe('Read intents when reading', () => {
-  const readStateMock = mock<ReadState>();
-  when(readStateMock.reading).thenReturn(true);
-
-  beforeEach(() => {
-    reset(readStateMock);
+  function mockReadState() {
+    const readStateMock = mock<ReadState>();
     when(readStateMock.reading).thenReturn(true);
-  });
+
+    return readStateMock;
+  }
 
   const sessionAttributesWhenReading: {
     readState: ReadState;
-  } = { readState: instance(readStateMock) };
+  } = { readState: instance(mockReadState()) };
 
   testIntentCanHandle({
     handler: ReadItemIntentHandler,
@@ -234,9 +233,81 @@ describe('Read intents when reading', () => {
     'ReadContentIntent - If it is any content item but the last one, prompt for continuing reading the next'
   );
 
-  test.todo(
-    'ReadContentIntent - If there are no other items to continue to, prompt for going to the next item'
-  );
+  test('ReadContentIntent - If there are no other items to continue to (or the index is not valid), prompt for going to the next item', () =>
+    fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            fc.array(feedItemRecord({ readingIt: true }), { minLength: 1 }),
+            fc.nat(),
+            fc.integer()
+          )
+          .map(([feedItems, currentIndex, currentContentIndex]) => {
+            currentIndex %= feedItems.length;
+
+            const contentLength =
+              feedItems[currentIndex].alexaReads.content.length;
+
+            if (
+              currentContentIndex >= 0 &&
+              currentContentIndex < contentLength
+            ) {
+              currentContentIndex += contentLength;
+            }
+
+            return {
+              feedItems: feedItems as FeedItem[],
+              currentIndex,
+              currentContentIndex,
+            };
+          }),
+        fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
+        async (
+          { feedItems, currentIndex, currentContentIndex },
+          confirmationStatus
+        ) => {
+          const readStateMock = mockReadState();
+
+          when(readStateMock.feedItems).thenReturn(feedItems);
+          when(readStateMock.currentIndex).thenReturn(currentIndex);
+          when(readStateMock.currentContentIndex).thenReturn(
+            currentContentIndex
+          );
+
+          const mocks = await mockHandlerInput({
+            sessionAttributes: { readState: instance(readStateMock) },
+          });
+
+          const { intentMock } = mockIntent();
+          when(intentMock.confirmationStatus).thenReturn(confirmationStatus);
+
+          await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
+
+          verify(
+            mocks.mockedResponseBuilder.speak(
+              mocks.t('CONFIRMATION_GOTO_NEXT_FEED_ITEM')
+            )
+          ).once();
+
+          verify(
+            mocks.mockedResponseBuilder.withStandardCard(
+              anyString(),
+              anyString(),
+              anyString()
+            )
+          ).never();
+
+          verify(
+            mocks.mockedResponseBuilder.addConfirmIntentDirective(
+              deepEqual({
+                name: 'AMAZON.NextIntent',
+                confirmationStatus: 'NONE',
+              })
+            )
+          ).once();
+        }
+      )
+    ));
 
   test('ReadContentIntent - If the intent was denied, go to the next item', () =>
     checkIfOnConfirmationStatus(
@@ -283,6 +354,7 @@ describe('Read intents when reading', () => {
         // min value so that initial AND final indexes are never negative
         fc.integer({ min: n < 0 ? Math.abs(n) : 0 }),
         async (index) => {
+          const readStateMock = mockReadState();
           const readState = instance(readStateMock);
 
           mockProperty(
@@ -365,6 +437,7 @@ describe('Read intents when reading', () => {
         DENIED: true,
       },
       async (shouldBeTrue) => {
+        const readStateMock = mockReadState();
         const mocks = await mockHandlerInput({
           sessionAttributes: {
             readState: instance(readStateMock),

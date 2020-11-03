@@ -87,6 +87,9 @@ export async function mockHandlerInput({
   when(mockedResponseBuilder.addDelegateDirective(anything())).thenCall(() =>
     instance(mockedResponseBuilder)
   );
+  when(mockedResponseBuilder.addConfirmIntentDirective(anything())).thenCall(() =>
+    instance(mockedResponseBuilder)
+  );
 
   const mockedResponse = mock<Response>();
 

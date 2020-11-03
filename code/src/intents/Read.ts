@@ -249,9 +249,16 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     attributesManager.setSessionAttributes(sessionAttributes);
 
+    if (cardOutputItem) {
+      responseBuilder.withStandardCard(
+        item.title,
+        cardOutputItem,
+        item.imageUrl
+      );
+    }
+
     return responseBuilder
       .speak(speakOutputItem + confirmationMsg)
-      .withStandardCard(item.title, cardOutputItem, item.imageUrl)
       .addConfirmIntentDirective({
         name: nextIntentName,
         confirmationStatus: 'NONE',
