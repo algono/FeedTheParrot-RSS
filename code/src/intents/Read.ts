@@ -2,20 +2,17 @@ import {
   RequestHandler,
   getRequestType,
   getIntentName,
-  getSlotValue,
-  getLocale,
   HandlerInput,
   getRequest,
 } from 'ask-sdk-core';
 import { IntentRequest } from 'ask-sdk-model';
 
 import {
-  feedSlotName,
   EXTRA_LONG_PAUSE,
   PAUSE_BETWEEN_ITEMS,
   LONG_PAUSE,
 } from '../util/constants';
-import { Feed, FeedItem, getItems } from '../logic/Feed';
+import { applyLangFormatter, Feed, FeedItems } from '../logic/Feed';
 
 import { TFunction } from '../util/localization';
 
@@ -23,80 +20,10 @@ export interface ReadState {
   reading: boolean;
   feedName: string;
   feed: Feed;
-  feedItems: FeedItem[];
+  feedItems: FeedItems;
   currentIndex: number;
   currentContentIndex?: number;
 }
-
-export const ReadIntentHandler: RequestHandler = {
-  canHandle(handlerInput) {
-    return (
-      getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
-      getIntentName(handlerInput.requestEnvelope) === 'ReadIntent'
-    );
-  },
-  async handle(handlerInput) {
-    const {
-      attributesManager,
-      requestEnvelope,
-      responseBuilder,
-    } = handlerInput;
-
-    const { t }: { t?: TFunction } = attributesManager.getRequestAttributes();
-
-    const feedName = getSlotValue(requestEnvelope, feedSlotName);
-    console.log('(ReadIntent) Feed name received: ' + feedName);
-
-    // If the feed name has not been received yet, let Alexa continue the dialogue
-    if (!feedName) {
-      return responseBuilder
-        .addDelegateDirective(getRequest<IntentRequest>(requestEnvelope).intent)
-        .getResponse();
-    }
-
-    const sessionAttributes = attributesManager.getSessionAttributes();
-
-    const feedNames: string[] = sessionAttributes.feedNames;
-
-    console.log('(ReadIntent) Feed names: ' + JSON.stringify(feedNames));
-
-    // If the feed is not on our list, return and warn the user
-    if (!(feedNames && feedNames.includes(feedName))) {
-      const nextIntent = getRequest<IntentRequest>(requestEnvelope).intent;
-      nextIntent.slots[feedSlotName].confirmationStatus = 'DENIED'; // Invalidate the feed name given
-
-      const noFeedMsg = t('NO_FEED_MSG');
-      return responseBuilder
-        .speak(noFeedMsg) // Warn the user
-        .addDelegateDirective(nextIntent) // Try again (feed name invalidated)
-        .getResponse();
-    }
-
-    const locale = getLocale(requestEnvelope);
-
-    const feed: Feed = sessionAttributes.feeds[feedName];
-
-    const items = await getItems(feed, locale);
-
-    const readState: ReadState = {
-      reading: false,
-      feedName: feedName,
-      feed: feed,
-      feedItems: items,
-      currentIndex: 0,
-    };
-
-    sessionAttributes.readState = readState;
-
-    attributesManager.setSessionAttributes(sessionAttributes);
-
-    console.log(
-      'Session attributes in ReadIntent: ' + JSON.stringify(sessionAttributes)
-    );
-
-    return ReadItemIntentHandler.handle(handlerInput);
-  },
-};
 
 export const ReadItemIntentHandler: RequestHandler = {
   canHandle(handlerInput) {
@@ -148,14 +75,14 @@ export const ReadItemIntentHandler: RequestHandler = {
     }
 
     // If the index is within the items length, continue
-    if (index >= 0 && index < items.length) {
-      const item = items[index];
+    if (index >= 0 && index < items.list.length) {
+      const item = items.list[index];
 
       console.log('Read Feed Item: ' + JSON.stringify(item));
 
       // Read only the title
       speakOutput +=
-        item.alexaReads.title +
+        applyLangFormatter(item.title, items.langFormatter) +
         EXTRA_LONG_PAUSE +
         t('CONFIRMATION_CONTINUE_READING_FEED');
 
@@ -211,13 +138,13 @@ export const ReadContentIntentHandler: RequestHandler = {
         .getResponse();
     }
 
-    const item = readState.feedItems[readState.currentIndex];
+    const item = readState.feedItems.list[readState.currentIndex];
 
     const { t }: { t?: TFunction } = attributesManager.getRequestAttributes();
 
     const index = readState.currentContentIndex ?? 0;
 
-    const content = item.alexaReads.content;
+    const content = item.content;
 
     let speakOutputItem: string,
       cardOutputItem: string,
@@ -225,8 +152,8 @@ export const ReadContentIntentHandler: RequestHandler = {
       nextIntentName: string;
 
     if (index >= 0 && index < content.length) {
-      speakOutputItem = content[index];
-      cardOutputItem = item.cardReads[index];
+      cardOutputItem = content[index];
+      speakOutputItem = applyLangFormatter(cardOutputItem, readState.feedItems.langFormatter);
 
       // If it is any content item but the last one, prompt for continue reading the next
       if (index < content.length - 1) {

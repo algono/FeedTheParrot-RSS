@@ -3,6 +3,7 @@ import { ListIntentHandler } from '../../src/intents/List';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 import * as fc from 'fast-check';
+import { escapeRegex } from '../helpers/escapeRegex';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle({ handler: ListIntentHandler, intentName: 'ListIntent' });
@@ -30,10 +31,6 @@ testInAllLocales(
     expect(responseCardContent.startsWith(feedListEmptyMessage)).toBe(true);
   }
 );
-
-function escapeRegex(currentValue: string) {
-  return currentValue.replace(/[\W]/g, '\\$&');
-}
 
 testInAllLocales('List intent shows all feeds', async (locale) => {
   const sessionAttributes: { feedNames?: string[] } = {};

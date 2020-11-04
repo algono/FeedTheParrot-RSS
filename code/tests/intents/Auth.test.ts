@@ -13,11 +13,11 @@ testIntentCanHandle({
 
 test('Auth intent generates a 6 digit code', async () => {
   const sessionAttributes = {};
-  const mocks = await mockHandlerInput({ sessionAttributes });
+  const mocks = await mockHandlerInput({ sessionAttributes, locale: null });
 
   const mockedDatabase = mockDatabase();
 
-  AuthIntentHandler.handle(mocks.instanceHandlerInput);
+  await AuthIntentHandler.handle(mocks.instanceHandlerInput);
 
   const [authCode] = capture(mockedDatabase.addAuthCode).last();
 

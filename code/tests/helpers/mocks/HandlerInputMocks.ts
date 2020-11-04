@@ -41,7 +41,15 @@ export async function mockHandlerInput({
 
   const mockedAttributesManager = mock<AttributesManager>();
 
-  const t = locale ? await init(locale) : () => '';
+  const t = locale
+    ? await init(locale)
+    : locale === null
+    ? () => ''
+    : () => {
+        throw new Error(
+          "You called the 't' function but never initialized the locale"
+        );
+      };
 
   if (addTFunctionToRequestAttributes) {
     if (requestAttributes) requestAttributes.t = t;
@@ -87,9 +95,9 @@ export async function mockHandlerInput({
   when(mockedResponseBuilder.addDelegateDirective(anything())).thenCall(() =>
     instance(mockedResponseBuilder)
   );
-  when(mockedResponseBuilder.addConfirmIntentDirective(anything())).thenCall(() =>
-    instance(mockedResponseBuilder)
-  );
+  when(
+    mockedResponseBuilder.addConfirmIntentDirective(anything())
+  ).thenCall(() => instance(mockedResponseBuilder));
 
   const mockedResponse = mock<Response>();
 

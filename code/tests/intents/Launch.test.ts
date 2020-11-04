@@ -24,7 +24,7 @@ testCanHandle({
 test('Launch intent saves userId from database in session attributes', async () => {
   await fc.assert(
     fc.asyncProperty(fc.string(), fc.string(), async (userId, refId) => {
-      const mocks = await mockHandlerInput();
+      const mocks = await mockHandlerInput({ locale: null });
 
       mocked(getUserId).mockReturnValue(userId);
 
@@ -77,7 +77,7 @@ test('Launch intent takes feed names from session attributes and creates slot va
         feeds: { testFeed: null }, // This is not used within the code, only checked if it has something in it
         feedNames,
       });
-      const mocks = await mockHandlerInput({ sessionAttributes });
+      const mocks = await mockHandlerInput({ sessionAttributes, locale: null });
 
       await LaunchRequestHandler.handle(mocks.instanceHandlerInput);
 

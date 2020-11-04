@@ -71,7 +71,7 @@ test('Generic error handler shows error stack in console', async () => {
       const logSpy = spy(console);
 
       await GenericErrorHandler.handle(
-        (await mockHandlerInput()).instanceHandlerInput,
+        (await mockHandlerInput({ locale: null })).instanceHandlerInput,
         instance(mockError)
       );
 

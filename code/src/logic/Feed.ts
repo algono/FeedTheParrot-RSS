@@ -3,7 +3,7 @@ import { AllHtmlEntities as entities } from 'html-entities';
 import fetch from 'node-fetch';
 import striptags from 'striptags';
 import util from 'util';
-import { initNewInstance } from '../util/localization';
+import { initNewInstance, TFunction } from '../util/localization';
 import { MAX_CHARACTERS_SPEECH, MAX_RESPONSE_LENGTH } from '../util/constants';
 import { FeedIsTooLongError } from '../intents/Error';
 
@@ -17,11 +17,6 @@ export interface ItemField {
   truncateAt: number;
 }
 
-export interface FeedItemAlexaReads {
-  title: string;
-  content: string[];
-}
-
 export interface FeedItem {
   title: string;
   description: string;
@@ -30,10 +25,14 @@ export interface FeedItem {
   link: string;
   imageUrl?: string;
 
-  alexaReads?: FeedItemAlexaReads;
-  cardReads?: string[];
+  content?: string[];
 
   index?: number;
+}
+
+export interface FeedItems {
+  list: FeedItem[];
+  langFormatter?: string;
 }
 
 export interface FeedData {
@@ -53,11 +52,13 @@ export function getItems(
   feed: Feed,
   defaultLocale: string,
   options?: GetItemsOptions
-): Promise<FeedItem[]> {
-  return new Promise<FeedItem[]>((resolve, reject) => {
+): Promise<FeedItems> {
+  return new Promise<FeedItems>((resolve, reject) => {
     const req = fetch(feed.url);
     const feedparser = new FeedParser({ feedurl: feed.url });
-    const items: FeedItem[] = [];
+    const items: FeedItems = {
+      list: [],
+    };
 
     req.then(
       function (res) {
@@ -84,11 +85,8 @@ export function getItems(
       const t = await initNewInstance(locale);
 
       // If the locale of the feed doesn't match the one on the device, use SSML to change the voice and language
-      let langFormatter: string;
       if (locale !== defaultLocale) {
-        langFormatter = `<voice name="${t(
-          'DEFAULT_VOICE'
-        )}"><lang xml:lang="${t('DEFAULT_VOICE_LOCALE')}">%s</lang></voice>`;
+        items.langFormatter = getLangFormatter(t);
       }
 
       // Get ampersand replacement for that language (i.e: 'and' in English)
@@ -111,11 +109,11 @@ export function getItems(
 
       let item: Item;
       while ((item = stream.read())) {
-        const feedItem = processFeedItem(item, feed, clean, langFormatter);
-        items.push(feedItem);
+        const feedItem = processFeedItem(item, feed, clean);
+        items.list.push(feedItem);
 
         // If there is an item limit set and it has been surpassed, consume the stream and break the loop
-        if (itemLimit && items.length >= itemLimit) {
+        if (itemLimit && items.list.length >= itemLimit) {
           stream.resume(); // It turns out the resume method does the best job at consuming the stream
           break;
         }
@@ -124,26 +122,29 @@ export function getItems(
 
     // All items have been parsed.
     feedparser.on('end', function () {
-      console.log('Checking feed size...') // Not sure why, but it seems to only work if there is something before checking the feed size
+      console.log('Checking feed size...'); // Not sure why, but it seems to only work if there is something before checking the feed size
 
-      const feedSize = JSON.stringify(items).length;
+      const feedSize = JSON.stringify(items.list).length;
 
       console.log('Feed size: ' + feedSize);
 
       if (
         feedSize >
         calculateMaxFeedSize(
-          calculateMaxCharactersInFeedContent(items, feed.truncateSummaryAt)
+          calculateMaxCharactersInFeedContent(
+            items.list,
+            feed.truncateSummaryAt
+          )
         )
       ) {
         console.log('Feed is too large for max size calculation');
         reject(new FeedIsTooLongError());
       }
 
-      items.sort(function (a, b) {
+      items.list.sort(function (a, b) {
         return new Date(b.date).getTime() - new Date(a.date).getTime();
       });
-      items.forEach(function (item, index) {
+      items.list.forEach(function (item, index) {
         item.index = index;
       });
 
@@ -154,6 +155,12 @@ export function getItems(
       reject(err);
     });
   });
+}
+
+export function getLangFormatter(t: TFunction): string {
+  return `<voice name="${t(
+    'DEFAULT_VOICE'
+  )}"><lang xml:lang="${t('DEFAULT_VOICE_LOCALE')}">%s</lang></voice>`;
 }
 
 // This value will probably be tweaked in the future
@@ -179,7 +186,7 @@ function calculateMaxCharactersInFeedContent(
   let res = 0;
   for (const item of items) {
     let max = 0;
-    for (const speech of item.alexaReads.content) {
+    for (const speech of item.content) {
       if (truncateAt && speech.length >= truncateAt) {
         return truncateAt;
       } else if (speech.length > max) {
@@ -198,11 +205,8 @@ function calculateMaxCharactersInFeedContent(
 function processFeedItem(
   item: Item,
   feed: Feed,
-  clean: { (text: string): string },
-  langFormatter: string
+  clean: { (text: string): string }
 ) {
-  //console.log('Get Feed Item = ' + JSON.stringify(item));
-
   /**
    * Note:
    * The FeedParser library adds the rss:content to the description, and the rss:description to the summary.
@@ -217,10 +221,6 @@ function processFeedItem(
     date: new Date(item.date).toUTCString(),
     link: item.link,
     imageUrl: item.image ? item.image.url : undefined,
-  };
-
-  const alexaReads: FeedItemAlexaReads = {
-    title: feedItem.title,
     content: [],
   };
 
@@ -241,9 +241,9 @@ function processFeedItem(
           `Field "${field.name}" truncated at ${truncateAt} characters`
         );
         truncatedText = truncateAll(text, truncateAt);
-        alexaReads.content.push(...truncatedText);
+        feedItem.content.push(...truncatedText);
       } else {
-        alexaReads.content.push(text);
+        feedItem.content.push(text);
       }
     });
   } else {
@@ -254,28 +254,24 @@ function processFeedItem(
     if (feed.truncateSummaryAt || summary.length > MAX_CHARACTERS_SPEECH) {
       truncatedSummary = truncateAll(summary, feed.truncateSummaryAt);
       console.log(`Summary truncated at ${feed.truncateSummaryAt} characters`);
-      alexaReads.content = truncatedSummary;
+      feedItem.content = truncatedSummary;
     } else {
-      alexaReads.content = [summary];
+      feedItem.content = [summary];
     }
   }
 
-  const cardReads = alexaReads.content;
-
-  if (langFormatter) {
-    alexaReads.title = util.format(langFormatter, alexaReads.title);
-    alexaReads.content = alexaReads.content.map((value) =>
-      util.format(langFormatter, value)
-    );
-  }
-
-  console.log('Alexa reads: ' + JSON.stringify(alexaReads));
-  console.log('Card reads: ' + cardReads);
-
-  feedItem.alexaReads = alexaReads;
-  feedItem.cardReads = cardReads;
-
   return feedItem;
+}
+
+export function applyLangFormatter(
+  target: string,
+  langFormatter: string
+) {
+  if (langFormatter) {
+    return util.format(langFormatter, target);
+  } else {
+    return target;
+  }
 }
 
 // Max characters between last phrase end and truncated string end

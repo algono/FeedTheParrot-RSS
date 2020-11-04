@@ -9,6 +9,9 @@ import { ListIntentHandler } from './intents/List';
 
 import {
   ReadIntentHandler,
+} from './intents/Fetch'
+
+import {
   ReadItemIntentHandler,
   ReadContentIntentHandler,
   GoToPreviousItemIntentHandler,

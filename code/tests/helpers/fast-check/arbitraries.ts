@@ -2,9 +2,11 @@ import fc from 'fast-check';
 import {
   Feed,
   FeedItem,
-  FeedItemAlexaReads,
+  FeedItems,
+  getLangFormatter,
   ItemField,
 } from '../../../src/logic/Feed';
+import { TFunction } from '../../../src/util/localization';
 
 export const feedRecord = fc.record<Feed>({
   name: fc.lorem(),
@@ -23,30 +25,56 @@ export const feedRecord = fc.record<Feed>({
   ),
 });
 
-export const alexaReadsRecord = fc.record<FeedItemAlexaReads>({
-  title: fc.lorem(),
-  content: fc.array(fc.lorem({ mode: 'sentences' })),
-});
-
-export function feedItemRecord({ readingIt = false } = {}) {
-  return fc.record<FeedItem>({
-    title: fc.lorem(),
-    description: fc.lorem({ mode: 'sentences' }),
-    summary: fc.lorem({ mode: 'sentences' }),
-    date: fc.date().map((date) => date.toUTCString()),
-    link: fc.webUrl(),
-    imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
-    alexaReads: readingIt
-      ? alexaReadsRecord
-      : fc.oneof(alexaReadsRecord, fc.constant(undefined)),
-    cardReads: readingIt
-      ? fc.array(fc.lorem({ mode: 'sentences' }))
-      : fc.oneof(
-          fc.array(fc.lorem({ mode: 'sentences' })),
-          fc.constant(undefined)
-        ),
-    index: readingIt ? fc.nat() : fc.oneof(fc.nat(), fc.constant(undefined)),
+function content({ minLength = 0 } = {}) {
+  return fc.array(fc.lorem({ mode: 'sentences' }), {
+    minLength,
   });
+}
+
+export function feedItemRecord({
+  reading = false,
+  contentMinLength = 0,
+} = {}) {
+  const contentArb = content({ minLength: contentMinLength });
+  return fc.record<FeedItem, fc.RecordConstraints>(
+    {
+      title: fc.lorem(),
+      description: fc.lorem({ mode: 'sentences' }),
+      summary: fc.lorem({ mode: 'sentences' }),
+      date: fc.date().map((date) => date.toUTCString()),
+      link: fc.webUrl(),
+      imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
+      content: reading
+        ? contentArb
+        : fc.oneof(contentArb, fc.constant(undefined)),
+      index: reading ? fc.nat() : fc.oneof(fc.nat(), fc.constant(undefined)),
+    },
+    { withDeletedKeys: false }
+  );
+}
+
+export function feedItemsRecord({
+  minLength = 0,
+  reading = false,
+  contentMinLength = 0,
+  t,
+}: {
+  minLength?: number;
+  contentMinLength?: number;
+  reading?: boolean;
+  t?: TFunction;
+} = {}) {
+  const langFormatterValue = t ? getLangFormatter(t) : undefined;
+
+  return fc.record<FeedItems, fc.RecordConstraints>(
+    {
+      list: fc.array(feedItemRecord({ reading, contentMinLength }), {
+        minLength,
+      }),
+      langFormatter: fc.constant(langFormatterValue),
+    },
+    { withDeletedKeys: false }
+  );
 }
 
 export const alphaAndUnderscoreString = fc.stringOf(
