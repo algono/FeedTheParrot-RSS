@@ -10,7 +10,7 @@ export const feedSlotName = 'feed';
 //
 // For now, I will use an arbitrary number above it that works with my test feed.
 //
-// (Note: According to Alexa docs, the maximum is 24 kilobytes - 24000 characters, but that doesn't seem to be the case)
+// (Note: According to Alexa docs, the maximum is 24 kilobytes = (24000 or 24576) characters, but that doesn't seem to be the case)
 */
 export const MAX_RESPONSE_LENGTH = 71907;
 
