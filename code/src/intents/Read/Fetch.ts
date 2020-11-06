@@ -1,9 +1,9 @@
 import { RequestHandler, getRequestType, getIntentName, getSlotValue, getRequest, getLocale } from "ask-sdk-core";
 import { IntentRequest } from "ask-sdk-model";
 import { TFunction } from "i18next";
-import { Feed, getItems } from "../logic/Feed";
-import { feedSlotName } from "../util/constants";
-import { ReadState, ReadItemIntentHandler } from "./Read";
+import { Feed, getItems } from "../../logic/Feed";
+import { feedSlotName } from "../../util/constants";
+import { ReadState, ReadItemIntentHandler } from "./Item";
 
 export const ReadIntentHandler: RequestHandler = {
   canHandle(handlerInput) {

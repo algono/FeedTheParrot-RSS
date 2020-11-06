@@ -9,14 +9,14 @@ import { ListIntentHandler } from './intents/List';
 
 import {
   ReadIntentHandler,
-} from './intents/Fetch'
+} from './intents/Read/Fetch'
 
 import {
   ReadItemIntentHandler,
   ReadContentIntentHandler,
   GoToPreviousItemIntentHandler,
   SkipItemIntentHandler,
-} from './intents/Read';
+} from './intents/Read/Item';
 
 import { HelpIntentHandler } from './intents/Help';
 import { CancelAndStopIntentHandler } from './intents/Stop';

@@ -3,14 +3,14 @@ import { Slot, SlotConfirmationStatus } from 'ask-sdk-model';
 import fc from 'fast-check';
 import { mocked } from 'ts-jest/utils';
 import { anyString, instance, when, spy, anything, verify } from 'ts-mockito';
-import { ReadIntentHandler } from '../../src/intents/Fetch';
-import { ReadState, ReadItemIntentHandler } from '../../src/intents/Read';
-import { getItems, Feed, FeedItems } from '../../src/logic/Feed';
-import { feedSlotName } from '../../src/util/constants';
-import { feedRecord, feedItemsRecord } from '../helpers/fast-check/arbitraries';
-import { testIntentCanHandle, testInAllLocales } from '../helpers/helperTests';
-import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
-import { mockIntent } from '../helpers/mocks/mockIntent';
+import { ReadIntentHandler } from '../../../src/intents/Read/Fetch';
+import { ReadState, ReadItemIntentHandler } from '../../../src/intents/Read/Item';
+import { getItems, Feed, FeedItems } from '../../../src/logic/Feed';
+import { feedSlotName } from '../../../src/util/constants';
+import { feedRecord, feedItemsRecord } from '../../helpers/fast-check/arbitraries';
+import { testIntentCanHandle, testInAllLocales } from '../../helpers/helperTests';
+import { mockHandlerInput } from '../../helpers/mocks/HandlerInputMocks';
+import { mockIntent } from '../../helpers/mocks/mockIntent';
 
 jest.mock('ask-sdk-core');
 testIntentCanHandle({
@@ -34,7 +34,7 @@ test('ReadIntent - If the feed name has not been received yet, let Alexa continu
   ).once();
 });
 
-jest.mock('../../src/logic/Feed');
+jest.mock('../../../src/logic/Feed');
 
 testInAllLocales(
   'ReadIntent - If the feed is not on our list, invalidate the feed name given, warn the user and try again',
