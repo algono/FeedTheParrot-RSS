@@ -1,7 +1,8 @@
 import { RequestHandler, getRequestType, getIntentName, getSlotValue, getRequest, getLocale } from "ask-sdk-core";
 import { IntentRequest } from "ask-sdk-model";
 import { TFunction } from "i18next";
-import { Feed, getItems } from "../../logic/Feed";
+import { Feed } from "../../logic/Feed";
+import { getItems } from "../../util/feed/getItems";
 import { feedSlotName } from "../../util/constants";
 import { ReadState, ReadItemIntentHandler } from "./Item";
 

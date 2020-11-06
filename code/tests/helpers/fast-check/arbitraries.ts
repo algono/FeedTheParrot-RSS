@@ -3,9 +3,9 @@ import {
   Feed,
   FeedItem,
   FeedItems,
-  getLangFormatter,
   ItemField,
 } from '../../../src/logic/Feed';
+import { getLangFormatter } from "../../../src/util/langFormatter";
 import { TFunction } from '../../../src/util/localization';
 
 export const feedRecord = fc.record<Feed>({

@@ -5,7 +5,8 @@ import { mocked } from 'ts-jest/utils';
 import { anyString, instance, when, spy, anything, verify } from 'ts-mockito';
 import { ReadIntentHandler } from '../../../src/intents/Read/Fetch';
 import { ReadState, ReadItemIntentHandler } from '../../../src/intents/Read/Item';
-import { getItems, Feed, FeedItems } from '../../../src/logic/Feed';
+import { Feed, FeedItems } from '../../../src/logic/Feed';
+import { getItems } from "../../../src/util/feed/getItems";
 import { feedSlotName } from '../../../src/util/constants';
 import { feedRecord, feedItemsRecord } from '../../helpers/fast-check/arbitraries';
 import { testIntentCanHandle, testInAllLocales } from '../../helpers/helperTests';
@@ -34,7 +35,7 @@ test('ReadIntent - If the feed name has not been received yet, let Alexa continu
   ).once();
 });
 
-jest.mock('../../../src/logic/Feed');
+jest.mock('../../../src/util/feed/getItems');
 
 testInAllLocales(
   'ReadIntent - If the feed is not on our list, invalidate the feed name given, warn the user and try again',

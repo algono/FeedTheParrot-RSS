@@ -12,9 +12,10 @@ import {
   PAUSE_BETWEEN_ITEMS,
   LONG_PAUSE,
 } from '../../util/constants';
-import { applyLangFormatter, Feed, FeedItems } from '../../logic/Feed';
+import { Feed, FeedItems } from '../../logic/Feed';
 
 import { TFunction } from '../../util/localization';
+import { applyLangFormatter } from '../../util/langFormatter';
 
 export interface ReadState {
   reading: boolean;
