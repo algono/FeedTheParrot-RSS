@@ -29,24 +29,31 @@ import { feedItemsRecord } from '../helpers/fast-check/arbitraries';
 import { escapeRegex } from '../helpers/escapeRegex';
 import { PAUSE_BETWEEN_ITEMS } from '../../src/util/constants';
 
-function mockReadState({ mockReadingSetter = false } = {}) {
+function mockReadState({
+  reading = true,
+  mockReadingSetter,
+}: { reading?: boolean; mockReadingSetter?: { (value: boolean): void } } = {}) {
   const readStateMock = mock<ReadState>();
   let readState: ReadState;
+  let propertyMocks: {
+    getterSpy: jest.SpyInstance<boolean, []>;
+    setterSpy: jest.SpyInstance<void, boolean[]>;
+  };
 
   if (mockReadingSetter) {
     readState = instance(readStateMock);
-    mockProperty(
+    propertyMocks = mockProperty(
       readState,
       'reading',
-      () => true,
-      () => {}
+      () => reading,
+      mockReadingSetter
     );
   } else {
-    when(readStateMock.reading).thenReturn(true);
+    when(readStateMock.reading).thenReturn(reading);
     readState = instance(readStateMock);
   }
 
-  return { readStateMock, readState };
+  return { readStateMock, readState, ...propertyMocks };
 }
 
 const sessionAttributesWhenReading: {
@@ -80,7 +87,7 @@ test('ReadItemIntent - If it was reading content before, delete its temp data fr
     fc.asyncProperty(
       fc.oneof(fc.nat(), fc.constant(undefined)),
       async (currentContentIndex) => {
-        const { readState } = mockReadState({ mockReadingSetter: true });
+        const { readState } = mockReadState({ mockReadingSetter: () => {} });
 
         mockProperty(
           readState,
@@ -103,28 +110,50 @@ test('ReadItemIntent - If it was reading content before, delete its temp data fr
     )
   ));
 
-test(
-  'ReadItemIntent - If it was reading before, add a pause before reading the current item',
-  async () => {
-    const { readState } = mockReadState({ mockReadingSetter: true });
+test('ReadItemIntent - If it was reading before, add a pause before reading the current item', async () => {
+  const { readState } = mockReadState({ mockReadingSetter: () => {} });
 
-    const sessionAttributes = { readState };
-    const mocks = await mockHandlerInput({
-      locale: null,
-      sessionAttributes,
-    });
+  const sessionAttributes = { readState };
+  const mocks = await mockHandlerInput({
+    locale: null,
+    sessionAttributes,
+  });
 
-    await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+  await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
 
-    const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
+  const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
 
-    expect(speakOutput.startsWith(PAUSE_BETWEEN_ITEMS)).toBe(true);
+  expect(speakOutput.startsWith(PAUSE_BETWEEN_ITEMS)).toBe(true);
+});
+
+testInAllLocales(
+  'ReadItemIntent - If there are no items left, tell the user and stop reading',
+  async (locale) => {
+    await testReadingEnd(locale, true);
+    await testReadingEnd(locale, false);
   }
 );
 
-test.todo(
-  'ReadItemIntent - If there are no items left, tell the user and stop reading'
-);
+async function testReadingEnd(locale: string, reading: boolean) {
+  const { readState, setterSpy } = mockReadState({
+    reading,
+    mockReadingSetter: () => {},
+  });
+
+  const sessionAttributes = { readState };
+  const mocks = await mockHandlerInput({
+    locale,
+    sessionAttributes,
+  });
+
+  await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+  expect(setterSpy).lastCalledWith(false);
+
+  const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
+
+  expect(speakOutput).toContain(mocks.t('END_READING_FEED'));
+}
 
 testIntentCanHandle({
   handler: ReadContentIntentHandler,
