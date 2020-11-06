@@ -32,7 +32,7 @@ function content({ minLength = 0 } = {}) {
 }
 
 export function feedItemRecord({
-  reading = false,
+  readingContent = false,
   contentMinLength = 0,
 } = {}) {
   const contentArb = content({ minLength: contentMinLength });
@@ -44,10 +44,10 @@ export function feedItemRecord({
       date: fc.date().map((date) => date.toUTCString()),
       link: fc.webUrl(),
       imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
-      content: reading
+      content: readingContent
         ? contentArb
         : fc.oneof(contentArb, fc.constant(undefined)),
-      index: reading ? fc.nat() : fc.oneof(fc.nat(), fc.constant(undefined)),
+      index: fc.nat(),
     },
     { withDeletedKeys: false }
   );
@@ -55,20 +55,20 @@ export function feedItemRecord({
 
 export function feedItemsRecord({
   minLength = 0,
-  reading = false,
+  readingContent = false,
   contentMinLength = 0,
   t,
 }: {
   minLength?: number;
   contentMinLength?: number;
-  reading?: boolean;
+  readingContent?: boolean;
   t?: TFunction;
 } = {}) {
   const langFormatterValue = t ? getLangFormatter(t) : undefined;
 
   return fc.record<FeedItems, fc.RecordConstraints>(
     {
-      list: fc.array(feedItemRecord({ reading, contentMinLength }), {
+      list: fc.array(feedItemRecord({ readingContent, contentMinLength }), {
         minLength,
       }),
       langFormatter: fc.constant(langFormatterValue),

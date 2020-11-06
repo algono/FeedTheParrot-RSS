@@ -78,8 +78,68 @@ testIntentCanHandle({
   },
 });
 
-test.todo(
-  'ReadItemIntent - If there are items to read, start reading, read the item title and ask for confirmation to continue reading'
+testInAllLocales(
+  'ReadItemIntent - If there are items to read, start reading, read the item title and ask for confirmation to continue reading',
+  async (locale) => {
+    const sessionAttributes: { readState?: ReadState } = {};
+    const mocks = await mockHandlerInput({
+      locale,
+      sessionAttributes,
+    });
+    await fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            feedItemsRecord({
+              minLength: 1,
+              readingContent: true,
+              t: mocks.t,
+            }),
+            fc.nat()
+          )
+          .map(([feedItems, currentIndex]) => ({
+            feedItems,
+            currentIndex: currentIndex % feedItems.list.length,
+          })),
+        async ({ feedItems, currentIndex }) => {
+          resetCalls<unknown>(
+            mocks.mockedHandlerInput,
+            mocks.mockedAttributesManager,
+            mocks.mockedResponseBuilder,
+            mocks.mockedResponse
+          );
+
+          const { readStateMock } = mockReadState({
+            mockReadingSetter: () => {},
+          });
+
+          when(readStateMock.feedItems).thenReturn(feedItems);
+          when(readStateMock.currentIndex).thenReturn(currentIndex);
+
+          sessionAttributes.readState = instance(readStateMock);
+
+          await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+          const [speakOutput] = capture(
+            mocks.mockedResponseBuilder.speak
+          ).last();
+
+          const item = feedItems.list[currentIndex];
+
+          expect(speakOutput).toMatch(
+            new RegExp(
+              `^.*?${escapeRegex(item.title)}.*?${escapeRegex(
+                mocks.t('CONFIRMATION_CONTINUE_READING_FEED')
+              )}$`,
+              's'
+            )
+          );
+
+          verify(mocks.mockedResponseBuilder.reprompt(speakOutput)).once();
+        }
+      )
+    );
+  }
 );
 
 test('ReadItemIntent - If it was reading content before, delete its temp data from session attributes', () =>
@@ -178,7 +238,7 @@ testInAllLocales(
           .tuple(
             feedItemsRecord({
               minLength: 1,
-              reading: true,
+              readingContent: true,
               contentMinLength: 2,
               t: mocks.t,
             }),
@@ -280,7 +340,7 @@ testInAllLocales(
           .tuple(
             feedItemsRecord({
               minLength: 1,
-              reading: true,
+              readingContent: true,
               contentMinLength: 1,
               t: mocks.t,
             }),
@@ -372,7 +432,7 @@ testInAllLocales(
       fc.asyncProperty(
         fc
           .tuple(
-            feedItemsRecord({ minLength: 1, reading: true }),
+            feedItemsRecord({ minLength: 1, readingContent: true }),
             fc.nat(),
             fc.integer()
           )
