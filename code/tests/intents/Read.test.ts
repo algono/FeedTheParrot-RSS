@@ -27,6 +27,7 @@ import { mockProperty } from '../helpers/ts-mockito/mockProperty';
 import { mockIntent } from '../helpers/mocks/mockIntent';
 import { feedItemsRecord } from '../helpers/fast-check/arbitraries';
 import { escapeRegex } from '../helpers/escapeRegex';
+import { PAUSE_BETWEEN_ITEMS } from '../../src/util/constants';
 
 function mockReadState({ mockReadingSetter = false } = {}) {
   const readStateMock = mock<ReadState>();
@@ -102,8 +103,23 @@ test('ReadItemIntent - If it was reading content before, delete its temp data fr
     )
   ));
 
-test.todo(
-  'ReadItemIntent - If it was reading before, add a pause before reading the current item'
+test(
+  'ReadItemIntent - If it was reading before, add a pause before reading the current item',
+  async () => {
+    const { readState } = mockReadState({ mockReadingSetter: true });
+
+    const sessionAttributes = { readState };
+    const mocks = await mockHandlerInput({
+      locale: null,
+      sessionAttributes,
+    });
+
+    await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+    const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
+
+    expect(speakOutput.startsWith(PAUSE_BETWEEN_ITEMS)).toBe(true);
+  }
 );
 
 test.todo(
