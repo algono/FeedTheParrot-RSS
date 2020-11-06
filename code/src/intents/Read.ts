@@ -54,7 +54,8 @@ export const ReadItemIntentHandler: RequestHandler = {
 
     const readState: ReadState = sessionAttributes.readState;
 
-    if (readState.currentContentIndex) {
+    const contentIndexProperty: keyof ReadState = 'currentContentIndex';
+    if (contentIndexProperty in sessionAttributes.readState) {
       delete readState.currentContentIndex;
       attributesManager.setSessionAttributes(sessionAttributes);
     }
@@ -153,7 +154,10 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     if (index >= 0 && index < content.length) {
       cardOutputItem = content[index];
-      speakOutputItem = applyLangFormatter(cardOutputItem, readState.feedItems.langFormatter);
+      speakOutputItem = applyLangFormatter(
+        cardOutputItem,
+        readState.feedItems.langFormatter
+      );
 
       // If it is any content item but the last one, prompt for continue reading the next
       if (index < content.length - 1) {

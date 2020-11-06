@@ -28,16 +28,29 @@ import { mockIntent } from '../helpers/mocks/mockIntent';
 import { feedItemsRecord } from '../helpers/fast-check/arbitraries';
 import { escapeRegex } from '../helpers/escapeRegex';
 
-function mockReadState() {
+function mockReadState({ mockReadingSetter = false } = {}) {
   const readStateMock = mock<ReadState>();
-  when(readStateMock.reading).thenReturn(true);
+  let readState: ReadState;
 
-  return readStateMock;
+  if (mockReadingSetter) {
+    readState = instance(readStateMock);
+    mockProperty(
+      readState,
+      'reading',
+      () => true,
+      () => {}
+    );
+  } else {
+    when(readStateMock.reading).thenReturn(true);
+    readState = instance(readStateMock);
+  }
+
+  return { readStateMock, readState };
 }
 
 const sessionAttributesWhenReading: {
   readState: ReadState;
-} = { readState: instance(mockReadState()) };
+} = { readState: mockReadState().readState };
 
 jest.mock('ask-sdk-core');
 
@@ -61,9 +74,33 @@ test.todo(
   'ReadItemIntent - If there are items to read, start reading, read the item title and ask for confirmation to continue reading'
 );
 
-test.todo(
-  'ReadItemIntent - If it was reading content before, delete its temp data from session attributes'
-);
+test('ReadItemIntent - If it was reading content before, delete its temp data from session attributes', () =>
+  fc.assert(
+    fc.asyncProperty(
+      fc.oneof(fc.nat(), fc.constant(undefined)),
+      async (currentContentIndex) => {
+        const { readState } = mockReadState({ mockReadingSetter: true });
+
+        mockProperty(
+          readState,
+          'currentContentIndex',
+          () => currentContentIndex,
+          (value) => expect(value).toBeUndefined()
+        );
+
+        const sessionAttributes = { readState };
+        const mocks = await mockHandlerInput({
+          locale: null,
+          sessionAttributes,
+        });
+
+        await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+        const indexProperty: keyof ReadState = 'currentContentIndex';
+        expect(indexProperty in sessionAttributes.readState).toBe(false);
+      }
+    )
+  ));
 
 test.todo(
   'ReadItemIntent - If it was reading before, add a pause before reading the current item'
@@ -127,7 +164,7 @@ testInAllLocales(
             mocks.mockedResponse
           );
 
-          const readStateMock = mockReadState();
+          const { readStateMock } = mockReadState();
 
           when(readStateMock.feedItems).thenReturn(feedItems);
           when(readStateMock.currentIndex).thenReturn(currentIndex);
@@ -230,7 +267,7 @@ testInAllLocales(
             mocks.mockedResponse
           );
 
-          const readStateMock = mockReadState();
+          const { readStateMock } = mockReadState();
 
           when(readStateMock.feedItems).thenReturn(feedItems);
           when(readStateMock.currentIndex).thenReturn(currentIndex);
@@ -317,7 +354,7 @@ testInAllLocales(
           { feedItems, currentIndex, currentContentIndex },
           confirmationStatus
         ) => {
-          const readStateMock = mockReadState();
+          const { readStateMock } = mockReadState();
 
           when(readStateMock.feedItems).thenReturn(feedItems);
           when(readStateMock.currentIndex).thenReturn(currentIndex);
@@ -407,8 +444,7 @@ async function checkIfItReadsItemAfterMovingIndexBy(
       // min value so that initial AND final indexes are never negative
       fc.integer({ min: n < 0 ? Math.abs(n) : 0 }),
       async (index) => {
-        const readStateMock = mockReadState();
-        const readState = instance(readStateMock);
+        const { readState } = mockReadState();
 
         mockProperty(
           readState,
