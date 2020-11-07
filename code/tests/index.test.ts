@@ -9,7 +9,7 @@ import {
   SaveResponseForRepeatingInterceptor,
 } from '../src/intents/Repeat';
 import { LocalizationRequestInterceptor } from '../src/util/localization';
-import { lastCallTo } from './helpers/jest/jestMockInstanceHelpers';
+import { lastCallTo } from './helpers/jest/mockInstanceHelpers';
 
 jest.mock('ask-sdk-core');
 
