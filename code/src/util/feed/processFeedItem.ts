@@ -1,7 +1,7 @@
 import { Item } from 'feedparser';
 import { MAX_CHARACTERS_SPEECH } from '../constants';
 import { Feed, FeedItem } from '../../logic/Feed';
-import { truncateAll } from '../truncate';
+import { truncateAll } from '../truncateAll';
 
 export function processFeedItem(
   item: Item,
@@ -40,7 +40,7 @@ export function processFeedItem(
         console.log(
           `Field "${field.name}" truncated at ${truncateAt} characters`
         );
-        truncatedText = truncateAll(text, truncateAt);
+        truncatedText = truncateAll(text, truncateAt, { readable: true });
         feedItem.content.push(...truncatedText);
       } else {
         feedItem.content.push(text);
@@ -52,7 +52,9 @@ export function processFeedItem(
     const summary = feedItem.summary || feedItem.description;
     let truncatedSummary: string[];
     if (feed.truncateSummaryAt || summary.length > MAX_CHARACTERS_SPEECH) {
-      truncatedSummary = truncateAll(summary, feed.truncateSummaryAt);
+      truncatedSummary = truncateAll(summary, feed.truncateSummaryAt, {
+        readable: true,
+      });
       console.log(`Summary truncated at ${feed.truncateSummaryAt} characters`);
       feedItem.content = truncatedSummary;
     } else {
