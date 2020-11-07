@@ -36,3 +36,20 @@ test('The original string starts with the result of calling truncate', () =>
       }
     )
   ));
+
+test('When the readable version is present, it is always the same as the normal version but with 3 dots at the end', () =>
+  fc.assert(
+    fc.property(
+      fc.lorem({ mode: 'sentences' }),
+      fc.integer({ min: 1 }),
+      (str, len) => {
+        const res = truncate(str, len);
+
+        if (res.readable) {
+          expect(res.readable).toEqual(res.str + '...');
+        } else {
+          expect(res.readable).toBeUndefined();
+        }
+      }
+    )
+  ));
