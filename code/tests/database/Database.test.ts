@@ -121,21 +121,26 @@ function testIfAddedToCollectionFn<T>(
 ) {
   return async () => {
     await fc.assert(
-      fc.asyncProperty(fc.record<T>(recordModel), async (data) => {
-        clearState();
+      fc.asyncProperty(
+        fc.record<T, fc.RecordConstraints>(recordModel, {
+          withDeletedKeys: false,
+        }),
+        async (data: T) => {
+          clearState();
 
-        const { firestoreMock, collectionMock } = mockCollectionFirestore();
+          const { firestoreMock, collectionMock } = mockCollectionFirestore();
 
-        await method(data as T);
+          await method(data);
 
-        const [collectionName] = capture(firestoreMock.collection).last();
+          const [collectionName] = capture(firestoreMock.collection).last();
 
-        expect(collectionName).toEqual(expectedCollectionName);
+          expect(collectionName).toEqual(expectedCollectionName);
 
-        const [addedData] = capture(collectionMock.add).last();
+          const [addedData] = capture(collectionMock.add).last();
 
-        expect(addedData).toEqual(data);
-      })
+          expect(addedData).toEqual(data);
+        }
+      )
     );
   };
 }
@@ -178,8 +183,11 @@ test('getUserData creates a new user if it does not exist', async () => {
 test('getUserData retrieves user data and ref if it exists', async () => {
   await fc.assert(
     fc.asyncProperty(
-      fc.record<UserData>({ userId: fc.string() }),
-      async (expectedUserData) => {
+      fc.record<UserData, fc.RecordConstraints>(
+        { userId: fc.string() },
+        { withDeletedKeys: false }
+      ),
+      async (expectedUserData: UserData) => {
         clearState();
 
         const { querySnapshotMock } = mockQuery({
@@ -209,7 +217,7 @@ test('getUserData retrieves user data and ref if it exists', async () => {
           expectedUserData.userId
         );
 
-        expect(userData).toStrictEqual(expectedUserData as UserData);
+        expect(userData).toStrictEqual(expectedUserData);
 
         /**
          * Equality check done this way because something like
