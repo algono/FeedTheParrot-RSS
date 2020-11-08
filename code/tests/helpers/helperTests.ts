@@ -2,7 +2,7 @@ import { getIntentName, getRequestType, RequestHandler } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
 import { mockHandlerInput, MockHandlerInputOptions } from './mocks/HandlerInputMocks';
 
-const availableLocales = ['en', 'es'];
+export const availableLocales = ['en', 'es'];
 
 function genTestName(name: string, locale: string): string {
   return `${name} (${locale})`;
