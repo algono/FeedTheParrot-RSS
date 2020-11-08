@@ -42,7 +42,7 @@ export const ItemRecord = fc.record<Item, fc.RecordConstraints>(
     link: fc.webUrl(),
     origlink: fc.webUrl(),
     author: fc.lorem(),
-    guid: fc.uuid(),
+    guid: fc.webUrl(),
     comments: fc.lorem({ mode: 'sentences' }),
     image: ImageRecord,
     categories: fc.array(fc.lorem()),
