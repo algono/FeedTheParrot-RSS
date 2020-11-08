@@ -1,7 +1,5 @@
 import FeedParser, { Item } from 'feedparser';
-import { AllHtmlEntities as entities } from 'html-entities';
 import fetch from 'node-fetch';
-import striptags from 'striptags';
 import { initNewInstance } from '../localization';
 import { FeedIsTooLongError } from '../../intents/Error';
 import { Feed, GetItemsOptions, FeedItems } from '../../logic/Feed';
@@ -54,24 +52,11 @@ export function getItems(
       // Get ampersand replacement for that language (i.e: 'and' in English)
       const ampersandReplacement = t('AMPERSAND');
 
-      function clean(text: string): string {
-        let cleanedText: string;
-
-        cleanedText = text;
-        cleanedText = entities.decode(striptags(cleanedText));
-        cleanedText = cleanedText.trim();
-        cleanedText = cleanedText
-          .replace(/[&]/g, ampersandReplacement)
-          .replace(/[<>]/g, '');
-
-        return cleanedText;
-      }
-
       const itemLimit = options?.itemLimit ?? feed.itemLimit;
 
       let item: Item;
       while ((item = stream.read())) {
-        const feedItem = processFeedItem(item, feed, clean);
+        const feedItem = processFeedItem(item, feed, ampersandReplacement);
         items.list.push(feedItem);
 
         // If there is an item limit set and it has been surpassed, consume the stream and break the loop

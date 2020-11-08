@@ -2,12 +2,14 @@ import { Item } from 'feedparser';
 import { MAX_CHARACTERS_SPEECH } from '../constants';
 import { Feed, FeedItem } from '../../logic/Feed';
 import { truncateAll } from '../truncateAll';
+import { cleanHtml } from './cleanHtml';
 
 export function processFeedItem(
   item: Item,
   feed: Feed,
-  clean: { (text: string): string }
+  ampersandReplacement: string
 ) {
+  const clean = (text: string) => cleanHtml(text, ampersandReplacement);
   /**
    * Note:
    * The FeedParser library adds the rss:content to the description, and the rss:description to the summary.
