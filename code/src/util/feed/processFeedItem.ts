@@ -28,41 +28,35 @@ export function processFeedItem(
 
   // If the fields to read content are specified, use them
   if (feed.readFields) {
-    console.log('Fields specified. Using: ' + JSON.stringify(feed.readFields));
-
     feed.readFields.forEach((field, _, arr) => {
-      const text: string = feedItem[field.name];
+      const originalContent: string = feedItem[field.name];
 
       const maxItemCharacters = Math.floor(MAX_CHARACTERS_SPEECH / arr.length);
+      
+      const content = processContent(originalContent, maxItemCharacters, field.truncateAt);
 
-      let truncatedText: string[];
-
-      if (field.truncateAt || text.length > maxItemCharacters) {
-        const truncateAt = field.truncateAt ?? maxItemCharacters;
-        console.log(
-          `Field "${field.name}" truncated at ${truncateAt} characters`
-        );
-        truncatedText = truncateAll(text, truncateAt, { readable: true });
-        feedItem.content.push(...truncatedText);
-      } else {
-        feedItem.content.push(text);
-      }
+      feedItem.content.push(...content);
     });
   } else {
-    console.log('No fields specified. Using summary/description by default');
-
+    // If they are not, use the summary/description by default
     const summary = feedItem.summary || feedItem.description;
-    let truncatedSummary: string[];
-    if (feed.truncateSummaryAt || summary.length > MAX_CHARACTERS_SPEECH) {
-      truncatedSummary = truncateAll(summary, feed.truncateSummaryAt, {
-        readable: true,
-      });
-      console.log(`Summary truncated at ${feed.truncateSummaryAt} characters`);
-      feedItem.content = truncatedSummary;
-    } else {
-      feedItem.content = [summary];
-    }
+
+    feedItem.content = processContent(summary, MAX_CHARACTERS_SPEECH, feed.truncateSummaryAt)
   }
 
   return feedItem;
+}
+
+function processContent(
+  content: string,
+  maxItemCharacters: number,
+  truncateAt?: number
+) {
+  if (truncateAt || content.length > maxItemCharacters) {
+    return truncateAll(content, truncateAt ?? maxItemCharacters, {
+      readable: true,
+    });
+  } else {
+    return [content];
+  }
 }
