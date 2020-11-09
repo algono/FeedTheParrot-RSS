@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { Enclosure, Image, Item, Meta, NS, Type } from 'feedparser';
-import { availableLocales } from '../helperTests';
+import { availableLocales } from '../../helperTests';
 
 const ImageRecord = fc.record<Image, fc.RecordConstraints>(
   {

@@ -17,7 +17,7 @@ import {
   UserData,
 } from '../../src/database/Database';
 import { allTranslationsFrom } from '../helpers/allTranslationsFrom';
-import { feedRecord } from '../helpers/fast-check/arbitraries';
+import { feedRecord } from '../helpers/fast-check/arbitraries/feed';
 import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
 
 jest.mock('firebase-admin', () => ({

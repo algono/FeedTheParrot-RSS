@@ -8,7 +8,7 @@ import { ReadState, ReadItemIntentHandler } from '../../../src/intents/Read/Item
 import { Feed, FeedItems } from '../../../src/logic/Feed';
 import { getItems } from "../../../src/util/feed/getItems";
 import { feedSlotName } from '../../../src/util/constants';
-import { feedRecord, feedItemsRecord } from '../../helpers/fast-check/arbitraries';
+import { feedRecord, feedItemsRecord } from '../../helpers/fast-check/arbitraries/feed';
 import { testIntentCanHandle, testInAllLocales } from '../../helpers/helperTests';
 import { mockHandlerInput } from '../../helpers/mocks/HandlerInputMocks';
 import { mockIntent } from '../../helpers/mocks/mockIntent';

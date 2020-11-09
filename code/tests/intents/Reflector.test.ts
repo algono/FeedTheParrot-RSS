@@ -8,7 +8,7 @@ jest.mock('ask-sdk-core');
 import { getIntentName } from 'ask-sdk-core';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import * as fc from 'fast-check';
-import { alphaAndUnderscoreString } from '../helpers/fast-check/arbitraries';
+import { alphaAndUnderscoreString } from '../helpers/fast-check/arbitraries/misc';
 
 testIntentCanHandle({
   handler: IntentReflectorHandler,

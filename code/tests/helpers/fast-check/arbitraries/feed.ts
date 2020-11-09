@@ -1,7 +1,7 @@
 import fc from 'fast-check';
-import { Feed, FeedItem, FeedItems, ItemField } from '../../../src/logic/Feed';
-import { getLangFormatter } from '../../../src/util/langFormatter';
-import { TFunction } from '../../../src/util/localization';
+import { Feed, FeedItem, FeedItems, ItemField } from '../../../../src/logic/Feed';
+import { getLangFormatter } from '../../../../src/util/langFormatter';
+import { TFunction } from '../../../../src/util/localization';
 
 export const feedRecord = fc.record<Feed, fc.RecordConstraints>(
   {
@@ -77,11 +77,3 @@ export function feedItemsRecord({
     { withDeletedKeys: false }
   );
 }
-
-export const alphaAndUnderscoreString = fc.stringOf(
-  fc.mapToConstant(
-    { num: 26, build: (v) => String.fromCharCode(v + 0x41) }, // A-Z
-    { num: 26, build: (v) => String.fromCharCode(v + 0x61) }, // a-z
-    { num: 1, build: () => '_' } // _
-  )
-);

@@ -25,7 +25,7 @@ import { mockHandlerInput } from '../../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../../helpers/helperTests';
 import { mockProperty } from '../../helpers/ts-mockito/mockProperty';
 import { mockIntent } from '../../helpers/mocks/mockIntent';
-import { feedItemsRecord } from '../../helpers/fast-check/arbitraries';
+import { feedItemsRecord } from '../../helpers/fast-check/arbitraries/feed';
 import { escapeRegex } from '../../helpers/escapeRegex';
 import { PAUSE_BETWEEN_ITEMS } from '../../../src/util/constants';
 
