@@ -17,8 +17,6 @@ export interface FeedItem {
   imageUrl?: string;
 
   content?: string[];
-
-  index?: number;
 }
 
 export interface FeedItems {

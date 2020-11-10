@@ -1,5 +1,10 @@
 import fc from 'fast-check';
-import { Feed, FeedItem, FeedItems, ItemField } from '../../../../src/logic/Feed';
+import {
+  Feed,
+  FeedItem,
+  FeedItems,
+  ItemField,
+} from '../../../../src/logic/Feed';
 import { getLangFormatter } from '../../../../src/util/langFormatter';
 import { TFunction } from '../../../../src/util/localization';
 
@@ -48,7 +53,6 @@ export function feedItemRecord({
       content: readingContent
         ? contentArb
         : fc.oneof(contentArb, fc.constant(undefined)),
-      index: fc.nat(),
     },
     { withDeletedKeys: false }
   );

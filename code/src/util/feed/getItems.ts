@@ -3,10 +3,12 @@ import fetch from 'node-fetch';
 import { initNewInstance } from '../localization';
 import { FeedIsTooLongError } from '../../intents/Error';
 import { Feed, GetItemsOptions, FeedItems } from '../../logic/Feed';
-import { getLangFormatter } from "../langFormatter";
-import { calculateMaxFeedSize, calculateMaxCharactersInFeedContent } from "./calculateMaxFeedSize";
-import { processFeedItem } from "./processFeedItem";
-
+import { getLangFormatter } from '../langFormatter';
+import {
+  calculateMaxFeedSize,
+  calculateMaxCharactersInFeedContent,
+} from './calculateMaxFeedSize';
+import { processFeedItem } from './processFeedItem';
 
 export function getItems(
   feed: Feed,
@@ -22,8 +24,6 @@ export function getItems(
 
     req.then(
       function (res) {
-        console.log('Is Get Feed Status OK = ' + res.ok);
-        console.log('Get Feed Status = ' + res.status);
         if (res.ok) {
           res.body.pipe(feedparser); // res.body is a stream
         } else {
@@ -75,22 +75,21 @@ export function getItems(
 
       console.log('Feed size: ' + feedSize);
 
-      if (feedSize >
+      if (
+        feedSize >
         calculateMaxFeedSize(
           calculateMaxCharactersInFeedContent(
             items.list,
             feed.truncateSummaryAt
           )
-        )) {
-        console.log('Feed is too large for max size calculation');
+        )
+      ) {
+        console.log('Feed is too large according to max size calculation');
         reject(new FeedIsTooLongError());
       }
 
       items.list.sort(function (a, b) {
         return new Date(b.date).getTime() - new Date(a.date).getTime();
-      });
-      items.list.forEach(function (item, index) {
-        item.index = index;
       });
 
       resolve(items);
