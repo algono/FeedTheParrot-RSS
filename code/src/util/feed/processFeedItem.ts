@@ -26,23 +26,13 @@ export function processFeedItem(
     content: [],
   };
 
-  // If the fields to read content are specified, use them
-  if (feed.readFields) {
-    feed.readFields.forEach((field, _, arr) => {
-      const originalContent: string = feedItem[field.name];
+  const summary = feedItem.summary || feedItem.description;
 
-      const maxItemCharacters = Math.floor(MAX_CHARACTERS_SPEECH / arr.length);
-      
-      const content = processContent(originalContent, maxItemCharacters, field.truncateAt);
-
-      feedItem.content.push(...content);
-    });
-  } else {
-    // If they are not, use the summary/description by default
-    const summary = feedItem.summary || feedItem.description;
-
-    feedItem.content = processContent(summary, MAX_CHARACTERS_SPEECH, feed.truncateSummaryAt)
-  }
+  feedItem.content = processContent(
+    summary,
+    MAX_CHARACTERS_SPEECH,
+    feed.truncateContentAt
+  );
 
   return feedItem;
 }

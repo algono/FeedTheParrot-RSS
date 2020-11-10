@@ -80,7 +80,7 @@ export function getItems(
         calculateMaxFeedSize(
           calculateMaxCharactersInFeedContent(
             items.list,
-            feed.truncateSummaryAt
+            feed.truncateContentAt
           )
         )
       ) {

@@ -3,11 +3,6 @@ export interface GetItemsOptions {
   itemLimit?: number;
 }
 
-export interface ItemField {
-  name: string;
-  truncateAt: number;
-}
-
 export interface FeedItem {
   title: string;
   description: string;
@@ -28,8 +23,7 @@ export interface FeedData {
   readonly url: string;
   language?: string;
 
-  readFields?: ItemField[];
-  truncateSummaryAt?: number;
+  truncateContentAt?: number;
   itemLimit?: number;
 }
 

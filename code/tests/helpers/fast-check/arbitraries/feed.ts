@@ -1,10 +1,5 @@
 import fc from 'fast-check';
-import {
-  Feed,
-  FeedItem,
-  FeedItems,
-  ItemField,
-} from '../../../../src/logic/Feed';
+import { Feed, FeedItem, FeedItems } from '../../../../src/logic/Feed';
 import { getLangFormatter } from '../../../../src/util/langFormatter';
 import { TFunction } from '../../../../src/util/localization';
 
@@ -14,19 +9,7 @@ export const feedRecord = fc.record<Feed, fc.RecordConstraints>(
     url: fc.webUrl(),
     language: fc.oneof(fc.string(), fc.constant(undefined)),
     itemLimit: fc.oneof(fc.nat(), fc.constant(undefined)),
-    truncateSummaryAt: fc.oneof(fc.nat(), fc.constant(undefined)),
-    readFields: fc.oneof(
-      fc.array(
-        fc.record<ItemField, fc.RecordConstraints>(
-          {
-            name: fc.string(),
-            truncateAt: fc.nat(),
-          },
-          { withDeletedKeys: false }
-        )
-      ),
-      fc.constant(undefined)
-    ),
+    truncateContentAt: fc.oneof(fc.nat(), fc.constant(undefined)),
   },
   { withDeletedKeys: false }
 );
