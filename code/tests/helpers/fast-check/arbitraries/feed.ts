@@ -3,7 +3,10 @@ import { Feed, FeedItem, FeedItems } from '../../../../src/logic/Feed';
 import { getLangFormatter } from '../../../../src/util/langFormatter';
 import { TFunction } from '../../../../src/util/localization';
 
-export const feedRecord = fc.record<Feed, fc.RecordConstraints>(
+export const feedRecord: fc.Arbitrary<Feed> = fc.record<
+  Feed,
+  fc.RecordConstraints
+>(
   {
     name: fc.lorem(),
     url: fc.webUrl(),
@@ -23,7 +26,7 @@ function content({ minLength = 0 } = {}) {
 export function feedItemRecord({
   readingContent = false,
   contentMinLength = 0,
-} = {}) {
+} = {}): fc.Arbitrary<FeedItem> {
   const contentArb = content({ minLength: contentMinLength });
   return fc.record<FeedItem, fc.RecordConstraints>(
     {
@@ -51,7 +54,7 @@ export function feedItemsRecord({
   contentMinLength?: number;
   readingContent?: boolean;
   t?: TFunction;
-} = {}) {
+} = {}): fc.Arbitrary<FeedItems> {
   const langFormatterValue = t ? getLangFormatter(t) : undefined;
 
   return fc.record<FeedItems, fc.RecordConstraints>(

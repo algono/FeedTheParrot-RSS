@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { Enclosure, Image, Item, Meta, NS, Type } from 'feedparser';
 import { availableLocales } from '../../helperTests';
 
-const ImageRecord = fc.record<Image, fc.RecordConstraints>(
+const imageRecord: fc.Arbitrary<Image> = fc.record<Image, fc.RecordConstraints>(
   {
     title: fc.lorem(),
     url: fc.webUrl(),
@@ -10,7 +10,7 @@ const ImageRecord = fc.record<Image, fc.RecordConstraints>(
   { withDeletedKeys: false }
 );
 
-const MetaRecord = fc.record<Meta, fc.RecordConstraints>(
+const metaRecord: fc.Arbitrary<Meta> = fc.record<Meta, fc.RecordConstraints>(
   {
     '#ns': fc.constant<NS[]>(null),
     '#type': fc.constant<Type>(null),
@@ -23,7 +23,7 @@ const MetaRecord = fc.record<Meta, fc.RecordConstraints>(
     xmlurl: fc.webUrl(),
     author: fc.lorem(),
     language: fc.constantFrom(...availableLocales),
-    image: ImageRecord,
+    image: imageRecord,
     favicon: fc.string(),
     copyright: fc.string(),
     generator: fc.string(),
@@ -32,7 +32,7 @@ const MetaRecord = fc.record<Meta, fc.RecordConstraints>(
   { withDeletedKeys: false }
 );
 
-export const ItemRecord = fc.record<Item, fc.RecordConstraints>(
+export const itemRecord: fc.Arbitrary<Item> = fc.record<Item, fc.RecordConstraints>(
   {
     title: fc.lorem(),
     description: fc.lorem({ mode: 'sentences' }),
@@ -44,7 +44,7 @@ export const ItemRecord = fc.record<Item, fc.RecordConstraints>(
     author: fc.lorem(),
     guid: fc.webUrl(),
     comments: fc.lorem({ mode: 'sentences' }),
-    image: ImageRecord,
+    image: imageRecord,
     categories: fc.array(fc.lorem()),
     enclosures: fc.array(
       fc.record<Enclosure, fc.RecordConstraints>(
@@ -61,7 +61,7 @@ export const ItemRecord = fc.record<Item, fc.RecordConstraints>(
         }
       )
     ),
-    meta: MetaRecord,
+    meta: metaRecord,
   },
   { withDeletedKeys: false }
 );
