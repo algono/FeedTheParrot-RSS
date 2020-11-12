@@ -55,7 +55,7 @@ export function itemRecord({
       author: fc.lorem(),
       guid: fc.webUrl(),
       comments: fc.lorem({ mode: 'sentences' }),
-      image: imageRecord,
+      image: fc.oneof(imageRecord, fc.constant(undefined)),
       categories: fc.array(fc.lorem()),
       enclosures: fc.array(
         fc.record<Enclosure, fc.RecordConstraints>(
