@@ -13,7 +13,7 @@ beforeEach(() => jest.resetAllMocks());
 test('processFeedItem properly cleans the title, description and summary', () => {
   fc.assert(
     fc.property(
-      itemRecord,
+      itemRecord(),
       feedRecord,
       fc.lorem({ maxCount: 1 }),
       fc.record(
@@ -70,7 +70,7 @@ test('processFeedItem returns the date in UTC string format', () => {
 
   fc.assert(
     fc.property(
-      itemRecord,
+      itemRecord(),
       feedRecord,
       fc.lorem({ maxCount: 1 }),
       (item, feed, ampersandReplacement) => {
@@ -87,5 +87,9 @@ test.todo(
 );
 
 test.todo(
-  'processFeedItem returns the readable result of truncating all content if it has to be truncated'
+  'processFeedItem returns the readable result of truncating all content if the feed has the truncateContentAt attribute defined'
+);
+
+test.todo(
+  'processFeedItem returns the readable result of truncating all content if the content surpasses the max character count'
 );
