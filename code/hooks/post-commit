@@ -19,6 +19,7 @@ if [ "$current_branch" = "$DEPLOY_BRANCH" ]; then
 	commit_msg="$(git log -1 --pretty=%B)"
 
 	git stash --include-untracked # Stash changes not added to the commit
+	stashed=$? # Store the stash command return value (0 = success, other = error)
 
 	git checkout "$CODE_BRANCH"
 
@@ -33,12 +34,13 @@ if [ "$current_branch" = "$DEPLOY_BRANCH" ]; then
 	# If .gitignore was changed in the other branch, the changes will be reverted
 	git checkout HEAD -- .gitignore
 
-	git add :/
+	git add --all
 	git commit -m "$commit_msg" --no-verify
 
 	git checkout "$DEPLOY_BRANCH"
-
-	git stash pop # Recover changes not added to the commit
+	
+	# If any changes were stashed, pop them back
+	[ $stashed -eq 0 ] && git stash pop
 fi
 
 exit 0
