@@ -1,20 +1,25 @@
 import fc from 'fast-check';
 import { mocked } from 'ts-jest/utils';
+import { MAX_CHARACTERS_SPEECH } from '../../../src/util/constants';
 import { cleanHtml } from '../../../src/util/feed/cleanHtml';
 import { processFeedItem } from '../../../src/util/feed/processFeedItem';
+import { truncateAll } from '../../../src/util/truncateAll';
 import { feedRecord } from '../../helpers/fast-check/arbitraries/feed';
 import { itemRecord } from '../../helpers/fast-check/arbitraries/feedParser';
 
 jest.mock('../../../src/util/feed/cleanHtml');
 jest.mock('../../../src/util/truncateAll');
 
-beforeEach(() => jest.resetAllMocks());
+beforeEach(() => {
+  jest.resetAllMocks();
+  mocked(cleanHtml).mockImplementation((text) => text);
+});
 
 test('processFeedItem properly cleans the title, description and summary', () => {
   fc.assert(
     fc.property(
       itemRecord(),
-      feedRecord,
+      feedRecord(),
       fc.lorem({ maxCount: 1 }),
       fc.record(
         {
@@ -66,12 +71,10 @@ test('processFeedItem properly cleans the title, description and summary', () =>
 });
 
 test('processFeedItem returns the date in UTC string format', () => {
-  mocked(cleanHtml).mockImplementation((text) => text);
-
   fc.assert(
     fc.property(
       itemRecord(),
-      feedRecord,
+      feedRecord(),
       fc.lorem({ maxCount: 1 }),
       (item, feed, ampersandReplacement) => {
         const feedItem = processFeedItem(item, feed, ampersandReplacement);
@@ -82,14 +85,66 @@ test('processFeedItem returns the date in UTC string format', () => {
   );
 });
 
-test.todo(
-  'processFeedItem returns the whole content if it does not have to be truncated'
-);
+test('processFeedItem returns the whole content if it does not have to be truncated', () => {
+  fc.assert(
+    fc.property(
+      itemRecord({ contentSurpassesMaxCharacters: 'never' }),
+      feedRecord({ hasTruncateContentAt: 'never' }),
+      fc.lorem({ maxCount: 1 }),
+      (item, feed, ampersandReplacement) => {
+        const feedItem = processFeedItem(item, feed, ampersandReplacement);
 
-test.todo(
-  'processFeedItem returns the readable result of truncating all content if the feed has the truncateContentAt attribute defined'
-);
+        expect(truncateAll).not.toHaveBeenCalled();
+        expect(feedItem.content).toEqual([item.summary || item.description]);
+      }
+    )
+  );
+});
 
-test.todo(
-  'processFeedItem returns the readable result of truncating all content if the content surpasses the max character count'
-);
+test('processFeedItem returns the readable result of truncating all content if the feed has the truncateContentAt attribute defined', () => {
+  fc.assert(
+    fc.property(
+      itemRecord(),
+      feedRecord({ hasTruncateContentAt: 'always' }),
+      fc.lorem({ maxCount: 1 }),
+      fc.array(fc.lorem({ mode: 'sentences' }), { minLength: 1 }),
+      (item, feed, ampersandReplacement, expectedResult) => {
+        mocked(truncateAll).mockClear();
+        mocked(truncateAll).mockReturnValue(expectedResult);
+
+        const feedItem = processFeedItem(item, feed, ampersandReplacement);
+
+        expect(truncateAll).toHaveBeenCalledWith(
+          item.summary || item.description,
+          feed.truncateContentAt,
+          { readable: true }
+        );
+        expect(feedItem.content).toEqual(expectedResult);
+      }
+    )
+  );
+});
+
+test('processFeedItem returns the readable result of truncating all content if the content surpasses the max character count', () => {
+  fc.assert(
+    fc.property(
+      itemRecord({ contentSurpassesMaxCharacters: 'always' }),
+      feedRecord(),
+      fc.lorem({ maxCount: 1 }),
+      fc.array(fc.lorem({ mode: 'sentences' }), { minLength: 1 }),
+      (item, feed, ampersandReplacement, expectedResult) => {
+        mocked(truncateAll).mockClear();
+        mocked(truncateAll).mockReturnValue(expectedResult);
+
+        const feedItem = processFeedItem(item, feed, ampersandReplacement);
+
+        expect(truncateAll).toHaveBeenCalledWith(
+          item.summary || item.description,
+          feed.truncateContentAt || MAX_CHARACTERS_SPEECH,
+          { readable: true }
+        );
+        expect(feedItem.content).toEqual(expectedResult);
+      }
+    )
+  );
+});

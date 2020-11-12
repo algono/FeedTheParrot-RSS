@@ -43,7 +43,7 @@ function processContent(
   truncateAt?: number
 ) {
   if (truncateAt || content.length > maxItemCharacters) {
-    return truncateAll(content, truncateAt ?? maxItemCharacters, {
+    return truncateAll(content, truncateAt || maxItemCharacters, {
       readable: true,
     });
   } else {

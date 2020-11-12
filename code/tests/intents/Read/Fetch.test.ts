@@ -98,7 +98,7 @@ testInAllLocales(
       fc.asyncProperty(
         fc
           .tuple(
-            fc.set(feedRecord, {
+            fc.set(feedRecord(), {
               minLength: 1,
               compare: (a, b) => a.name === b.name,
             }),

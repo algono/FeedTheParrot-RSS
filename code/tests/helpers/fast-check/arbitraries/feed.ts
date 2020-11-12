@@ -2,20 +2,35 @@ import fc from 'fast-check';
 import { Feed, FeedItem, FeedItems } from '../../../../src/logic/Feed';
 import { getLangFormatter } from '../../../../src/util/langFormatter';
 import { TFunction } from '../../../../src/util/localization';
+import { MayHappenOption } from './misc';
 
-export const feedRecord: fc.Arbitrary<Feed> = fc.record<
-  Feed,
-  fc.RecordConstraints
->(
-  {
-    name: fc.lorem(),
-    url: fc.webUrl(),
-    language: fc.oneof(fc.string(), fc.constant(undefined)),
-    itemLimit: fc.oneof(fc.nat(), fc.constant(undefined)),
-    truncateContentAt: fc.oneof(fc.nat(), fc.constant(undefined)),
-  },
-  { withDeletedKeys: false }
-);
+export function feedRecord({
+  hasTruncateContentAt = 'sometimes',
+}: { hasTruncateContentAt?: MayHappenOption } = {}): fc.Arbitrary<Feed> {
+  return fc.record<Feed, fc.RecordConstraints>(
+    {
+      name: fc.lorem(),
+      url: fc.webUrl(),
+      language: fc.oneof(fc.string(), fc.constant(undefined)),
+      itemLimit: fc.oneof(fc.nat(), fc.constant(undefined)),
+      truncateContentAt: truncateContentAtArb(hasTruncateContentAt),
+    },
+    { withDeletedKeys: false }
+  );
+}
+
+function truncateContentAtArb(hasTruncateContentAt: MayHappenOption) {
+  switch (hasTruncateContentAt) {
+    case 'always':
+      return fc.integer({ min: 1 });
+
+    case 'never':
+      return fc.constant(undefined);
+
+    default:
+      return fc.oneof(fc.integer({ min: 1 }), fc.constant(undefined));
+  }
+}
 
 function content({ minLength = 0 } = {}) {
   return fc.array(fc.lorem({ mode: 'sentences' }), {

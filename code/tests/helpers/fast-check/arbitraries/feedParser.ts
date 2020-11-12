@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { Enclosure, Image, Item, Meta, NS, Type } from 'feedparser';
 import { MAX_CHARACTERS_SPEECH } from '../../../../src/util/constants';
 import { availableLocales } from '../../helperTests';
+import { MayHappenOption } from './misc';
 
 const imageRecord: fc.Arbitrary<Image> = fc.record<Image, fc.RecordConstraints>(
   {
@@ -34,17 +35,19 @@ const metaRecord: fc.Arbitrary<Meta> = fc.record<Meta, fc.RecordConstraints>(
 );
 
 export function itemRecord({
-  contentSurpassesMaxCharacters = false,
+  contentSurpassesMaxCharacters = 'sometimes',
+}: {
+  contentSurpassesMaxCharacters?: MayHappenOption;
 } = {}): fc.Arbitrary<Item> {
+  const contentArbitrary = createContentArbitrary(
+    contentSurpassesMaxCharacters
+  );
+
   return fc.record<Item, fc.RecordConstraints>(
     {
       title: fc.lorem(),
-      description: contentSurpassesMaxCharacters
-        ? fc.string({ minLength: MAX_CHARACTERS_SPEECH })
-        : fc.lorem({ mode: 'sentences' }),
-      summary: contentSurpassesMaxCharacters
-        ? fc.string({ minLength: MAX_CHARACTERS_SPEECH })
-        : fc.lorem({ mode: 'sentences' }),
+      description: contentArbitrary,
+      summary: contentArbitrary,
       date: fc.option(fc.date()),
       pubdate: fc.option(fc.date()),
       link: fc.webUrl(),
@@ -73,4 +76,21 @@ export function itemRecord({
     },
     { withDeletedKeys: false }
   );
+}
+
+function createContentArbitrary(
+  contentSurpassesMaxCharacters: MayHappenOption
+) {
+  return contentSurpassesMaxCharacters === 'sometimes'
+    ? fc.lorem({ mode: 'sentences' })
+    : fc.string({
+        minLength:
+          contentSurpassesMaxCharacters === 'always'
+            ? MAX_CHARACTERS_SPEECH + 1
+            : undefined,
+        maxLength:
+          contentSurpassesMaxCharacters === 'never'
+            ? MAX_CHARACTERS_SPEECH
+            : undefined,
+      });
 }

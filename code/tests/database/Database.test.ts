@@ -246,7 +246,7 @@ test('getFeedsFromUser gets feeds and feedNames based on the name field', async 
       fc.constantFrom(
         ...(await allTranslationsFrom<string>('FEED_NAME_FIELD'))
       ),
-      fc.array(feedRecord),
+      fc.array(feedRecord()),
       async (nameField, expectedFeeds) => {
         clearState();
 
