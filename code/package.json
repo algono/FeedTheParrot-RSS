@@ -14,7 +14,7 @@
     "setup-ci": "echo \"{}\" > src/database/firebaseServiceAccountKey.json",
     "test": "jest --silent",
     "test:coverage": "jest --clearCache && jest --coverage --silent",
-    "test:ci": "npm run setup-ci && jest --ci",
+    "test:ci": "npm run setup-ci && npm run test -- --ci",
     "format": "prettier --write \"**/*.ts\"",
     "lint:init": "eslint --init",
     "lint:check": "gts check",
