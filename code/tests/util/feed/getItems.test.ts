@@ -88,7 +88,25 @@ describe('feedparser related tests', () => {
     clearInterval(intervals.error);
   });
 
-  test.todo('getItems tests');
+  test.todo(
+    'adds a lang formatter to the result based on the locale if it does not match the one on the feed'
+  );
+  test.todo(
+    'does not add a lang formatter to the result if the locale matches the one on the feed'
+  );
+  test.todo(
+    'processes all items and pushes the results to an items list'
+  );
+  test.todo(
+    'consumes the stream and breaks the loop if there is an item limit set and it has been surpassed'
+  );
+
+  test.todo(
+    'returns a list of items sorted by date in descending order'
+  );
+  test.todo(
+    'throws an error if the feed is too long for Alexa to read'
+  );
 
   afterEach(() => {
     for (const key in intervals) {
