@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import fc from 'fast-check';
 import FeedParser from 'feedparser';
 import { anyOfClass, instance, mock, when } from 'ts-mockito';
@@ -5,15 +6,14 @@ import { Feed } from '../../../src/logic/Feed';
 import { getItems } from '../../../src/util/feed/getItems';
 import { testInAllLocales } from '../../helpers/helperTests';
 import {
-  //mockFeedParser,
+  FeedParserEventIntervals,
+  mockFeedParser,
   mockNodeFetch,
   mockNodeFetchRejects,
 } from '../../helpers/mocks/mockFeedParser';
 
 jest.mock('feedparser');
 jest.mock('node-fetch');
-
-//const { intervals } = mockFeedParser();
 
 testInAllLocales(
   'getItems pipes response body stream into feedparser when fetch response is ok'
@@ -26,7 +26,7 @@ testInAllLocales(
         done()
       );
 
-      await getItems(mock<Feed>(), locale);
+      await getItems(instance(mock<Feed>()), locale);
     })
   )
 );
@@ -38,9 +38,9 @@ testInAllLocales('getItems throws error when fetch response is not ok')(
         fc.integer({ min: 300, max: 999 }),
         async (statusCode) => {
           mockNodeFetch({ statusCode });
-          await expect(getItems(mock<Feed>(), locale)).rejects.toBeInstanceOf(
-            Error
-          );
+          await expect(
+            getItems(instance(mock<Feed>()), locale)
+          ).rejects.toBeInstanceOf(Error);
         }
       )
     );
@@ -52,14 +52,48 @@ testInAllLocales(
 )(async (locale) => {
   const expectedError = instance(mock<Error>());
   mockNodeFetchRejects(expectedError);
-  await expect(getItems(mock<Feed>(), locale)).rejects.toBe(expectedError);
+  await getItems(instance(mock<Feed>()), locale)
+    .then(() => fail('The promise was not rejected'))
+    .catch((err) => {
+      expect(err === expectedError).toBe(true);
+    });
 });
 
-test.todo('getItems tests');
-/*
-afterAll(() => {
-  for (const key in intervals) {
-    clearInterval(intervals[key]);
-  }
+describe('feedparser related tests', () => {
+  let eventEmitter: EventEmitter, intervals: FeedParserEventIntervals;
+  beforeAll(() => {
+    const res = mockFeedParser();
+    eventEmitter = res.eventEmitter;
+    intervals = res.intervals;
+  });
+
+  beforeEach(() => eventEmitter.removeAllListeners());
+
+  testInAllLocales(
+    'getItems rejects with feedparser response reason when feedparser emits an error'
+  )(async (locale) => {
+    const expectedError = instance(mock<Error>());
+
+    intervals.error = setInterval(() => {
+      if (eventEmitter.listeners('error').length > 0)
+        eventEmitter.emit('error', expectedError);
+    }, 10);
+
+    await getItems(instance(mock<Feed>()), locale)
+      .then(() => fail('The promise was not rejected'))
+      .catch((err) => {
+        expect(err === expectedError).toBe(true);
+      });
+
+    clearInterval(intervals.error);
+  });
+
+  test.todo('getItems tests');
+
+  afterEach(() => {
+    for (const key in intervals) {
+      clearInterval(intervals[key]);
+      delete intervals[key];
+    }
+  });
 });
-*/

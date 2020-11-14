@@ -25,6 +25,12 @@ export function mockNodeFetchRejects(reason: any) {
   mocked(fetch).mockRejectedValue(reason);
 }
 
+export type FeedParserEventIntervals = {
+  readable?: NodeJS.Timeout;
+  end?: NodeJS.Timeout;
+  [key: string]: NodeJS.Timeout;
+};
+
 /**
  * This function needs 'feedparser' and 'node-fetch' libraries to have been mocked before
  * @example
@@ -52,7 +58,7 @@ export function mockFeedParser() {
 
   const eventEmitter = new EventEmitter();
 
-  const intervals: { readable?: NodeJS.Timeout; end?: NodeJS.Timeout } = {};
+  const intervals: FeedParserEventIntervals = {};
 
   const setReadableInterval = () => {
     intervals.readable = setInterval(() => eventEmitter.emit('readable'), 10);
@@ -74,7 +80,9 @@ export function mockFeedParser() {
     })
   );
 
-  when(feedParserMock.on(anyString(), anyFunction())).thenCall(eventEmitter.on);
+  when(feedParserMock.on(anyString(), anyFunction())).thenCall((ev, fn) =>
+    eventEmitter.on(ev, fn)
+  );
 
   mocked(FeedParser).mockImplementation(() => instance(feedParserMock));
 
