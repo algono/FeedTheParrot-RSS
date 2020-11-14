@@ -1,8 +1,3 @@
-export interface GetItemsOptions {
-  forceUpdate?: boolean;
-  itemLimit?: number;
-}
-
 export interface FeedItem {
   title: string;
   description: string;

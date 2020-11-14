@@ -2,7 +2,7 @@ import FeedParser, { Item } from 'feedparser';
 import fetch from 'node-fetch';
 import { initNewInstance } from '../localization';
 import { FeedIsTooLongError } from '../../intents/Error';
-import { Feed, GetItemsOptions, FeedItems } from '../../logic/Feed';
+import { Feed, FeedItems } from '../../logic/Feed';
 import { getLangFormatter } from '../langFormatter';
 import {
   calculateMaxFeedSize,
@@ -12,8 +12,7 @@ import { processFeedItem } from './processFeedItem';
 
 export function getItems(
   feed: Feed,
-  defaultLocale: string,
-  options?: GetItemsOptions
+  defaultLocale: string
 ): Promise<FeedItems> {
   return new Promise<FeedItems>((resolve, reject) => {
     const req = fetch(feed.url);
@@ -52,15 +51,13 @@ export function getItems(
       // Get ampersand replacement for that language (i.e: 'and' in English)
       const ampersandReplacement = t('AMPERSAND');
 
-      const itemLimit = options?.itemLimit ?? feed.itemLimit;
-
       let item: Item;
       while ((item = stream.read())) {
         const feedItem = processFeedItem(item, feed, ampersandReplacement);
         items.list.push(feedItem);
 
         // If there is an item limit set and it has been surpassed, consume the stream and break the loop
-        if (itemLimit && items.list.length >= itemLimit) {
+        if (feed.itemLimit && items.list.length >= feed.itemLimit) {
           stream.resume(); // It turns out the resume method does the best job at consuming the stream
           break;
         }
