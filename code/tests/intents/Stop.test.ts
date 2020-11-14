@@ -13,7 +13,7 @@ testIntentCanHandle({
   intentName: 'AMAZON.StopIntent',
 });
 
-testInAllLocales('Stop intent speaks goodbye message', async (locale) => {
+testInAllLocales('Stop intent speaks goodbye message')(async (locale) => {
   const mocks = await mockHandlerInput({ locale });
 
   CancelAndStopIntentHandler.handle(mocks.instanceHandlerInput);

@@ -12,23 +12,22 @@ test('cleanHtml properly cleans html formatted text', () =>
   ));
 
 testInAllLocales(
-  "cleanHtml changes the html ampersand symbol ('&amp;') with the ampersandReplacement",
-  async (locale) => {
-    const t = await init(locale);
-    const ampersandReplacement = t('AMPERSAND');
+  "cleanHtml changes the html ampersand symbol ('&amp;') with the ampersandReplacement"
+)(async (locale) => {
+  const t = await init(locale);
+  const ampersandReplacement = t('AMPERSAND');
 
-    fc.assert(
-      fc.property(
-        fc.stringOf(fc.oneof(fc.lorem(), fc.constant('&amp;'))),
-        (text) => {
-          expect(cleanHtml(text, ampersandReplacement)).toEqual(
-            text.replace(/&amp;/g, ampersandReplacement)
-          );
-        }
-      )
-    );
-  }
-);
+  fc.assert(
+    fc.property(
+      fc.stringOf(fc.oneof(fc.lorem(), fc.constant('&amp;'))),
+      (text) => {
+        expect(cleanHtml(text, ampersandReplacement)).toEqual(
+          text.replace(/&amp;/g, ampersandReplacement)
+        );
+      }
+    )
+  );
+});
 
 test("cleanHtml removes html tag symbols ('<', '>')", () =>
   fc.assert(

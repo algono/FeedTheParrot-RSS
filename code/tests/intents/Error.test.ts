@@ -29,8 +29,7 @@ test('Feed is too long error handler can handle only FeedIsToLongErrors', () => 
   ).toBe(false);
 });
 
-testInAllLocales(
-  'Feed is too long error handler speaks error message',
+testInAllLocales('Feed is too long error handler speaks error message')(
   async (locale) => {
     const mocks = await mockHandlerInput({ locale });
 
@@ -82,8 +81,7 @@ test('Generic error handler shows error stack in console', async () => {
   );
 });
 
-testInAllLocales(
-  'Generic error handler speaks error message',
+testInAllLocales('Generic error handler speaks error message')(
   async (locale) => {
     const mocks = await mockHandlerInput({ locale });
 

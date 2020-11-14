@@ -8,8 +8,7 @@ import {
 import { init } from '../../src/util/localization';
 import { testInAllLocales } from '../helpers/helperTests';
 
-testInAllLocales(
-  "getLangFormatter returns ssml with a valid 'lang' tag",
+testInAllLocales("getLangFormatter returns ssml with a valid 'lang' tag")(
   async (locale) => {
     const t = await init(locale);
 
@@ -21,8 +20,7 @@ testInAllLocales(
   }
 );
 
-testInAllLocales(
-  "getLangFormatter returns ssml with a valid 'voice' tag",
+testInAllLocales("getLangFormatter returns ssml with a valid 'voice' tag")(
   async (locale) => {
     const t = await init(locale);
 

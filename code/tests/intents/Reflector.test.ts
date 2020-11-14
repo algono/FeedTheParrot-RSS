@@ -15,8 +15,7 @@ testIntentCanHandle({
   testName: 'Intent reflector can handle any IntentRequest',
 });
 
-testInAllLocales(
-  'Intent reflector response contains the reflected intent',
+testInAllLocales('Intent reflector response contains the reflected intent')(
   async (locale) => {
     const mocks = await mockHandlerInput({ locale });
 

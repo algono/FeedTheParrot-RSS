@@ -11,8 +11,7 @@ testCanHandle({
   testName: 'Session Ended Request Handler can handle any SessionEndedRequest',
 });
 
-testInAllLocales(
-  'Session ended handler clears dynamic entities',
+testInAllLocales('Session ended handler clears dynamic entities')(
   async (locale) => {
     const mocks = await mockHandlerInput({ locale });
 
@@ -30,8 +29,7 @@ testInAllLocales(
   }
 );
 
-testInAllLocales(
-  'Session ended handler does not speak nor reprompt',
+testInAllLocales('Session ended handler does not speak nor reprompt')(
   async (locale) => {
     const mocks = await mockHandlerInput({ locale });
 

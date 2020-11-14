@@ -41,13 +41,12 @@ function checkTFunctionFromInit(init: (locale: string) => Promise<TFunction>) {
   };
 }
 
-testInAllLocales('init works', checkTFunctionFromInit(init));
-testInAllLocales(
-  'initNewInstance works',
+testInAllLocales('init works')(checkTFunctionFromInit(init));
+testInAllLocales('initNewInstance works')(
   checkTFunctionFromInit(initNewInstance)
 );
 
-testInAllLocales('Localization Request Interceptor works', async (locale) => {
+testInAllLocales('Localization Request Interceptor works')(async (locale) => {
   const requestAttributes: { t?: TFunction } = {};
   const mocks = await mockHandlerInput({
     locale,

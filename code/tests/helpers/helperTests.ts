@@ -1,40 +1,19 @@
 import { getIntentName, getRequestType, RequestHandler } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
-import { mockHandlerInput, MockHandlerInputOptions } from './mocks/HandlerInputMocks';
+import {
+  mockHandlerInput,
+  MockHandlerInputOptions,
+} from './mocks/HandlerInputMocks';
 
-export const availableLocales = ['en', 'es'];
+export const availableLocales: readonly string[] = ['en', 'es'];
 
-function genTestName(name: string, locale: string): string {
-  return `${name} (${locale})`;
-}
-
-export function testInAllLocales(
-  name: string,
-  fn: { (locale: string): unknown }
-) {
-  availableLocales.forEach((locale) => {
-    test(genTestName(name, locale), () => fn(locale));
-  });
-}
-
-export namespace testInAllLocales {
-  export function todo(name: string) {
-    availableLocales.forEach((locale) => {
-      test.todo(genTestName(name, locale));
-    });
-  }
-
-  export function only(name: string, fn: { (locale: string): unknown }) {
-    availableLocales.forEach((locale) => {
-      test.only(genTestName(name, locale), () => fn(locale));
-    });
-  }
-
-  export function skip(name: string, fn?: { (locale: string): unknown }) {
-    availableLocales.forEach((locale) => {
-      test.skip(genTestName(name, locale), () => fn(locale));
-    });
-  }
+export function testInAllLocales(name: string, type?: 'only' | 'skip') {
+  const testIt = type ? test[type] : test;
+  const testFn = testIt.each<string | jest.DoneCallback>(availableLocales);
+  return (
+    fn: (locale: string, done: jest.DoneCallback) => any,
+    timeout?: number
+  ) => testFn(`${name} (%s)`, fn, timeout);
 }
 
 /**
