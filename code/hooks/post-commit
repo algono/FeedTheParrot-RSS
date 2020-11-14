@@ -18,8 +18,11 @@ if [ "$current_branch" = "$DEPLOY_BRANCH" ]; then
 
 	commit_msg="$(git log -1 --pretty=%B)"
 
+	previous_stash_count="$(git stash list | wc -l)"
+
 	git stash --include-untracked # Stash changes not added to the commit
-	stashed=$? # Store the stash command return value (0 = success, other = error)
+
+	current_stash_count="$(git stash list | wc -l)"
 
 	git checkout "$CODE_BRANCH"
 
@@ -40,7 +43,7 @@ if [ "$current_branch" = "$DEPLOY_BRANCH" ]; then
 	git checkout "$DEPLOY_BRANCH"
 	
 	# If any changes were stashed, pop them back
-	[ $stashed -eq 0 ] && git stash pop
+	[ $current_stash_count -gt $previous_stash_count ] && git stash pop
 fi
 
 exit 0
