@@ -3,6 +3,23 @@ import FeedParser from 'feedparser';
 import fetch, { Response } from 'node-fetch';
 import { mocked } from 'ts-jest/utils';
 import { anyFunction, anyString, instance, mock, when } from 'ts-mockito';
+import { resolvableInstance } from '../ts-mockito/resolvableInstance';
+
+export function mockNodeFetch({ statusCode = 200 } = {}) {
+  const responseMock = mock<Response>();
+
+  when(responseMock.ok).thenReturn(statusCode >= 200 && statusCode < 300);
+  when(responseMock.status).thenReturn(statusCode);
+
+  const responseBodyMock = mock<NodeJS.ReadableStream>();
+
+  when(responseMock.body).thenCall(() => instance(responseBodyMock));
+
+  mocked(fetch).mockImplementation(() =>
+    Promise.resolve(resolvableInstance(responseMock))
+  );
+  return { responseMock, responseBodyMock };
+}
 
 /**
  * This function needs 'feedparser' and 'node-fetch' libraries to have been mocked before
@@ -25,18 +42,7 @@ import { anyFunction, anyString, instance, mock, when } from 'ts-mockito';
  * });
  */
 export function mockFeedParser() {
-  const responseMock = mock<Response>();
-
-  when(responseMock.ok).thenReturn(true);
-  when(responseMock.status).thenReturn(200);
-
-  const responseBodyMock = mock<NodeJS.ReadableStream>();
-
-  when(responseMock.body).thenCall(() => instance(responseBodyMock));
-
-  mocked(fetch).mockImplementation(() =>
-    Promise.resolve(instance(responseMock))
-  );
+  const { responseMock, responseBodyMock } = mockNodeFetch();
 
   const feedParserMock = mock<FeedParser>();
 
@@ -44,7 +50,10 @@ export function mockFeedParser() {
 
   const intervals: { readable?: NodeJS.Timeout; end?: NodeJS.Timeout } = {};
 
-  intervals.readable = setInterval(() => eventEmitter.emit('readable'), 10);
+  const setReadableInterval = () => {
+    intervals.readable = setInterval(() => eventEmitter.emit('readable'), 10);
+    return intervals;
+  };
 
   when(feedParserMock.on('readable', anyFunction())).thenCall((ev, fn) =>
     eventEmitter.on(ev, async () => {
@@ -63,7 +72,7 @@ export function mockFeedParser() {
 
   when(feedParserMock.on(anyString(), anyFunction())).thenCall(eventEmitter.on);
 
-  mocked(FeedParser).mockReturnValue(instance(feedParserMock));
+  mocked(FeedParser).mockImplementation(() => instance(feedParserMock));
 
   return {
     responseMock,
@@ -71,5 +80,6 @@ export function mockFeedParser() {
     feedParserMock,
     eventEmitter,
     intervals,
+    setReadableInterval,
   };
 }
