@@ -16,7 +16,7 @@ jest.mock('feedparser');
 jest.mock('node-fetch');
 
 testInAllLocales(
-  'getItems pipes response body stream into feedparser when fetch response is ok'
+  'pipes response body stream into feedparser when fetch response is ok'
 )((locale, done) =>
   fc.assert(
     fc.asyncProperty(fc.integer({ min: 200, max: 299 }), async (statusCode) => {
@@ -31,7 +31,7 @@ testInAllLocales(
   )
 );
 
-testInAllLocales('getItems throws error when fetch response is not ok')(
+testInAllLocales('throws error when fetch response is not ok')(
   async (locale) => {
     await fc.assert(
       fc.asyncProperty(
@@ -48,7 +48,7 @@ testInAllLocales('getItems throws error when fetch response is not ok')(
 );
 
 testInAllLocales(
-  'getItems rejects with fetch response reason when fetch response is rejected'
+  'rejects with fetch response reason when fetch response is rejected'
 )(async (locale) => {
   const expectedError = instance(mock<Error>());
   mockNodeFetchRejects(expectedError);
@@ -70,7 +70,7 @@ describe('feedparser related tests', () => {
   beforeEach(() => eventEmitter.removeAllListeners());
 
   testInAllLocales(
-    'getItems rejects with feedparser response reason when feedparser emits an error'
+    'rejects with feedparser response reason when feedparser emits an error'
   )(async (locale) => {
     const expectedError = instance(mock<Error>());
 

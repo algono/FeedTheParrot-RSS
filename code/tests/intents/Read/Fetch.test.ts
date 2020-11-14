@@ -23,153 +23,157 @@ import { mockHandlerInput } from '../../helpers/mocks/HandlerInputMocks';
 import { mockIntent } from '../../helpers/mocks/mockIntent';
 
 jest.mock('ask-sdk-core');
-testIntentCanHandle({
-  handler: ReadIntentHandler,
-  intentName: 'ReadIntent',
-});
-
-test('ReadIntent - If the feed name has not been received yet, let Alexa continue the dialogue', async () => {
-  const mocks = await mockHandlerInput();
-
-  mocked(getSlotValue).mockReturnValue(undefined);
-
-  const { intentMock } = mockIntent();
-
-  await ReadIntentHandler.handle(mocks.instanceHandlerInput);
-
-  verify(mocks.mockedResponseBuilder.speak(anyString())).never();
-
-  verify(
-    mocks.mockedResponseBuilder.addDelegateDirective(instance(intentMock))
-  ).once();
-});
-
 jest.mock('../../../src/util/feed/getItems');
 
-testInAllLocales(
-  'ReadIntent - If the feed is not on our list, invalidate the feed name given, warn the user and try again'
-)((locale) =>
-  fc.assert(
-    fc.asyncProperty(
-      fc.array(fc.string()),
-      fc.string({ minLength: 1 }),
-      async (feedNames, feedName) => {
-        fc.pre(!feedNames.includes(feedName));
+describe('ReadIntent', () => {
+  testIntentCanHandle({
+    handler: ReadIntentHandler,
+    intentName: 'ReadIntent',
+  });
 
-        const mocks = await mockHandlerInput({
-          locale,
-          sessionAttributes: {
-            feedNames,
-          },
-        });
+  test('If the feed name has not been received yet, let Alexa continue the dialogue', async () => {
+    const mocks = await mockHandlerInput();
 
-        mocked(getSlotValue).mockReturnValue(feedName);
+    mocked(getSlotValue).mockReturnValue(undefined);
 
-        const { intentMock } = mockIntent();
+    const { intentMock } = mockIntent();
 
-        const feedSlot: Slot = {
-          name: feedName,
-          confirmationStatus: 'NONE',
-        };
+    await ReadIntentHandler.handle(mocks.instanceHandlerInput);
 
-        when(intentMock.slots).thenReturn({
-          [feedSlotName]: feedSlot,
-        });
+    verify(mocks.mockedResponseBuilder.speak(anyString())).never();
 
-        mocked(getItems).mockImplementation(() => {
-          throw new Error('Should not be trying to get any items');
-        });
+    verify(
+      mocks.mockedResponseBuilder.addDelegateDirective(instance(intentMock))
+    ).once();
+  });
 
-        await ReadIntentHandler.handle(mocks.instanceHandlerInput);
+  testInAllLocales(
+    'If the feed is not on our list, invalidate the feed name given, warn the user and try again'
+  )((locale) =>
+    fc.assert(
+      fc.asyncProperty(
+        fc.array(fc.string()),
+        fc.string({ minLength: 1 }),
+        async (feedNames, feedName) => {
+          fc.pre(!feedNames.includes(feedName));
 
-        expect(feedSlot.confirmationStatus).toEqual<SlotConfirmationStatus>(
-          'DENIED'
-        );
+          const mocks = await mockHandlerInput({
+            locale,
+            sessionAttributes: {
+              feedNames,
+            },
+          });
 
-        verify(
-          mocks.mockedResponseBuilder.speak(mocks.t('NO_FEED_MSG'))
-        ).once();
+          mocked(getSlotValue).mockReturnValue(feedName);
 
-        verify(
-          mocks.mockedResponseBuilder.addDelegateDirective(instance(intentMock))
-        ).once();
-      }
-    )
-  )
-);
+          const { intentMock } = mockIntent();
 
-testInAllLocales(
-  "ReadIntent - Gets items from feed with Alexa's locale, stores a ReadState and starts reading items"
-)((locale) =>
-  fc.assert(
-    fc.asyncProperty(
-      fc
-        .tuple(
-          fc.set(feedRecord(), {
-            minLength: 1,
-            compare: (a, b) => a.name === b.name,
-          }),
-          fc.nat()
-        )
-        .map(([feeds, index]) => {
-          const feedNames = feeds.map((feed) => feed.name);
-          return {
-            feeds: feeds.reduce<{ [x: string]: Feed }>((feeds, feed) => {
-              feeds[feed.name] = feed as Feed;
-              return feeds;
-            }, {}),
-            feedNames,
-            feed: feeds[index % feeds.length],
+          const feedSlot: Slot = {
+            name: feedName,
+            confirmationStatus: 'NONE',
           };
-        }),
-      feedItemsRecord(),
-      async (
-        {
-          feeds,
-          feedNames,
-          feed,
-        }: {
-          feeds: { [x: string]: Feed };
-          feedNames: string[];
-          feed: Feed;
-        },
-        feedItems: FeedItems
-      ) => {
-        const sessionAttributes: {
-          feeds: { [x: string]: Feed };
-          feedNames: string[];
-          readState?: ReadState;
-        } = {
-          feeds,
-          feedNames,
-        };
 
-        const mocks = await mockHandlerInput({
-          locale,
-          sessionAttributes,
-        });
+          when(intentMock.slots).thenReturn({
+            [feedSlotName]: feedSlot,
+          });
 
-        mocked(getLocale).mockReturnValue(locale);
+          mocked(getItems).mockImplementation(() => {
+            throw new Error('Should not be trying to get any items');
+          });
 
-        mocked(getSlotValue).mockReturnValue(feed.name);
+          await ReadIntentHandler.handle(mocks.instanceHandlerInput);
 
-        mocked(getItems).mockResolvedValue(feedItems);
+          expect(feedSlot.confirmationStatus).toEqual<SlotConfirmationStatus>(
+            'DENIED'
+          );
 
-        const readItemSpy = spy(ReadItemIntentHandler);
-        when(readItemSpy.handle(anything())).thenCall(() => {});
+          verify(
+            mocks.mockedResponseBuilder.speak(mocks.t('NO_FEED_MSG'))
+          ).once();
 
-        await ReadIntentHandler.handle(mocks.instanceHandlerInput);
-
-        expect(getItems).toHaveBeenLastCalledWith(feed, locale);
-
-        expect(sessionAttributes.readState).toMatchObject({
-          feedName: feed.name,
-          feed,
-          feedItems,
-        });
-
-        verify(readItemSpy.handle(mocks.instanceHandlerInput)).once();
-      }
+          verify(
+            mocks.mockedResponseBuilder.addDelegateDirective(
+              instance(intentMock)
+            )
+          ).once();
+        }
+      )
     )
-  )
-);
+  );
+
+  testInAllLocales(
+    "Gets items from feed with Alexa's locale, stores a ReadState and starts reading items"
+  )((locale) =>
+    fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            fc.set(feedRecord(), {
+              minLength: 1,
+              compare: (a, b) => a.name === b.name,
+            }),
+            fc.nat()
+          )
+          .map(([feeds, index]) => {
+            const feedNames = feeds.map((feed) => feed.name);
+            return {
+              feeds: feeds.reduce<{ [x: string]: Feed }>((feeds, feed) => {
+                feeds[feed.name] = feed as Feed;
+                return feeds;
+              }, {}),
+              feedNames,
+              feed: feeds[index % feeds.length],
+            };
+          }),
+        feedItemsRecord(),
+        async (
+          {
+            feeds,
+            feedNames,
+            feed,
+          }: {
+            feeds: { [x: string]: Feed };
+            feedNames: string[];
+            feed: Feed;
+          },
+          feedItems: FeedItems
+        ) => {
+          const sessionAttributes: {
+            feeds: { [x: string]: Feed };
+            feedNames: string[];
+            readState?: ReadState;
+          } = {
+            feeds,
+            feedNames,
+          };
+
+          const mocks = await mockHandlerInput({
+            locale,
+            sessionAttributes,
+          });
+
+          mocked(getLocale).mockReturnValue(locale);
+
+          mocked(getSlotValue).mockReturnValue(feed.name);
+
+          mocked(getItems).mockResolvedValue(feedItems);
+
+          const readItemSpy = spy(ReadItemIntentHandler);
+          when(readItemSpy.handle(anything())).thenCall(() => {});
+
+          await ReadIntentHandler.handle(mocks.instanceHandlerInput);
+
+          expect(getItems).toHaveBeenLastCalledWith(feed, locale);
+
+          expect(sessionAttributes.readState).toMatchObject({
+            feedName: feed.name,
+            feed,
+            feedItems,
+          });
+
+          verify(readItemSpy.handle(mocks.instanceHandlerInput)).once();
+        }
+      )
+    )
+  );
+});

@@ -8,29 +8,31 @@ import {
 import { init } from '../../src/util/localization';
 import { testInAllLocales } from '../helpers/helperTests';
 
-testInAllLocales("getLangFormatter returns ssml with a valid 'lang' tag")(
-  async (locale) => {
-    const t = await init(locale);
+describe('getLangFormatter', () => {
+  testInAllLocales("returns ssml with a valid 'lang' tag")(
+    async (locale) => {
+      const t = await init(locale);
 
-    const langFormatter = getLangFormatter(t);
+      const langFormatter = getLangFormatter(t);
 
-    expect(langFormatter).toMatch(
-      /.*?<lang xml:lang="[\w-]+?">.*?%s.*?<\/lang>.*?/
-    );
-  }
-);
+      expect(langFormatter).toMatch(
+        /.*?<lang xml:lang="[\w-]+?">.*?%s.*?<\/lang>.*?/
+      );
+    }
+  );
 
-testInAllLocales("getLangFormatter returns ssml with a valid 'voice' tag")(
-  async (locale) => {
-    const t = await init(locale);
+  testInAllLocales("returns ssml with a valid 'voice' tag")(
+    async (locale) => {
+      const t = await init(locale);
 
-    const langFormatter = getLangFormatter(t);
+      const langFormatter = getLangFormatter(t);
 
-    expect(langFormatter).toMatch(
-      /.*?<voice name="[\w]+?">.*?%s.*?<\/voice>.*?/
-    );
-  }
-);
+      expect(langFormatter).toMatch(
+        /.*?<voice name="[\w]+?">.*?%s.*?<\/voice>.*?/
+      );
+    }
+  );
+});
 
 jest.mock('util');
 describe('applyLangFormatter', () => {

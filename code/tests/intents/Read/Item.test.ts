@@ -65,465 +65,578 @@ const sessionAttributesWhenReading: {
 
 jest.mock('ask-sdk-core');
 
-testIntentCanHandle({
-  handler: ReadItemIntentHandler,
-  intentName: 'ReadItemIntent',
-  mockHandlerInputOptions: {
-    sessionAttributes: sessionAttributesWhenReading,
-  },
-});
-
-testIntentCanHandle({
-  handler: ReadItemIntentHandler,
-  intentName: 'AMAZON.RepeatIntent',
-  mockHandlerInputOptions: {
-    sessionAttributes: sessionAttributesWhenReading,
-  },
-});
-
-testInAllLocales(
-  'ReadItemIntent - If there are items to read, start reading, read the item title and ask for confirmation to continue reading'
-)(async (locale) => {
-  const sessionAttributes: { readState?: ReadState } = {};
-  const mocks = await mockHandlerInput({
-    locale,
-    sessionAttributes,
-  });
-  await fc.assert(
-    fc.asyncProperty(
-      fc
-        .tuple(
-          feedItemsRecord({
-            minLength: 1,
-            readingContent: true,
-            t: mocks.t,
-          }),
-          fc.nat()
-        )
-        .map(([feedItems, currentIndex]) => ({
-          feedItems,
-          currentIndex: currentIndex % feedItems.list.length,
-        })),
-      async ({ feedItems, currentIndex }) => {
-        resetCalls<unknown>(
-          mocks.mockedHandlerInput,
-          mocks.mockedAttributesManager,
-          mocks.mockedResponseBuilder,
-          mocks.mockedResponse
-        );
-
-        const { readStateMock } = mockReadState({
-          mockReadingSetter: () => {},
-        });
-
-        when(readStateMock.feedItems).thenReturn(feedItems);
-        when(readStateMock.currentIndex).thenReturn(currentIndex);
-
-        sessionAttributes.readState = instance(readStateMock);
-
-        await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
-
-        const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
-
-        const item = feedItems.list[currentIndex];
-
-        expect(speakOutput).toMatch(
-          new RegExp(
-            `^.*?${escapeRegex(item.title)}.*?${escapeRegex(
-              mocks.t('CONFIRMATION_CONTINUE_READING_FEED')
-            )}$`,
-            's'
-          )
-        );
-
-        verify(mocks.mockedResponseBuilder.reprompt(speakOutput)).once();
-      }
-    )
-  );
-});
-
-test('ReadItemIntent - If it was reading content before, delete its temp data from session attributes', () =>
-  fc.assert(
-    fc.asyncProperty(
-      fc.oneof(fc.nat(), fc.constant(undefined)),
-      async (currentContentIndex) => {
-        const { readState } = mockReadState({ mockReadingSetter: () => {} });
-
-        mockProperty(
-          readState,
-          'currentContentIndex',
-          () => currentContentIndex,
-          (value) => expect(value).toBeUndefined()
-        );
-
-        const sessionAttributes = { readState };
-        const mocks = await mockHandlerInput({
-          locale: null,
-          sessionAttributes,
-        });
-
-        await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
-
-        const indexProperty: keyof ReadState = 'currentContentIndex';
-        expect(indexProperty in sessionAttributes.readState).toBe(false);
-      }
-    )
-  ));
-
-test('ReadItemIntent - If it was reading before, add a pause before reading the current item', async () => {
-  const { readState } = mockReadState({ mockReadingSetter: () => {} });
-
-  const sessionAttributes = { readState };
-  const mocks = await mockHandlerInput({
-    locale: null,
-    sessionAttributes,
-  });
-
-  await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
-
-  const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
-
-  expect(speakOutput.startsWith(PAUSE_BETWEEN_ITEMS)).toBe(true);
-});
-
-testInAllLocales(
-  'ReadItemIntent - If there are no items left, tell the user and stop reading'
-)(async (locale) => {
-  await testReadingEnd(locale, true);
-  await testReadingEnd(locale, false);
-});
-
-async function testReadingEnd(locale: string, reading: boolean) {
-  const { readState, setterSpy } = mockReadState({
-    reading,
-    mockReadingSetter: () => {},
-  });
-
-  const sessionAttributes = { readState };
-  const mocks = await mockHandlerInput({
-    locale,
-    sessionAttributes,
-  });
-
-  await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
-
-  expect(setterSpy).lastCalledWith(false);
-
-  const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
-
-  expect(speakOutput).toContain(mocks.t('END_READING_FEED'));
-}
-
-testIntentCanHandle({
-  handler: ReadContentIntentHandler,
-  intentName: 'AMAZON.YesIntent',
-  mockHandlerInputOptions: {
-    sessionAttributes: sessionAttributesWhenReading,
-  },
-});
-
-testInAllLocales(
-  'ReadContentIntent - If it is any content item but the last one, read it, move index by one and prompt for continue reading the next one'
-)(async (locale) => {
-  const sessionAttributes: { readState?: ReadState } = {};
-  const mocks = await mockHandlerInput({
-    locale,
-    sessionAttributes,
-  });
-
-  await fc.assert(
-    fc.asyncProperty(
-      fc
-        .tuple(
-          feedItemsRecord({
-            minLength: 1,
-            readingContent: true,
-            contentMinLength: 2,
-            t: mocks.t,
-          }),
-          fc.nat(),
-          fc.option(fc.nat())
-        )
-        .map(([feedItems, currentIndex, currentContentIndex]) => {
-          currentIndex %= feedItems.list.length;
-          const contentLength = feedItems.list[currentIndex].content.length;
-
-          return {
-            feedItems,
-            currentIndex,
-            currentContentIndex: currentContentIndex
-              ? currentContentIndex % (contentLength - 1)
-              : undefined,
-          };
-        }),
-      fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
-      async (
-        { feedItems, currentIndex, currentContentIndex },
-        confirmationStatus
-      ) => {
-        resetCalls<unknown>(
-          mocks.mockedHandlerInput,
-          mocks.mockedAttributesManager,
-          mocks.mockedResponseBuilder,
-          mocks.mockedResponse
-        );
-
-        const { readStateMock } = mockReadState();
-
-        when(readStateMock.feedItems).thenReturn(feedItems);
-        when(readStateMock.currentIndex).thenReturn(currentIndex);
-
-        sessionAttributes.readState = instance(readStateMock);
-
-        mockProperty(
-          sessionAttributes.readState,
-          'currentContentIndex',
-          () => currentContentIndex,
-          (value) => expect(value).toEqual((currentContentIndex ?? 0) + 1)
-        );
-
-        const { intentMock } = mockIntent();
-        when(intentMock.confirmationStatus).thenReturn(confirmationStatus);
-
-        await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
-
-        const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
-
-        const feedItem = feedItems.list[currentIndex];
-        const currentContent = feedItem.content[currentContentIndex ?? 0];
-
-        expect(speakOutput).toMatch(
-          new RegExp(
-            `^.*?${escapeRegex(currentContent)}.*?${escapeRegex(
-              mocks.t('CONFIRMATION_CONTINUE_READING_FEED')
-            )}$`,
-            's'
-          )
-        );
-
-        verify(
-          mocks.mockedResponseBuilder.withStandardCard(
-            feedItem.title,
-            currentContent,
-            feedItem.imageUrl
-          )
-        ).once();
-
-        verify(
-          mocks.mockedResponseBuilder.addConfirmIntentDirective(
-            deepEqual({
-              name: 'AMAZON.YesIntent',
-              confirmationStatus: 'NONE',
-            })
-          )
-        ).once();
-      }
-    )
-  );
-});
-
-testInAllLocales(
-  'ReadContentIntent - If it is the last content item, read it and prompt for going to the next item'
-)(async (locale) => {
-  const sessionAttributes: { readState?: ReadState } = {};
-  const mocks = await mockHandlerInput({
-    locale,
-    sessionAttributes,
-  });
-  await fc.assert(
-    fc.asyncProperty(
-      fc
-        .tuple(
-          feedItemsRecord({
-            minLength: 1,
-            readingContent: true,
-            contentMinLength: 1,
-            t: mocks.t,
-          }),
-          fc.nat(),
-          fc.boolean()
-        )
-        .map(([feedItems, currentIndex, isCurrentContentIndexDefined]) => {
-          currentIndex %= feedItems.list.length;
-          const contentLength = feedItems.list[currentIndex].content.length;
-
-          return {
-            feedItems,
-            currentIndex,
-            currentContentIndex:
-              contentLength == 1 && !isCurrentContentIndexDefined
-                ? undefined
-                : contentLength - 1,
-          };
-        }),
-      fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
-      async (
-        { feedItems, currentIndex, currentContentIndex },
-        confirmationStatus
-      ) => {
-        resetCalls<unknown>(
-          mocks.mockedHandlerInput,
-          mocks.mockedAttributesManager,
-          mocks.mockedResponseBuilder,
-          mocks.mockedResponse
-        );
-
-        const { readStateMock } = mockReadState();
-
-        when(readStateMock.feedItems).thenReturn(feedItems);
-        when(readStateMock.currentIndex).thenReturn(currentIndex);
-        when(readStateMock.currentContentIndex).thenReturn(currentContentIndex);
-
-        sessionAttributes.readState = instance(readStateMock);
-
-        const { intentMock } = mockIntent();
-        when(intentMock.confirmationStatus).thenReturn(confirmationStatus);
-
-        await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
-
-        const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
-
-        const feedItem = feedItems.list[currentIndex];
-        const currentContent = feedItem.content[currentContentIndex ?? 0];
-
-        expect(speakOutput).toMatch(
-          new RegExp(
-            `^.*?${escapeRegex(currentContent)}.*?${escapeRegex(
-              mocks.t('CONFIRMATION_GOTO_NEXT_FEED_ITEM')
-            )}$`,
-            's'
-          )
-        );
-
-        verify(
-          mocks.mockedResponseBuilder.withStandardCard(
-            feedItem.title,
-            currentContent,
-            feedItem.imageUrl
-          )
-        ).once();
-
-        verify(
-          mocks.mockedResponseBuilder.addConfirmIntentDirective(
-            deepEqual({
-              name: 'AMAZON.NextIntent',
-              confirmationStatus: 'NONE',
-            })
-          )
-        ).once();
-      }
-    )
-  );
-});
-
-testInAllLocales(
-  'ReadContentIntent - If there are no other items to continue to (or the index is not valid), prompt for going to the next item'
-)((locale) =>
-  fc.assert(
-    fc.asyncProperty(
-      fc
-        .tuple(
-          feedItemsRecord({ minLength: 1, readingContent: true }),
-          fc.nat(),
-          fc.integer()
-        )
-        .map(([feedItems, currentIndex, currentContentIndex]) => {
-          currentIndex %= feedItems.list.length;
-
-          const contentLength = feedItems.list[currentIndex].content.length;
-
-          if (currentContentIndex >= 0 && currentContentIndex < contentLength) {
-            currentContentIndex += contentLength;
-          }
-
-          return {
-            feedItems,
-            currentIndex,
-            currentContentIndex,
-          };
-        }),
-      fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
-      async (
-        { feedItems, currentIndex, currentContentIndex },
-        confirmationStatus
-      ) => {
-        const { readStateMock } = mockReadState();
-
-        when(readStateMock.feedItems).thenReturn(feedItems);
-        when(readStateMock.currentIndex).thenReturn(currentIndex);
-        when(readStateMock.currentContentIndex).thenReturn(currentContentIndex);
-
-        const mocks = await mockHandlerInput({
-          locale,
-          sessionAttributes: { readState: instance(readStateMock) },
-        });
-
-        const { intentMock } = mockIntent();
-        when(intentMock.confirmationStatus).thenReturn(confirmationStatus);
-
-        await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
-
-        verify(
-          mocks.mockedResponseBuilder.speak(
-            mocks.t('CONFIRMATION_GOTO_NEXT_FEED_ITEM')
-          )
-        ).once();
-
-        verify(
-          mocks.mockedResponseBuilder.withStandardCard(
-            anyString(),
-            anyString(),
-            anyString()
-          )
-        ).never();
-
-        verify(
-          mocks.mockedResponseBuilder.addConfirmIntentDirective(
-            deepEqual({
-              name: 'AMAZON.NextIntent',
-              confirmationStatus: 'NONE',
-            })
-          )
-        ).once();
-      }
-    )
-  )
-);
-
-test('ReadContentIntent - If the intent was denied, go to the next item', () =>
-  checkIfOnConfirmationStatus(
-    {
-      DENIED: true,
+describe('ReadItemIntent', () => {
+  testIntentCanHandle({
+    handler: ReadItemIntentHandler,
+    intentName: 'ReadItemIntent',
+    mockHandlerInputOptions: {
+      sessionAttributes: sessionAttributesWhenReading,
     },
-    async (shouldBeTrue) => {
-      const mocks = await mockHandlerInput({ sessionAttributes: {} });
+  });
 
-      await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
+  testIntentCanHandle({
+    handler: ReadItemIntentHandler,
+    intentName: 'AMAZON.RepeatIntent',
+    mockHandlerInputOptions: {
+      sessionAttributes: sessionAttributesWhenReading,
+    },
+  });
 
-      const verificator = verify(
-        mocks.mockedResponseBuilder.addDelegateDirective(
-          deepEqual({
-            name: 'AMAZON.NextIntent',
-            confirmationStatus: 'CONFIRMED',
-          })
-        )
-      );
+  testInAllLocales(
+    'If there are items to read, start reading, read the item title and ask for confirmation to continue reading'
+  )(async (locale) => {
+    const sessionAttributes: { readState?: ReadState } = {};
+    const mocks = await mockHandlerInput({
+      locale,
+      sessionAttributes,
+    });
+    await fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            feedItemsRecord({
+              minLength: 1,
+              readingContent: true,
+              t: mocks.t,
+            }),
+            fc.nat()
+          )
+          .map(([feedItems, currentIndex]) => ({
+            feedItems,
+            currentIndex: currentIndex % feedItems.list.length,
+          })),
+        async ({ feedItems, currentIndex }) => {
+          resetCalls<unknown>(
+            mocks.mockedHandlerInput,
+            mocks.mockedAttributesManager,
+            mocks.mockedResponseBuilder,
+            mocks.mockedResponse
+          );
 
-      if (shouldBeTrue) {
-        verificator.once();
-      } else {
-        verificator.never();
-      }
-    }
-  ));
+          const { readStateMock } = mockReadState({
+            mockReadingSetter: () => {},
+          });
 
-testIntentCanHandle({
-  handler: GoToPreviousItemIntentHandler,
-  intentName: 'AMAZON.PreviousIntent',
-  mockHandlerInputOptions: {
-    sessionAttributes: sessionAttributesWhenReading,
-  },
+          when(readStateMock.feedItems).thenReturn(feedItems);
+          when(readStateMock.currentIndex).thenReturn(currentIndex);
+
+          sessionAttributes.readState = instance(readStateMock);
+
+          await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+          const [speakOutput] = capture(
+            mocks.mockedResponseBuilder.speak
+          ).last();
+
+          const item = feedItems.list[currentIndex];
+
+          expect(speakOutput).toMatch(
+            new RegExp(
+              `^.*?${escapeRegex(item.title)}.*?${escapeRegex(
+                mocks.t('CONFIRMATION_CONTINUE_READING_FEED')
+              )}$`,
+              's'
+            )
+          );
+
+          verify(mocks.mockedResponseBuilder.reprompt(speakOutput)).once();
+        }
+      )
+    );
+  });
+
+  test('If it was reading content before, delete its temp data from session attributes', () =>
+    fc.assert(
+      fc.asyncProperty(
+        fc.oneof(fc.nat(), fc.constant(undefined)),
+        async (currentContentIndex) => {
+          const { readState } = mockReadState({ mockReadingSetter: () => {} });
+
+          mockProperty(
+            readState,
+            'currentContentIndex',
+            () => currentContentIndex,
+            (value) => expect(value).toBeUndefined()
+          );
+
+          const sessionAttributes = { readState };
+          const mocks = await mockHandlerInput({
+            locale: null,
+            sessionAttributes,
+          });
+
+          await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+          const indexProperty: keyof ReadState = 'currentContentIndex';
+          expect(indexProperty in sessionAttributes.readState).toBe(false);
+        }
+      )
+    ));
+
+  test('If it was reading before, add a pause before reading the current item', async () => {
+    const { readState } = mockReadState({ mockReadingSetter: () => {} });
+
+    const sessionAttributes = { readState };
+    const mocks = await mockHandlerInput({
+      locale: null,
+      sessionAttributes,
+    });
+
+    await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+    const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
+
+    expect(speakOutput.startsWith(PAUSE_BETWEEN_ITEMS)).toBe(true);
+  });
+
+  testInAllLocales(
+    'If there are no items left, tell the user and stop reading'
+  )(async (locale) => {
+    await testReadingEnd(locale, true);
+    await testReadingEnd(locale, false);
+  });
+
+  async function testReadingEnd(locale: string, reading: boolean) {
+    const { readState, setterSpy } = mockReadState({
+      reading,
+      mockReadingSetter: () => {},
+    });
+
+    const sessionAttributes = { readState };
+    const mocks = await mockHandlerInput({
+      locale,
+      sessionAttributes,
+    });
+
+    await ReadItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+    expect(setterSpy).lastCalledWith(false);
+
+    const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
+
+    expect(speakOutput).toContain(mocks.t('END_READING_FEED'));
+  }
 });
+
+describe('ReadContentIntent', () => {
+  testIntentCanHandle({
+    handler: ReadContentIntentHandler,
+    intentName: 'AMAZON.YesIntent',
+    mockHandlerInputOptions: {
+      sessionAttributes: sessionAttributesWhenReading,
+    },
+  });
+
+  testInAllLocales(
+    'If it is any content item but the last one, read it, move index by one and prompt for continue reading the next one'
+  )(async (locale) => {
+    const sessionAttributes: { readState?: ReadState } = {};
+    const mocks = await mockHandlerInput({
+      locale,
+      sessionAttributes,
+    });
+
+    await fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            feedItemsRecord({
+              minLength: 1,
+              readingContent: true,
+              contentMinLength: 2,
+              t: mocks.t,
+            }),
+            fc.nat(),
+            fc.option(fc.nat())
+          )
+          .map(([feedItems, currentIndex, currentContentIndex]) => {
+            currentIndex %= feedItems.list.length;
+            const contentLength = feedItems.list[currentIndex].content.length;
+
+            return {
+              feedItems,
+              currentIndex,
+              currentContentIndex: currentContentIndex
+                ? currentContentIndex % (contentLength - 1)
+                : undefined,
+            };
+          }),
+        fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
+        async (
+          { feedItems, currentIndex, currentContentIndex },
+          confirmationStatus
+        ) => {
+          resetCalls<unknown>(
+            mocks.mockedHandlerInput,
+            mocks.mockedAttributesManager,
+            mocks.mockedResponseBuilder,
+            mocks.mockedResponse
+          );
+
+          const { readStateMock } = mockReadState();
+
+          when(readStateMock.feedItems).thenReturn(feedItems);
+          when(readStateMock.currentIndex).thenReturn(currentIndex);
+
+          sessionAttributes.readState = instance(readStateMock);
+
+          mockProperty(
+            sessionAttributes.readState,
+            'currentContentIndex',
+            () => currentContentIndex,
+            (value) => expect(value).toEqual((currentContentIndex ?? 0) + 1)
+          );
+
+          const { intentMock } = mockIntent();
+          when(intentMock.confirmationStatus).thenReturn(confirmationStatus);
+
+          await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
+
+          const [speakOutput] = capture(
+            mocks.mockedResponseBuilder.speak
+          ).last();
+
+          const feedItem = feedItems.list[currentIndex];
+          const currentContent = feedItem.content[currentContentIndex ?? 0];
+
+          expect(speakOutput).toMatch(
+            new RegExp(
+              `^.*?${escapeRegex(currentContent)}.*?${escapeRegex(
+                mocks.t('CONFIRMATION_CONTINUE_READING_FEED')
+              )}$`,
+              's'
+            )
+          );
+
+          verify(
+            mocks.mockedResponseBuilder.withStandardCard(
+              feedItem.title,
+              currentContent,
+              feedItem.imageUrl
+            )
+          ).once();
+
+          verify(
+            mocks.mockedResponseBuilder.addConfirmIntentDirective(
+              deepEqual({
+                name: 'AMAZON.YesIntent',
+                confirmationStatus: 'NONE',
+              })
+            )
+          ).once();
+        }
+      )
+    );
+  });
+
+  testInAllLocales(
+    'If it is the last content item, read it and prompt for going to the next item'
+  )(async (locale) => {
+    const sessionAttributes: { readState?: ReadState } = {};
+    const mocks = await mockHandlerInput({
+      locale,
+      sessionAttributes,
+    });
+    await fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            feedItemsRecord({
+              minLength: 1,
+              readingContent: true,
+              contentMinLength: 1,
+              t: mocks.t,
+            }),
+            fc.nat(),
+            fc.boolean()
+          )
+          .map(([feedItems, currentIndex, isCurrentContentIndexDefined]) => {
+            currentIndex %= feedItems.list.length;
+            const contentLength = feedItems.list[currentIndex].content.length;
+
+            return {
+              feedItems,
+              currentIndex,
+              currentContentIndex:
+                contentLength == 1 && !isCurrentContentIndexDefined
+                  ? undefined
+                  : contentLength - 1,
+            };
+          }),
+        fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
+        async (
+          { feedItems, currentIndex, currentContentIndex },
+          confirmationStatus
+        ) => {
+          resetCalls<unknown>(
+            mocks.mockedHandlerInput,
+            mocks.mockedAttributesManager,
+            mocks.mockedResponseBuilder,
+            mocks.mockedResponse
+          );
+
+          const { readStateMock } = mockReadState();
+
+          when(readStateMock.feedItems).thenReturn(feedItems);
+          when(readStateMock.currentIndex).thenReturn(currentIndex);
+          when(readStateMock.currentContentIndex).thenReturn(
+            currentContentIndex
+          );
+
+          sessionAttributes.readState = instance(readStateMock);
+
+          const { intentMock } = mockIntent();
+          when(intentMock.confirmationStatus).thenReturn(confirmationStatus);
+
+          await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
+
+          const [speakOutput] = capture(
+            mocks.mockedResponseBuilder.speak
+          ).last();
+
+          const feedItem = feedItems.list[currentIndex];
+          const currentContent = feedItem.content[currentContentIndex ?? 0];
+
+          expect(speakOutput).toMatch(
+            new RegExp(
+              `^.*?${escapeRegex(currentContent)}.*?${escapeRegex(
+                mocks.t('CONFIRMATION_GOTO_NEXT_FEED_ITEM')
+              )}$`,
+              's'
+            )
+          );
+
+          verify(
+            mocks.mockedResponseBuilder.withStandardCard(
+              feedItem.title,
+              currentContent,
+              feedItem.imageUrl
+            )
+          ).once();
+
+          verify(
+            mocks.mockedResponseBuilder.addConfirmIntentDirective(
+              deepEqual({
+                name: 'AMAZON.NextIntent',
+                confirmationStatus: 'NONE',
+              })
+            )
+          ).once();
+        }
+      )
+    );
+  });
+
+  testInAllLocales(
+    'If there are no other items to continue to (or the index is not valid), prompt for going to the next item'
+  )((locale) =>
+    fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            feedItemsRecord({ minLength: 1, readingContent: true }),
+            fc.nat(),
+            fc.integer()
+          )
+          .map(([feedItems, currentIndex, currentContentIndex]) => {
+            currentIndex %= feedItems.list.length;
+
+            const contentLength = feedItems.list[currentIndex].content.length;
+
+            if (
+              currentContentIndex >= 0 &&
+              currentContentIndex < contentLength
+            ) {
+              currentContentIndex += contentLength;
+            }
+
+            return {
+              feedItems,
+              currentIndex,
+              currentContentIndex,
+            };
+          }),
+        fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
+        async (
+          { feedItems, currentIndex, currentContentIndex },
+          confirmationStatus
+        ) => {
+          const { readStateMock } = mockReadState();
+
+          when(readStateMock.feedItems).thenReturn(feedItems);
+          when(readStateMock.currentIndex).thenReturn(currentIndex);
+          when(readStateMock.currentContentIndex).thenReturn(
+            currentContentIndex
+          );
+
+          const mocks = await mockHandlerInput({
+            locale,
+            sessionAttributes: { readState: instance(readStateMock) },
+          });
+
+          const { intentMock } = mockIntent();
+          when(intentMock.confirmationStatus).thenReturn(confirmationStatus);
+
+          await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
+
+          verify(
+            mocks.mockedResponseBuilder.speak(
+              mocks.t('CONFIRMATION_GOTO_NEXT_FEED_ITEM')
+            )
+          ).once();
+
+          verify(
+            mocks.mockedResponseBuilder.withStandardCard(
+              anyString(),
+              anyString(),
+              anyString()
+            )
+          ).never();
+
+          verify(
+            mocks.mockedResponseBuilder.addConfirmIntentDirective(
+              deepEqual({
+                name: 'AMAZON.NextIntent',
+                confirmationStatus: 'NONE',
+              })
+            )
+          ).once();
+        }
+      )
+    )
+  );
+
+  test('If the intent was denied, go to the next item', () =>
+    checkIfOnConfirmationStatus(
+      {
+        DENIED: true,
+      },
+      async (shouldBeTrue) => {
+        const mocks = await mockHandlerInput({ sessionAttributes: {} });
+
+        await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
+
+        const verificator = verify(
+          mocks.mockedResponseBuilder.addDelegateDirective(
+            deepEqual({
+              name: 'AMAZON.NextIntent',
+              confirmationStatus: 'CONFIRMED',
+            })
+          )
+        );
+
+        if (shouldBeTrue) {
+          verificator.once();
+        } else {
+          verificator.never();
+        }
+      }
+    ));
+});
+
+describe('GoToPreviousItemIntent', () => {
+  testIntentCanHandle({
+    handler: GoToPreviousItemIntentHandler,
+    intentName: 'AMAZON.PreviousIntent',
+    mockHandlerInputOptions: {
+      sessionAttributes: sessionAttributesWhenReading,
+    },
+  });
+
+  test('Go to the previous item and read it', () =>
+    checkIfItReadsItemAfterMovingIndexBy(
+      GoToPreviousItemIntentHandler.handle,
+      -1
+    ));
+});
+
+describe('SkipItemIntent', () => {
+  testIntentCanHandle({
+    handler: SkipItemIntentHandler,
+    intentName: 'AMAZON.NoIntent',
+    mockHandlerInputOptions: {
+      sessionAttributes: sessionAttributesWhenReading,
+    },
+  });
+
+  testIntentCanHandle({
+    handler: SkipItemIntentHandler,
+    intentName: 'AMAZON.NextIntent',
+    mockHandlerInputOptions: {
+      sessionAttributes: sessionAttributesWhenReading,
+    },
+  });
+
+  test('If the intent was not denied, go to the next item and read it', () =>
+    checkIfOnConfirmationStatus(
+      {
+        NONE: true,
+        CONFIRMED: true,
+      },
+      (shouldBeTrue) =>
+        checkIfItReadsItemAfterMovingIndexBy(
+          SkipItemIntentHandler.handle,
+          1,
+          shouldBeTrue
+        )
+    ));
+
+  test('If the intent was denied, cancel reading', () =>
+    checkIfOnConfirmationStatus(
+      {
+        DENIED: true,
+      },
+      async (shouldBeTrue) => {
+        const readStateMock = mockReadState();
+        const mocks = await mockHandlerInput({
+          sessionAttributes: {
+            readState: instance(readStateMock),
+          },
+        });
+
+        const readItemSpy = spy(ReadItemIntentHandler);
+        when(readItemSpy.handle(anything())).thenCall(() => {});
+
+        await SkipItemIntentHandler.handle(mocks.instanceHandlerInput);
+
+        const verificator = verify(
+          mocks.mockedResponseBuilder.addDelegateDirective(
+            deepEqual({
+              name: 'AMAZON.CancelIntent',
+              confirmationStatus: anyString(),
+            })
+          )
+        );
+
+        if (shouldBeTrue) {
+          verificator.once();
+        } else {
+          verificator.never();
+        }
+      }
+    ));
+});
+
+async function checkIfOnConfirmationStatus(
+  allowedConfirmationStatuses: {
+    [key in IntentConfirmationStatus]?: boolean;
+  },
+  fn: (shouldBeTrue?: boolean) => unknown | Promise<unknown>
+) {
+  const { intentMock } = mockIntent();
+
+  for (const confirmationStatus in allowedConfirmationStatuses) {
+    reset(intentMock);
+    when(intentMock.confirmationStatus).thenReturn(
+      confirmationStatus as IntentConfirmationStatus
+    );
+
+    const shouldBeTrue: boolean =
+      allowedConfirmationStatuses[confirmationStatus];
+
+    await fn(shouldBeTrue);
+  }
+}
 
 async function checkIfItReadsItemAfterMovingIndexBy(
   fn: { (handlerInput: HandlerInput): unknown | Promise<unknown> },
@@ -573,96 +686,4 @@ async function checkIfItReadsItemAfterMovingIndexBy(
       }
     )
   );
-}
-
-test('PreviousIntent (item) - Go to the previous item and read it', () =>
-  checkIfItReadsItemAfterMovingIndexBy(
-    GoToPreviousItemIntentHandler.handle,
-    -1
-  ));
-
-testIntentCanHandle({
-  handler: SkipItemIntentHandler,
-  intentName: 'AMAZON.NoIntent',
-  mockHandlerInputOptions: {
-    sessionAttributes: sessionAttributesWhenReading,
-  },
-});
-
-testIntentCanHandle({
-  handler: SkipItemIntentHandler,
-  intentName: 'AMAZON.NextIntent',
-  mockHandlerInputOptions: {
-    sessionAttributes: sessionAttributesWhenReading,
-  },
-});
-
-test('NextIntent (item) - If the intent was not denied, go to the next item and read it', () =>
-  checkIfOnConfirmationStatus(
-    {
-      NONE: true,
-      CONFIRMED: true,
-    },
-    (shouldBeTrue) =>
-      checkIfItReadsItemAfterMovingIndexBy(
-        SkipItemIntentHandler.handle,
-        1,
-        shouldBeTrue
-      )
-  ));
-
-test('NextIntent (item) - If the intent was denied, cancel reading', () =>
-  checkIfOnConfirmationStatus(
-    {
-      DENIED: true,
-    },
-    async (shouldBeTrue) => {
-      const readStateMock = mockReadState();
-      const mocks = await mockHandlerInput({
-        sessionAttributes: {
-          readState: instance(readStateMock),
-        },
-      });
-
-      const readItemSpy = spy(ReadItemIntentHandler);
-      when(readItemSpy.handle(anything())).thenCall(() => {});
-
-      await SkipItemIntentHandler.handle(mocks.instanceHandlerInput);
-
-      const verificator = verify(
-        mocks.mockedResponseBuilder.addDelegateDirective(
-          deepEqual({
-            name: 'AMAZON.CancelIntent',
-            confirmationStatus: anyString(),
-          })
-        )
-      );
-
-      if (shouldBeTrue) {
-        verificator.once();
-      } else {
-        verificator.never();
-      }
-    }
-  ));
-
-async function checkIfOnConfirmationStatus(
-  allowedConfirmationStatuses: {
-    [key in IntentConfirmationStatus]?: boolean;
-  },
-  fn: (shouldBeTrue?: boolean) => unknown | Promise<unknown>
-) {
-  const { intentMock } = mockIntent();
-
-  for (const confirmationStatus in allowedConfirmationStatuses) {
-    reset(intentMock);
-    when(intentMock.confirmationStatus).thenReturn(
-      confirmationStatus as IntentConfirmationStatus
-    );
-
-    const shouldBeTrue: boolean =
-      allowedConfirmationStatuses[confirmationStatus];
-
-    await fn(shouldBeTrue);
-  }
 }

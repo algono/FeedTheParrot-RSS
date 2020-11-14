@@ -15,7 +15,7 @@ beforeEach(() => {
   mocked(cleanHtml).mockImplementation((text) => text);
 });
 
-test('processFeedItem properly cleans the title, description and summary', () => {
+test('properly cleans the title, description and summary', () => {
   fc.assert(
     fc.property(
       itemRecord(),
@@ -70,7 +70,7 @@ test('processFeedItem properly cleans the title, description and summary', () =>
   );
 });
 
-test('processFeedItem returns the date in UTC string format', () => {
+test('returns the date in UTC string format', () => {
   fc.assert(
     fc.property(
       itemRecord(),
@@ -85,7 +85,7 @@ test('processFeedItem returns the date in UTC string format', () => {
   );
 });
 
-test('processFeedItem returns the whole content if it does not have to be truncated', () => {
+test('returns the whole content if it does not have to be truncated', () => {
   fc.assert(
     fc.property(
       itemRecord({ contentSurpassesMaxCharacters: 'never' }),
@@ -101,7 +101,7 @@ test('processFeedItem returns the whole content if it does not have to be trunca
   );
 });
 
-test('processFeedItem returns the readable result of truncating all content if the feed has the truncateContentAt attribute defined', () => {
+test('returns the readable result of truncating all content if the feed has the truncateContentAt attribute defined', () => {
   fc.assert(
     fc.property(
       itemRecord(),
@@ -125,7 +125,7 @@ test('processFeedItem returns the readable result of truncating all content if t
   );
 });
 
-test('processFeedItem returns the readable result of truncating all content if the content surpasses the max character count', () => {
+test('returns the readable result of truncating all content if the content surpasses the max character count', () => {
   fc.assert(
     fc.property(
       itemRecord({ contentSurpassesMaxCharacters: 'always' }),

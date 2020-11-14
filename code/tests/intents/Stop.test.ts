@@ -4,23 +4,26 @@ import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 
 jest.mock('ask-sdk-core');
-testIntentCanHandle({
-  handler: CancelAndStopIntentHandler,
-  intentName: 'AMAZON.CancelIntent',
-});
-testIntentCanHandle({
-  handler: CancelAndStopIntentHandler,
-  intentName: 'AMAZON.StopIntent',
-});
 
-testInAllLocales('Stop intent speaks goodbye message')(async (locale) => {
-  const mocks = await mockHandlerInput({ locale });
+describe('Cancel and stop intent', () => {
+  testIntentCanHandle({
+    handler: CancelAndStopIntentHandler,
+    intentName: 'AMAZON.CancelIntent',
+  });
+  testIntentCanHandle({
+    handler: CancelAndStopIntentHandler,
+    intentName: 'AMAZON.StopIntent',
+  });
 
-  CancelAndStopIntentHandler.handle(mocks.instanceHandlerInput);
+  testInAllLocales('speaks goodbye message')(async (locale) => {
+    const mocks = await mockHandlerInput({ locale });
 
-  const [responseSpeakOutput] = capture(
-    mocks.mockedResponseBuilder.speak
-  ).last();
+    CancelAndStopIntentHandler.handle(mocks.instanceHandlerInput);
 
-  expect(responseSpeakOutput).toEqual(mocks.t('GOODBYE_MSG'));
+    const [responseSpeakOutput] = capture(
+      mocks.mockedResponseBuilder.speak
+    ).last();
+
+    expect(responseSpeakOutput).toEqual(mocks.t('GOODBYE_MSG'));
+  });
 });

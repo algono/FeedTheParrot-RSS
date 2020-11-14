@@ -4,7 +4,7 @@ import { init } from '../../../src/util/localization';
 import { htmlFormattedLorem } from '../../helpers/fast-check/arbitraries/formattedText';
 import { testInAllLocales } from '../../helpers/helperTests';
 
-test('cleanHtml properly cleans html formatted text', () =>
+test('properly cleans html formatted text', () =>
   fc.assert(
     fc.property(htmlFormattedLorem, (text) =>
       expect(cleanHtml(text.html, '')).toEqual(text.plain.trim())
@@ -12,7 +12,7 @@ test('cleanHtml properly cleans html formatted text', () =>
   ));
 
 testInAllLocales(
-  "cleanHtml changes the html ampersand symbol ('&amp;') with the ampersandReplacement"
+  "changes the html ampersand symbol ('&amp;') with the ampersandReplacement"
 )(async (locale) => {
   const t = await init(locale);
   const ampersandReplacement = t('AMPERSAND');
@@ -29,7 +29,7 @@ testInAllLocales(
   );
 });
 
-test("cleanHtml removes html tag symbols ('<', '>')", () =>
+test("removes html tag symbols ('<', '>')", () =>
   fc.assert(
     fc.property(htmlFormattedLorem, (text) => {
       const res = cleanHtml(text.html, '');

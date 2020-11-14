@@ -3,7 +3,7 @@ import * as truncate from '../../src/util/truncate';
 import { truncateAll } from '../../src/util/truncateAll';
 import { hasReturned } from '../helpers/jest/mockResultHelpers';
 
-test('None of the strings from the result of truncateAll surpass the provided length', () =>
+test('None of the strings from the result surpass the provided length', () =>
   fc.assert(
     fc.property(
       fc.lorem({ mode: 'sentences' }),
@@ -16,7 +16,7 @@ test('None of the strings from the result of truncateAll surpass the provided le
     )
   ));
 
-test('The list resulting from truncateAll contains everything from the original string', () =>
+test('The result list contains everything from the original string', () =>
   fc.assert(
     fc.property(
       fc.lorem({ mode: 'sentences' }),
@@ -28,7 +28,7 @@ test('The list resulting from truncateAll contains everything from the original 
     )
   ));
 
-describe('truncateAll tests with truncate mocked', () => {
+describe('tests with truncate mocked', () => {
   const truncateSpy = jest.spyOn(truncate, 'truncate');
   beforeEach(() => truncateSpy.mockClear());
 
@@ -42,7 +42,7 @@ describe('truncateAll tests with truncate mocked', () => {
     });
   }
 
-  test('When truncateAll has the readable flag unset, it returns the result strings from calling truncate', () =>
+  test('When the readable flag is unset, it returns the result strings from calling truncate', () =>
     fc.assert(
       fc.property(
         fc.lorem({ mode: 'sentences' }),
@@ -58,7 +58,7 @@ describe('truncateAll tests with truncate mocked', () => {
       )
     ));
 
-  test('When truncateAll has the readable flag set to false, it returns the result strings from calling truncate', () =>
+  test('When the readable flag is set to false, it returns the result strings from calling truncate', () =>
     fc.assert(
       fc.property(
         fc.lorem({ mode: 'sentences' }),
@@ -74,7 +74,7 @@ describe('truncateAll tests with truncate mocked', () => {
       )
     ));
 
-  test('When truncateAll has the readable flag set to true, it instead returns the readable versions of the result strings from calling truncate', () =>
+  test('When the readable flag is set to true, it instead returns the readable versions of the result strings from calling truncate', () =>
     fc.assert(
       fc.property(
         fc.lorem({ mode: 'sentences' }),

@@ -4,19 +4,22 @@ import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 
 jest.mock('ask-sdk-core');
-testIntentCanHandle({
-  handler: HelpIntentHandler,
-  intentName: 'AMAZON.HelpIntent',
-});
 
-testInAllLocales('Help intent speaks help message')(async (locale) => {
-  const mocks = await mockHandlerInput({ locale });
+describe('Help intent', () => {
+  testIntentCanHandle({
+    handler: HelpIntentHandler,
+    intentName: 'AMAZON.HelpIntent',
+  });
 
-  HelpIntentHandler.handle(mocks.instanceHandlerInput);
+  testInAllLocales('speaks help message')(async (locale) => {
+    const mocks = await mockHandlerInput({ locale });
 
-  const [responseSpeakOutput] = capture(
-    mocks.mockedResponseBuilder.speak
-  ).last();
+    HelpIntentHandler.handle(mocks.instanceHandlerInput);
 
-  expect(responseSpeakOutput).toEqual(mocks.t('HELP_MSG'));
+    const [responseSpeakOutput] = capture(
+      mocks.mockedResponseBuilder.speak
+    ).last();
+
+    expect(responseSpeakOutput).toEqual(mocks.t('HELP_MSG'));
+  });
 });
