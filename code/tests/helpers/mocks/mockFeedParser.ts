@@ -21,6 +21,10 @@ export function mockNodeFetch({ statusCode = 200 } = {}) {
   return { responseMock, responseBodyMock };
 }
 
+export function mockNodeFetchRejects(reason: any) {
+  mocked(fetch).mockRejectedValue(reason);
+}
+
 /**
  * This function needs 'feedparser' and 'node-fetch' libraries to have been mocked before
  * @example

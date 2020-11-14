@@ -1,12 +1,13 @@
 import fc from 'fast-check';
 import FeedParser from 'feedparser';
-import { anyOfClass, mock, when } from 'ts-mockito';
+import { anyOfClass, instance, mock, when } from 'ts-mockito';
 import { Feed } from '../../../src/logic/Feed';
 import { getItems } from '../../../src/util/feed/getItems';
 import { testInAllLocales } from '../../helpers/helperTests';
 import {
   //mockFeedParser,
   mockNodeFetch,
+  mockNodeFetchRejects,
 } from '../../helpers/mocks/mockFeedParser';
 
 jest.mock('feedparser');
@@ -45,6 +46,14 @@ testInAllLocales('getItems throws error when fetch response is not ok')(
     );
   }
 );
+
+testInAllLocales(
+  'getItems rejects with fetch response reason when fetch response is rejected'
+)(async (locale) => {
+  const expectedError = instance(mock<Error>());
+  mockNodeFetchRejects(expectedError);
+  await expect(getItems(mock<Feed>(), locale)).rejects.toBe(expectedError);
+});
 
 test.todo('getItems tests');
 /*
