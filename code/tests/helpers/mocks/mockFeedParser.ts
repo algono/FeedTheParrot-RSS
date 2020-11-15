@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import FeedParser from 'feedparser';
 import fetch, { Response } from 'node-fetch';
 import { mocked } from 'ts-jest/utils';
-import { anyFunction, anyString, instance, mock, when } from 'ts-mockito';
+import { anyFunction, instance, mock, when } from 'ts-mockito';
 import { resolvableInstance } from '../ts-mockito/resolvableInstance';
 
 export function mockNodeFetch({ statusCode = 200 } = {}) {
@@ -61,27 +61,31 @@ export function mockFeedParser() {
   const intervals: FeedParserEventIntervals = {};
 
   const setReadableInterval = () => {
-    intervals.readable = setInterval(() => eventEmitter.emit('readable'), 10);
+    intervals.readable = setInterval(() => eventEmitter.emit('readable'), 0);
     return intervals;
   };
 
+  function callEventHandler(handler: () => any, args?: any[]) {
+    return handler.bind(instance(feedParserMock), ...args)();
+  }
+
   when(feedParserMock.on('readable', anyFunction())).thenCall((ev, fn) =>
-    eventEmitter.on(ev, async () => {
+    eventEmitter.once(ev, async (...args) => {
       clearInterval(intervals.readable);
-      await fn();
-      intervals.end = setInterval(() => eventEmitter.emit('end'), 10);
+      await callEventHandler(fn, args);
+      intervals.end = setInterval(() => eventEmitter.emit('end'), 0);
     })
   );
 
   when(feedParserMock.on('end', anyFunction())).thenCall((ev, fn) =>
-    eventEmitter.on(ev, async () => {
+    eventEmitter.once(ev, async (...args) => {
       clearInterval(intervals.end);
-      await fn();
+      await callEventHandler(fn, args);
     })
   );
 
-  when(feedParserMock.on(anyString(), anyFunction())).thenCall((ev, fn) =>
-    eventEmitter.on(ev, fn)
+  when(feedParserMock.on('error', anyFunction())).thenCall((ev, fn) =>
+    eventEmitter.once(ev, (...args) => callEventHandler(fn, args))
   );
 
   mocked(FeedParser).mockImplementation(() => instance(feedParserMock));

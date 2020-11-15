@@ -16,7 +16,7 @@ export function feedRecord({
     {
       name: fc.lorem(),
       url: fc.webUrl(),
-      language: fc.oneof(fc.constantFrom(...locales), fc.constant(undefined)),
+      language: fc.constantFrom(...locales),
       itemLimit: fc.oneof(fc.nat(), fc.constant(undefined)),
       truncateContentAt: truncateContentAtArb(hasTruncateContentAt),
     },
