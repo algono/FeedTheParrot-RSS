@@ -1,13 +1,9 @@
 import FeedParser, { Item } from 'feedparser';
 import fetch from 'node-fetch';
 import { initNewInstance } from '../localization';
-import { FeedIsTooLongError } from '../../intents/Error';
 import { Feed, FeedItems } from '../../logic/Feed';
 import { getLangFormatter } from '../langFormatter';
-import {
-  calculateMaxFeedSize,
-  calculateMaxCharactersInFeedContent,
-} from './calculateMaxFeedSize';
+import { checkFeedSize } from './checkFeedSize';
 import { processFeedItem } from './processFeedItem';
 
 export function getItems(
@@ -66,23 +62,10 @@ export function getItems(
 
     // All items have been parsed.
     feedparser.on('end', function () {
-      console.log('Checking feed size...'); // Not sure why, but it seems to only work if there is something before checking the feed size
-
-      const feedSize = JSON.stringify(items.list).length;
-
-      console.log('Feed size: ' + feedSize);
-
-      if (
-        feedSize >
-        calculateMaxFeedSize(
-          calculateMaxCharactersInFeedContent(
-            items.list,
-            feed.truncateContentAt
-          )
-        )
-      ) {
-        console.log('Feed is too large according to max size calculation');
-        reject(new FeedIsTooLongError());
+      try {
+        checkFeedSize(items, feed);
+      } catch (err) {
+        reject(err);
       }
 
       items.list.sort(function (a, b) {
