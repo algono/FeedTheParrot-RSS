@@ -2,16 +2,21 @@ import fc from 'fast-check';
 import { Feed, FeedItem, FeedItems } from '../../../../src/logic/Feed';
 import { getLangFormatter } from '../../../../src/util/langFormatter';
 import { TFunction } from '../../../../src/util/localization';
+import { AvailableLocale, availableLocales } from '../../helperTests';
 import { MayHappenOption } from './misc';
 
 export function feedRecord({
   hasTruncateContentAt = 'sometimes',
-}: { hasTruncateContentAt?: MayHappenOption } = {}): fc.Arbitrary<Feed> {
+  locales = availableLocales,
+}: {
+  hasTruncateContentAt?: MayHappenOption;
+  locales?: readonly AvailableLocale[];
+} = {}): fc.Arbitrary<Feed> {
   return fc.record<Feed, fc.RecordConstraints>(
     {
       name: fc.lorem(),
       url: fc.webUrl(),
-      language: fc.oneof(fc.string(), fc.constant(undefined)),
+      language: fc.oneof(fc.constantFrom(...locales), fc.constant(undefined)),
       itemLimit: fc.oneof(fc.nat(), fc.constant(undefined)),
       truncateContentAt: truncateContentAtArb(hasTruncateContentAt),
     },

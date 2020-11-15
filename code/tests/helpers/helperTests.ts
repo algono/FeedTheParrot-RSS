@@ -5,13 +5,15 @@ import {
   MockHandlerInputOptions,
 } from './mocks/HandlerInputMocks';
 
-export const availableLocales: readonly string[] = ['en', 'es'];
+export const availableLocales = ['en', 'es'] as const;
+
+export type AvailableLocale = typeof availableLocales[number];
 
 export function testInAllLocales(name: string, type?: 'only' | 'skip') {
   const testIt = type ? test[type] : test;
   const testFn = testIt.each<string | jest.DoneCallback>(availableLocales);
   return (
-    fn: (locale: string, done: jest.DoneCallback) => any,
+    fn: (locale: AvailableLocale, done: jest.DoneCallback) => any,
     timeout?: number
   ) => testFn(`${name} (%s)`, fn, timeout);
 }
