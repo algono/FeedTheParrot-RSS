@@ -5,9 +5,14 @@ import { mocked } from 'ts-jest/utils';
 import { anyOfClass, instance, mock, when } from 'ts-mockito';
 import { Feed } from '../../../src/logic/Feed';
 import { getItems } from '../../../src/util/feed/getItems';
+import { processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { getLangFormatter } from '../../../src/util/langFormatter';
 import { init, initNewInstance } from '../../../src/util/localization';
-import { feedRecord } from '../../helpers/fast-check/arbitraries/feed';
+import {
+  feedItemRecord,
+  feedRecord,
+} from '../../helpers/fast-check/arbitraries/feed';
+import { itemRecord } from '../../helpers/fast-check/arbitraries/feedParser';
 import { availableLocales, testInAllLocales } from '../../helpers/helperTests';
 import {
   FeedParserEventIntervals,
@@ -71,18 +76,26 @@ testInAllLocales(
 });
 
 describe('feedparser related tests', () => {
-  let eventEmitter: EventEmitter,
+  let feedParserMock: FeedParser,
+    eventEmitter: EventEmitter,
     intervals: FeedParserEventIntervals,
     setReadableInterval: () => FeedParserEventIntervals,
     cleanupEventEmitter: () => EventEmitter;
 
-  beforeEach(() => {
+  const tMock = jest.fn();
+
+  const setupFeedParser = () => {
     const res = mockFeedParser();
+    feedParserMock = res.feedParserMock;
     eventEmitter = res.eventEmitter;
     intervals = res.intervals;
     setReadableInterval = res.setReadableInterval;
     cleanupEventEmitter = () => eventEmitter.removeAllListeners();
-  });
+
+    mocked(initNewInstance).mockResolvedValue(tMock);
+  };
+
+  beforeEach(setupFeedParser);
 
   testInAllLocales(
     'rejects with feedparser response reason when feedparser emits an error'
@@ -112,9 +125,7 @@ describe('feedparser related tests', () => {
       )
     );
 
-    const initNewInstanceMock = mocked(initNewInstance).mockResolvedValue(
-      jest.fn()
-    );
+    const initNewInstanceMock = mocked(initNewInstance);
 
     const feedMock = mock<Feed>();
     when(feedMock.language).thenReturn(locale);
@@ -139,9 +150,6 @@ describe('feedparser related tests', () => {
         async (feed, langFormatter) => {
           cleanupEventEmitter();
 
-          const tMock = jest.fn();
-          mocked(initNewInstance).mockResolvedValue(tMock);
-
           mocked(getLangFormatter).mockImplementation((t) => {
             if (t === tMock) {
               return langFormatter;
@@ -158,15 +166,108 @@ describe('feedparser related tests', () => {
       )
     );
   });
-  test.todo(
+  testInAllLocales(
     'does not add a lang formatter to the result if the locale matches the one on the feed'
-  );
-  test.todo('processes all items and pushes the results to an items list');
+  )(async (locale) => {
+    await fc.assert(
+      fc.asyncProperty(
+        feedRecord({
+          locales: [locale],
+        }),
+        async (feed) => {
+          cleanupEventEmitter();
+
+          setReadableInterval();
+          const items = await getItems(feed, locale);
+
+          expect(mocked(getLangFormatter)).not.toHaveBeenCalled();
+          expect(items.langFormatter).toBeUndefined();
+        }
+      )
+    );
+  });
+  testInAllLocales(
+    'processes all items and returns a list of the results sorted by date in descending order'
+  )(async (locale) => {
+    await fc.assert(
+      fc.asyncProperty(
+        feedRecord({ hasItemLimit: 'never' }),
+        fc.array(itemRecord(), { minLength: 1 }).chain((itemList) =>
+          fc.tuple(
+            fc.constant(itemList),
+            fc.array(feedItemRecord(), {
+              minLength: itemList.length,
+              maxLength: itemList.length,
+            })
+          )
+        ),
+        fc.lorem({ maxCount: 1 }),
+        async (feed, [itemList, feedItemList], ampersandReplacement) => {
+          tMock.mockReset();
+
+          let processFeedItemMock = mocked(processFeedItem);
+          processFeedItemMock.mockReset();
+
+          setupFeedParser();
+
+          tMock.mockImplementation((key) => {
+            if (key === 'AMPERSAND') {
+              return ampersandReplacement;
+            } else {
+              return null;
+            }
+          });
+
+          // Chaining different return values for each call with ts-mockito creates a memory leak
+          // So, as a workaround, we wrap it in a jest mock, which does not leak
+
+          let readMock = jest.fn();
+          for (const item of itemList) {
+            readMock = readMock.mockReturnValueOnce(item);
+          }
+          when(feedParserMock.read()).thenCall(() => readMock());
+
+          for (const item of feedItemList) {
+            processFeedItemMock = processFeedItemMock.mockReturnValueOnce(item);
+          }
+
+          setReadableInterval();
+          const items = await getItems(feed, locale);
+
+          expect(items.list.length).toEqual(itemList.length);
+          expect(processFeedItemMock).toHaveBeenCalledTimes(itemList.length);
+
+          for (let i = 0; i < itemList.length; i++) {
+            const expectedItem = itemList[i];
+            expect(processFeedItemMock).toHaveBeenNthCalledWith(
+              i + 1,
+              expectedItem,
+              feed,
+              ampersandReplacement
+            );
+          }
+
+          // Check that items list contains all elements from feedItemList, ignoring order
+          expect(items.list).toEqual(expect.arrayContaining(feedItemList));
+
+          expect(
+            // List is sorted by date in descending order
+            items.list.every((item, index, list) => {
+              return (
+                index === 0 ||
+                new Date(list[index - 1].date).getTime() >=
+                  new Date(item.date).getTime()
+              );
+            })
+          ).toBe(true);
+        }
+      )
+    );
+  });
   test.todo(
     'consumes the stream and breaks the loop if there is an item limit set and it has been surpassed'
   );
 
-  test.todo('returns a list of items sorted by date in descending order');
   test.todo('throws an error if the feed is too long for Alexa to read');
 
   afterEach(() => {

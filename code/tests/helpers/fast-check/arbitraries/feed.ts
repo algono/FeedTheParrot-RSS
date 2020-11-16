@@ -3,12 +3,14 @@ import { Feed, FeedItem, FeedItems } from '../../../../src/logic/Feed';
 import { getLangFormatter } from '../../../../src/util/langFormatter';
 import { TFunction } from '../../../../src/util/localization';
 import { AvailableLocale, availableLocales } from '../../helperTests';
-import { MayHappenOption } from './misc';
+import { mayHappenArbitrary, MayHappenOption } from './misc';
 
 export function feedRecord({
+  hasItemLimit = 'sometimes',
   hasTruncateContentAt = 'sometimes',
   locales = availableLocales,
 }: {
+  hasItemLimit?: MayHappenOption;
   hasTruncateContentAt?: MayHappenOption;
   locales?: readonly AvailableLocale[];
 } = {}): fc.Arbitrary<Feed> {
@@ -17,24 +19,14 @@ export function feedRecord({
       name: fc.lorem(),
       url: fc.webUrl(),
       language: fc.constantFrom(...locales),
-      itemLimit: fc.oneof(fc.nat(), fc.constant(undefined)),
-      truncateContentAt: truncateContentAtArb(hasTruncateContentAt),
+      itemLimit: mayHappenArbitrary(fc.nat(), hasItemLimit),
+      truncateContentAt: mayHappenArbitrary(
+        fc.integer({ min: 1 }),
+        hasTruncateContentAt
+      ),
     },
     { withDeletedKeys: false }
   );
-}
-
-function truncateContentAtArb(hasTruncateContentAt: MayHappenOption) {
-  switch (hasTruncateContentAt) {
-    case 'always':
-      return fc.integer({ min: 1 });
-
-    case 'never':
-      return fc.constant(undefined);
-
-    default:
-      return fc.oneof(fc.integer({ min: 1 }), fc.constant(undefined));
-  }
 }
 
 function content({ minLength = 0 } = {}) {
@@ -53,7 +45,7 @@ export function feedItemRecord({
       title: fc.lorem(),
       description: fc.lorem({ mode: 'sentences' }),
       summary: fc.lorem({ mode: 'sentences' }),
-      date: fc.date().map((date) => date.toUTCString()),
+      date: fc.date({ min: new Date(0) }).map((date) => date.toUTCString()),
       link: fc.webUrl(),
       imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
       content: readingContent
