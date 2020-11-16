@@ -33,10 +33,9 @@ export function getItems(
     // Received stream. Read them, process them, and save them in a list
     feedparser.on('readable', async function () {
       const stream: FeedParser = this;
-      const meta = stream.meta;
 
       // Get localization function for the feed's language
-      const locale: string = feed.language || meta.language;
+      const locale: string = feed.language;
       const t = await initNewInstance(locale);
 
       // If the locale of the feed doesn't match the one on the device, use SSML to change the voice and language
