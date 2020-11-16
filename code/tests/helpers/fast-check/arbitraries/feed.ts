@@ -9,17 +9,22 @@ export function feedRecord({
   hasItemLimit = 'sometimes',
   hasTruncateContentAt = 'sometimes',
   locales = availableLocales,
+  maxItemLimit,
 }: {
   hasItemLimit?: MayHappenOption;
   hasTruncateContentAt?: MayHappenOption;
   locales?: readonly AvailableLocale[];
+  maxItemLimit?: number;
 } = {}): fc.Arbitrary<Feed> {
   return fc.record<Feed, fc.RecordConstraints>(
     {
       name: fc.lorem(),
       url: fc.webUrl(),
       language: fc.constantFrom(...locales),
-      itemLimit: mayHappenArbitrary(fc.nat(), hasItemLimit),
+      itemLimit: mayHappenArbitrary(
+        fc.integer({ min: 1, max: maxItemLimit }),
+        hasItemLimit
+      ),
       truncateContentAt: mayHappenArbitrary(
         fc.integer({ min: 1 }),
         hasTruncateContentAt

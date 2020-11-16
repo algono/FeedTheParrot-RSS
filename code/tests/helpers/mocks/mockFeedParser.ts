@@ -31,6 +31,8 @@ export type FeedParserEventIntervals = {
   [key: string]: NodeJS.Timeout;
 };
 
+export type FeedParserEvents = 'readable' | 'end';
+
 /**
  * This function needs 'feedparser' and 'node-fetch' libraries to have been mocked before
  * @example
@@ -60,10 +62,16 @@ export function mockFeedParser() {
 
   const intervals: FeedParserEventIntervals = {};
 
-  const setReadableInterval = () => {
-    intervals.readable = setInterval(() => eventEmitter.emit('readable'), 0);
-    return intervals;
-  };
+  function setEventInterval(event: FeedParserEvents) {
+    intervals[event] = setInterval(() => eventEmitter.emit(event), 0);
+  }
+
+  function setErrorEventInterval(expectedError: Error) {
+    intervals.error = setInterval(() => {
+      if (eventEmitter.listeners('error').length > 0)
+        eventEmitter.emit('error', expectedError);
+    }, 0);
+  }
 
   function callEventHandler(handler: () => any, args?: any[]) {
     return handler.bind(instance(feedParserMock), ...args)();
@@ -96,6 +104,7 @@ export function mockFeedParser() {
     feedParserMock,
     eventEmitter,
     intervals,
-    setReadableInterval,
+    setEventInterval,
+    setErrorEventInterval,
   };
 }

@@ -3,7 +3,9 @@ import fc from 'fast-check';
 import FeedParser from 'feedparser';
 import { mocked } from 'ts-jest/utils';
 import { anyOfClass, instance, mock, when } from 'ts-mockito';
-import { Feed } from '../../../src/logic/Feed';
+import { FeedIsTooLongError } from '../../../src/intents/Error';
+import { Feed, FeedItem } from '../../../src/logic/Feed';
+import { checkFeedSize } from '../../../src/util/feed/checkFeedSize';
 import { getItems } from '../../../src/util/feed/getItems';
 import { processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { getLangFormatter } from '../../../src/util/langFormatter';
@@ -16,6 +18,7 @@ import { itemRecord } from '../../helpers/fast-check/arbitraries/feedParser';
 import { availableLocales, testInAllLocales } from '../../helpers/helperTests';
 import {
   FeedParserEventIntervals,
+  FeedParserEvents,
   mockFeedParser,
   mockNodeFetch,
   mockNodeFetchRejects,
@@ -79,17 +82,19 @@ describe('feedparser related tests', () => {
   let feedParserMock: FeedParser,
     eventEmitter: EventEmitter,
     intervals: FeedParserEventIntervals,
-    setReadableInterval: () => FeedParserEventIntervals,
+    setEventInterval: (event: FeedParserEvents) => void,
+    setErrorEventInterval: (expectedError: Error) => void,
     cleanupEventEmitter: () => EventEmitter;
 
-  const tMock = jest.fn();
+  const tMock = jest.fn<string, string[]>();
 
   const setupFeedParser = () => {
     const res = mockFeedParser();
     feedParserMock = res.feedParserMock;
     eventEmitter = res.eventEmitter;
     intervals = res.intervals;
-    setReadableInterval = res.setReadableInterval;
+    setEventInterval = res.setEventInterval;
+    setErrorEventInterval = res.setErrorEventInterval;
     cleanupEventEmitter = () => eventEmitter.removeAllListeners();
 
     mocked(initNewInstance).mockResolvedValue(tMock);
@@ -101,11 +106,7 @@ describe('feedparser related tests', () => {
     'rejects with feedparser response reason when feedparser emits an error'
   )(async (locale) => {
     const expectedError = instance(mock<Error>());
-
-    intervals.error = setInterval(() => {
-      if (eventEmitter.listeners('error').length > 0)
-        eventEmitter.emit('error', expectedError);
-    }, 0);
+    setErrorEventInterval(expectedError);
 
     await getItems(instance(mock<Feed>()), locale)
       .then(() => fail('The promise was not rejected'))
@@ -132,7 +133,7 @@ describe('feedparser related tests', () => {
 
     initNewInstanceMock.mockClear();
 
-    setReadableInterval();
+    setEventInterval('readable');
     await getItems(instance(feedMock), null);
 
     expect(initNewInstanceMock).toHaveBeenCalledWith(locale);
@@ -158,7 +159,7 @@ describe('feedparser related tests', () => {
             }
           });
 
-          setReadableInterval();
+          setEventInterval('readable');
           const items = await getItems(feed, locale);
 
           expect(items.langFormatter).toEqual(langFormatter);
@@ -177,7 +178,7 @@ describe('feedparser related tests', () => {
         async (feed) => {
           cleanupEventEmitter();
 
-          setReadableInterval();
+          setEventInterval('readable');
           const items = await getItems(feed, locale);
 
           expect(mocked(getLangFormatter)).not.toHaveBeenCalled();
@@ -186,6 +187,41 @@ describe('feedparser related tests', () => {
       )
     );
   });
+
+  function setupReadable(
+    itemList: FeedParser.Item[],
+    feedItemList: FeedItem[],
+    ampersandReplacement: string
+  ) {
+    tMock.mockReset();
+
+    let processFeedItemMock = mocked(processFeedItem);
+    processFeedItemMock.mockReset();
+
+    setupFeedParser();
+
+    tMock.mockImplementation((key) => {
+      if (key === 'AMPERSAND') {
+        return ampersandReplacement;
+      } else {
+        return null;
+      }
+    });
+
+    // Chaining different return values for each call with ts-mockito creates a memory leak
+    // So, as a workaround, we wrap it in a jest mock, which does not leak
+    let readMock = jest.fn();
+    for (const item of itemList) {
+      readMock = readMock.mockReturnValueOnce(item);
+    }
+    when(feedParserMock.read()).thenCall(() => readMock());
+
+    for (const item of feedItemList) {
+      processFeedItemMock = processFeedItemMock.mockReturnValueOnce(item);
+    }
+    return { readMock, processFeedItemMock };
+  }
+
   testInAllLocales(
     'processes all items and returns a list of the results sorted by date in descending order'
   )(async (locale) => {
@@ -203,35 +239,13 @@ describe('feedparser related tests', () => {
         ),
         fc.lorem({ maxCount: 1 }),
         async (feed, [itemList, feedItemList], ampersandReplacement) => {
-          tMock.mockReset();
+          const { processFeedItemMock } = setupReadable(
+            itemList,
+            feedItemList,
+            ampersandReplacement
+          );
 
-          let processFeedItemMock = mocked(processFeedItem);
-          processFeedItemMock.mockReset();
-
-          setupFeedParser();
-
-          tMock.mockImplementation((key) => {
-            if (key === 'AMPERSAND') {
-              return ampersandReplacement;
-            } else {
-              return null;
-            }
-          });
-
-          // Chaining different return values for each call with ts-mockito creates a memory leak
-          // So, as a workaround, we wrap it in a jest mock, which does not leak
-
-          let readMock = jest.fn();
-          for (const item of itemList) {
-            readMock = readMock.mockReturnValueOnce(item);
-          }
-          when(feedParserMock.read()).thenCall(() => readMock());
-
-          for (const item of feedItemList) {
-            processFeedItemMock = processFeedItemMock.mockReturnValueOnce(item);
-          }
-
-          setReadableInterval();
+          setEventInterval('readable');
           const items = await getItems(feed, locale);
 
           expect(items.list.length).toEqual(itemList.length);
@@ -264,11 +278,62 @@ describe('feedparser related tests', () => {
       )
     );
   });
-  test.todo(
-    'consumes the stream and breaks the loop if there is an item limit set and it has been surpassed'
-  );
+  testInAllLocales(
+    'consumes the stream and breaks the loop if there is an item limit set and it has been reached'
+  )(async (locale) => {
+    await fc.assert(
+      fc.asyncProperty(
+        // Reasonable max item limit to avoid really large arrays making javascript run out of memory
+        feedRecord({ hasItemLimit: 'always', maxItemLimit: 5 }).chain((feed) =>
+          fc
+            .array(itemRecord(), { minLength: feed.itemLimit })
+            .chain((itemList) =>
+              fc.tuple(
+                fc.constant(feed),
+                fc.constant(itemList),
+                fc.array(feedItemRecord(), {
+                  minLength: itemList.length,
+                  maxLength: itemList.length,
+                })
+              )
+            )
+        ),
+        fc.lorem({ maxCount: 1 }),
+        async ([feed, itemList, feedItemList], ampersandReplacement) => {
+          const { readMock } = setupReadable(
+            itemList,
+            feedItemList,
+            ampersandReplacement
+          );
+          when(feedParserMock.resume()).thenCall(() => readMock.mockReset());
 
-  test.todo('throws an error if the feed is too long for Alexa to read');
+          setEventInterval('readable');
+          const items = await getItems(feed, locale);
+
+          expect(items.list.length).toEqual(feed.itemLimit);
+        }
+      )
+    );
+  });
+
+  testInAllLocales(
+    'throws an error if the feed is too long for Alexa to read (according to checkFeedSize)'
+  )(async (locale) => {
+    await fc.assert(
+      fc.asyncProperty(feedRecord(), async (feed) => {
+        cleanupEventEmitter();
+
+        mocked(checkFeedSize).mockImplementation(() => {
+          throw new FeedIsTooLongError();
+        });
+
+        setEventInterval('end');
+        await expect(getItems(feed, locale)).rejects.toBeInstanceOf(
+          FeedIsTooLongError
+        );
+      })
+    );
+  });
 
   afterEach(() => {
     for (const key in intervals) {
