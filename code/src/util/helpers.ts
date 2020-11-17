@@ -16,3 +16,34 @@ function isSsml(
 export function getSpeakOutput(outputSpeech: ui.OutputSpeech): string {
   return isSsml(outputSpeech) ? outputSpeech.ssml : outputSpeech.text;
 }
+
+/**
+ * Calculate the max number of characters in a series of string lists
+ * wrapped inside a property from a list of objects with type T
+ * @param list The list of objects to get the string lists from
+ * @param property The property within the objects that contains the string lists
+ * @param topLimit (Optional) Number that should never be exceeded. If it does, this gets immediately returned as the max value.
+ */
+export function calculateMaxCharactersIn<
+  P extends keyof T,
+  T extends { [key in P]?: string[] }
+>(list: T[], property: P, topLimit?: number): number {
+  let res = 0;
+  for (const item of list) {
+    const content = item[property];
+    if (content) {
+      let max = 0;
+      for (const text of content) {
+        if (topLimit && text.length >= topLimit) {
+          return topLimit;
+        } else if (text.length > max) {
+          max = text.length;
+        }
+      }
+      if (max > res) {
+        res = max;
+      }
+    }
+  }
+  return res;
+}
