@@ -11,6 +11,7 @@ import { processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { truncateAll } from '../../../src/util/truncateAll';
 import { feedRecord } from '../../helpers/fast-check/arbitraries/feed';
 import { itemRecord } from '../../helpers/fast-check/arbitraries/feedParser';
+import { MayHappenOption } from '../../helpers/fast-check/arbitraries/misc';
 import { mockArbitrary } from '../../helpers/fast-check/arbitraries/mockArbitrary';
 import { lastCallTo } from '../../helpers/jest/mockInstanceHelpers';
 
@@ -95,14 +96,16 @@ test('returns the date in UTC string format', () => {
 test('returns the whole content if it does not have to be truncated', () => {
   fc.assert(
     fc.property(
-      itemRecord({ contentSurpassesMaxCharacters: 'never' }),
+      mockItemArbitrary({ contentSurpassesMaxCharacters: 'never' }),
       feedRecord({ hasTruncateContentAt: 'never' }),
       fc.lorem({ maxCount: 1 }),
       (item, feed, ampersandReplacement) => {
         const feedItem = processFeedItem(item, feed, ampersandReplacement);
 
         expect(truncateAll).not.toHaveBeenCalled();
-        expect(feedItem.content).toEqual([item.summary || item.description]);
+
+        expect(feedItem.content.length).toEqual(1);
+        expect(feedItem.content[0]).toBe(item.summary || item.description);
       }
     )
   );
@@ -135,16 +138,7 @@ test('returns the readable result of truncating all content if the feed has the 
 test('returns the readable result of truncating all content if the content surpasses the max character count', () => {
   fc.assert(
     fc.property(
-      fc.integer({ min: MAX_RESPONSE_LENGTH + 1 }).chain((contentLength) => {
-        const contentMock = mock<string>();
-        when(contentMock.length).thenReturn(contentLength);
-        const content = instance(contentMock);
-
-        return mockArbitrary<FeedParser.Item>((itemMock) => {
-          when(itemMock.summary).thenReturn(content);
-          when(itemMock.description).thenReturn(content);
-        });
-      }),
+      mockItemArbitrary({ contentSurpassesMaxCharacters: 'always' }),
       feedRecord(),
       fc.lorem({ maxCount: 1 }),
       mockArbitrary<string[]>(),
@@ -166,3 +160,31 @@ test('returns the readable result of truncating all content if the content surpa
     )
   );
 });
+
+function mockItemArbitrary({
+  contentSurpassesMaxCharacters = 'sometimes',
+}: { contentSurpassesMaxCharacters?: MayHappenOption } = {}): fc.Arbitrary<
+  FeedParser.Item
+> {
+  return fc
+    .integer({
+      min:
+        contentSurpassesMaxCharacters === 'always'
+          ? MAX_RESPONSE_LENGTH + 1
+          : undefined,
+      max:
+        contentSurpassesMaxCharacters === 'never'
+          ? MAX_RESPONSE_LENGTH
+          : undefined,
+    })
+    .chain((contentLength) => {
+      const contentMock = mock<string>();
+      when(contentMock.length).thenReturn(contentLength);
+      const content = instance(contentMock);
+
+      return mockArbitrary<FeedParser.Item>((itemMock) => {
+        when(itemMock.summary).thenReturn(content);
+        when(itemMock.description).thenReturn(content);
+      });
+    });
+}
