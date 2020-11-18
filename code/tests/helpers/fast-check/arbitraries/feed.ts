@@ -46,19 +46,29 @@ export function feedItemRecord({
 } = {}): fc.Arbitrary<FeedItem> {
   const contentArb = content({ minLength: contentMinLength });
   return fc.record<FeedItem, fc.RecordConstraints>(
-    {
-      title: fc.lorem(),
-      description: fc.lorem({ mode: 'sentences' }),
-      summary: fc.lorem({ mode: 'sentences' }),
-      date: fc.date({ min: new Date(0) }).map((date) => date.toUTCString()),
-      link: fc.webUrl(),
-      imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
-      content: readingContent
-        ? contentArb
-        : fc.oneof(contentArb, fc.constant(undefined)),
-    },
+    feedItemRecordModel({ readingContent, contentArb }),
     { withDeletedKeys: false }
   );
+}
+
+export function feedItemRecordModel({
+  readingContent,
+  contentArb,
+}: {
+  readingContent?: boolean;
+  contentArb?: fc.Arbitrary<string[]>;
+} = {}) {
+  return {
+    title: fc.lorem(),
+    description: fc.lorem({ mode: 'sentences' }),
+    summary: fc.lorem({ mode: 'sentences' }),
+    date: fc.date({ min: new Date(0) }).map((date) => date.toUTCString()),
+    link: fc.webUrl(),
+    imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
+    content: readingContent
+      ? contentArb
+      : fc.oneof(contentArb, fc.constant(undefined)),
+  };
 }
 
 export function feedItemsRecord({

@@ -11,10 +11,10 @@ import { processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { getLangFormatter } from '../../../src/util/langFormatter';
 import { init, initNewInstance } from '../../../src/util/localization';
 import {
-  feedItemRecord,
+  feedItemRecordModel,
   feedRecord,
 } from '../../helpers/fast-check/arbitraries/feed';
-import { itemRecord } from '../../helpers/fast-check/arbitraries/feedParser';
+import { mockArbitrary } from '../../helpers/fast-check/arbitraries/mockArbitrary';
 import { availableLocales, testInAllLocales } from '../../helpers/helperTests';
 import {
   FeedParserEventIntervals,
@@ -225,18 +225,29 @@ describe('feedparser related tests', () => {
   testInAllLocales(
     'processes all items and returns a list of the results sorted by date in descending order'
   )(async (locale) => {
+    const dateArbitrary = feedItemRecordModel().date;
+
     await fc.assert(
       fc.asyncProperty(
         feedRecord({ hasItemLimit: 'never' }),
-        fc.array(itemRecord(), { minLength: 1 }).chain((itemList) =>
-          fc.tuple(
-            fc.constant(itemList),
-            fc.array(feedItemRecord(), {
-              minLength: itemList.length,
-              maxLength: itemList.length,
-            })
-          )
-        ),
+        fc
+          .array(mockArbitrary<FeedParser.Item>(), { minLength: 1 })
+          .chain((itemList) =>
+            fc.tuple(
+              fc.clonedConstant(itemList),
+              fc.array(
+                dateArbitrary.chain((date) =>
+                  mockArbitrary<FeedItem>((mock) => {
+                    when(mock.date).thenReturn(date);
+                  })
+                ),
+                {
+                  minLength: itemList.length,
+                  maxLength: itemList.length,
+                }
+              )
+            )
+          ),
         fc.lorem({ maxCount: 1 }),
         async (feed, [itemList, feedItemList], ampersandReplacement) => {
           const { processFeedItemMock } = setupReadable(
@@ -253,12 +264,10 @@ describe('feedparser related tests', () => {
 
           for (let i = 0; i < itemList.length; i++) {
             const expectedItem = itemList[i];
-            expect(processFeedItemMock).toHaveBeenNthCalledWith(
-              i + 1,
-              expectedItem,
-              feed,
-              ampersandReplacement
-            );
+            const nthCallArgs = processFeedItemMock.mock.calls[i];
+            expect(nthCallArgs[0]).toBe(expectedItem);
+            expect(nthCallArgs[1]).toBe(feed);
+            expect(nthCallArgs[2]).toEqual(ampersandReplacement);
           }
 
           // Check that items list contains all elements from feedItemList, ignoring order
@@ -286,12 +295,14 @@ describe('feedparser related tests', () => {
         // Reasonable max item limit to avoid really large arrays making javascript run out of memory
         feedRecord({ hasItemLimit: 'always', maxItemLimit: 5 }).chain((feed) =>
           fc
-            .array(itemRecord(), { minLength: feed.itemLimit })
+            .array(mockArbitrary<FeedParser.Item>(), {
+              minLength: feed.itemLimit,
+            })
             .chain((itemList) =>
               fc.tuple(
                 fc.constant(feed),
-                fc.constant(itemList),
-                fc.array(feedItemRecord(), {
+                fc.clonedConstant(itemList),
+                fc.array(mockArbitrary<FeedItem>(), {
                   minLength: itemList.length,
                   maxLength: itemList.length,
                 })
