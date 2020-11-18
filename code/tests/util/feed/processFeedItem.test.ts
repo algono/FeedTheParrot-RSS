@@ -1,11 +1,18 @@
 import fc from 'fast-check';
+import FeedParser from 'feedparser';
 import { mocked } from 'ts-jest/utils';
-import { MAX_CHARACTERS_SPEECH } from '../../../src/util/constants';
+import { instance, mock, when } from 'ts-mockito';
+import {
+  MAX_CHARACTERS_SPEECH,
+  MAX_RESPONSE_LENGTH,
+} from '../../../src/util/constants';
 import { cleanHtml } from '../../../src/util/feed/cleanHtml';
 import { processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { truncateAll } from '../../../src/util/truncateAll';
 import { feedRecord } from '../../helpers/fast-check/arbitraries/feed';
 import { itemRecord } from '../../helpers/fast-check/arbitraries/feedParser';
+import { mockArbitrary } from '../../helpers/fast-check/arbitraries/mockArbitrary';
+import { lastCallTo } from '../../helpers/jest/mockInstanceHelpers';
 
 jest.mock('../../../src/util/feed/cleanHtml');
 jest.mock('../../../src/util/truncateAll');
@@ -128,22 +135,33 @@ test('returns the readable result of truncating all content if the feed has the 
 test('returns the readable result of truncating all content if the content surpasses the max character count', () => {
   fc.assert(
     fc.property(
-      itemRecord({ contentSurpassesMaxCharacters: 'always' }),
+      fc.integer({ min: MAX_RESPONSE_LENGTH + 1 }).chain((contentLength) => {
+        const contentMock = mock<string>();
+        when(contentMock.length).thenReturn(contentLength);
+        const content = instance(contentMock);
+
+        return mockArbitrary<FeedParser.Item>((itemMock) => {
+          when(itemMock.summary).thenReturn(content);
+          when(itemMock.description).thenReturn(content);
+        });
+      }),
       feedRecord(),
       fc.lorem({ maxCount: 1 }),
-      fc.array(fc.lorem({ mode: 'sentences' }), { minLength: 1 }),
+      mockArbitrary<string[]>(),
       (item, feed, ampersandReplacement, expectedResult) => {
         mocked(truncateAll).mockClear();
         mocked(truncateAll).mockReturnValue(expectedResult);
 
         const feedItem = processFeedItem(item, feed, ampersandReplacement);
 
-        expect(truncateAll).toHaveBeenCalledWith(
-          item.summary || item.description,
-          feed.truncateContentAt || MAX_CHARACTERS_SPEECH,
-          { readable: true }
+        expect(feedItem.content).toBe(expectedResult);
+
+        const callToTruncateAll = lastCallTo(mocked(truncateAll));
+        expect(callToTruncateAll[0]).toBe(item.summary || item.description);
+        expect(callToTruncateAll[1]).toEqual(
+          feed.truncateContentAt || MAX_CHARACTERS_SPEECH
         );
-        expect(feedItem.content).toEqual(expectedResult);
+        expect(callToTruncateAll[2]).toMatchObject({ readable: true });
       }
     )
   );
