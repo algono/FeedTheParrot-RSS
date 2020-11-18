@@ -26,7 +26,7 @@ beforeEach(() => {
 test('properly cleans the title, description and summary', () => {
   fc.assert(
     fc.property(
-      itemRecord(),
+      itemRecord,
       feedRecord(),
       fc.lorem({ maxCount: 1 }),
       fc.record(
@@ -81,7 +81,7 @@ test('properly cleans the title, description and summary', () => {
 test('returns the date in UTC string format', () => {
   fc.assert(
     fc.property(
-      itemRecord(),
+      itemRecord,
       feedRecord(),
       fc.lorem({ maxCount: 1 }),
       (item, feed, ampersandReplacement) => {
@@ -114,7 +114,7 @@ test('returns the whole content if it does not have to be truncated', () => {
 test('returns the readable result of truncating all content if the feed has the truncateContentAt attribute defined', () => {
   fc.assert(
     fc.property(
-      itemRecord(),
+      itemRecord,
       feedRecord({ hasTruncateContentAt: 'always' }),
       fc.lorem({ maxCount: 1 }),
       fc.array(fc.lorem({ mode: 'sentences' }), { minLength: 1 }),

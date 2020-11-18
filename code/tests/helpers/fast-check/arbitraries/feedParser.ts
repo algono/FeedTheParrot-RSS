@@ -1,8 +1,6 @@
 import fc from 'fast-check';
 import { Enclosure, Image, Item, Meta, NS, Type } from 'feedparser';
-import { MAX_CHARACTERS_SPEECH } from '../../../../src/util/constants';
 import { availableLocales } from '../../helperTests';
-import { MayHappenOption } from './misc';
 
 const imageRecord: fc.Arbitrary<Image> = fc.record<Image, fc.RecordConstraints>(
   {
@@ -34,63 +32,36 @@ const metaRecord: fc.Arbitrary<Meta> = fc.record<Meta, fc.RecordConstraints>(
   { withDeletedKeys: false }
 );
 
-export function itemRecord({
-  contentSurpassesMaxCharacters = 'sometimes',
-}: {
-  contentSurpassesMaxCharacters?: MayHappenOption;
-} = {}): fc.Arbitrary<Item> {
-  const contentArbitrary = createContentArbitrary(
-    contentSurpassesMaxCharacters
-  );
-
-  return fc.record<Item, fc.RecordConstraints>(
-    {
-      title: fc.lorem(),
-      description: contentArbitrary,
-      summary: contentArbitrary,
-      date: fc.option(fc.date({ min: new Date(0) })),
-      pubdate: fc.option(fc.date({ min: new Date(0) })),
-      link: fc.webUrl(),
-      origlink: fc.webUrl(),
-      author: fc.lorem(),
-      guid: fc.webUrl(),
-      comments: fc.lorem({ mode: 'sentences' }),
-      image: fc.oneof(imageRecord, fc.constant(undefined)),
-      categories: fc.array(fc.lorem()),
-      enclosures: fc.array(
-        fc.record<Enclosure, fc.RecordConstraints>(
-          {
-            length: fc.oneof(
-              fc.nat().map((n) => n.toString()),
-              fc.constant(undefined)
-            ),
-            type: fc.oneof(fc.string(), fc.constant(undefined)),
-            url: fc.webUrl(),
-          },
-          {
-            withDeletedKeys: false,
-          }
-        )
-      ),
-      meta: metaRecord,
-    },
-    { withDeletedKeys: false }
-  );
-}
-
-function createContentArbitrary(
-  contentSurpassesMaxCharacters: MayHappenOption
-) {
-  return contentSurpassesMaxCharacters === 'sometimes'
-    ? fc.lorem({ mode: 'sentences' })
-    : fc.string({
-        minLength:
-          contentSurpassesMaxCharacters === 'always'
-            ? MAX_CHARACTERS_SPEECH + 1
-            : undefined,
-        maxLength:
-          contentSurpassesMaxCharacters === 'never'
-            ? MAX_CHARACTERS_SPEECH
-            : undefined,
-      });
-}
+export const itemRecord = fc.record<Item, fc.RecordConstraints>(
+  {
+    title: fc.lorem(),
+    description: fc.lorem({ mode: 'sentences' }),
+    summary: fc.lorem({ mode: 'sentences' }),
+    date: fc.option(fc.date({ min: new Date(0) })),
+    pubdate: fc.option(fc.date({ min: new Date(0) })),
+    link: fc.webUrl(),
+    origlink: fc.webUrl(),
+    author: fc.lorem(),
+    guid: fc.webUrl(),
+    comments: fc.lorem({ mode: 'sentences' }),
+    image: fc.oneof(imageRecord, fc.constant(undefined)),
+    categories: fc.array(fc.lorem()),
+    enclosures: fc.array(
+      fc.record<Enclosure, fc.RecordConstraints>(
+        {
+          length: fc.oneof(
+            fc.nat().map((n) => n.toString()),
+            fc.constant(undefined)
+          ),
+          type: fc.oneof(fc.string(), fc.constant(undefined)),
+          url: fc.webUrl(),
+        },
+        {
+          withDeletedKeys: false,
+        }
+      )
+    ),
+    meta: metaRecord,
+  },
+  { withDeletedKeys: false }
+);
