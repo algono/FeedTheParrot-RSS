@@ -5,6 +5,7 @@ import { Feed, FeedItems } from '../../logic/Feed';
 import { getLangFormatter } from '../langFormatter';
 import { checkFeedSize } from './checkFeedSize';
 import { processFeedItem } from './processFeedItem';
+import { InvalidFeedUrlError } from '../../logic/Errors';
 
 export function getItems(
   feed: Feed,
@@ -26,7 +27,11 @@ export function getItems(
         }
       },
       function (err) {
-        reject(err);
+        if (err instanceof TypeError) {
+          reject(new InvalidFeedUrlError('invalid-url', err.message));
+        } else {
+          reject(err);
+        }
       }
     );
 
@@ -75,7 +80,14 @@ export function getItems(
     });
 
     feedparser.on('error', function (err: any) {
-      reject(err);
+      if (
+        err instanceof Error &&
+        err.message.toLowerCase().includes('not a feed')
+      ) {
+        reject(new InvalidFeedUrlError('no-feed', err.message));
+      } else {
+        reject(err);
+      }
     });
   });
 }

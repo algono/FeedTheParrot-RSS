@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { mocked } from 'ts-jest/utils';
 import { instance, mock, when } from 'ts-mockito';
-import { FeedIsTooLongError } from '../../../src/intents/Error';
+import { FeedIsTooLongError } from '../../../src/logic/Errors';
 import { Feed, FeedItems } from '../../../src/logic/Feed';
 import {
   MAX_CHARACTERS_SPEECH,

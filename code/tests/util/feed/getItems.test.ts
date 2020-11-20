@@ -3,7 +3,7 @@ import fc from 'fast-check';
 import FeedParser from 'feedparser';
 import { mocked } from 'ts-jest/utils';
 import { anyOfClass, instance, mock, when } from 'ts-mockito';
-import { FeedIsTooLongError } from '../../../src/intents/Error';
+import { FeedIsTooLongError } from '../../../src/logic/Errors';
 import { Feed, FeedItem } from '../../../src/logic/Feed';
 import { checkFeedSize } from '../../../src/util/feed/checkFeedSize';
 import { getItems } from '../../../src/util/feed/getItems';

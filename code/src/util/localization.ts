@@ -18,10 +18,16 @@ export const languageStrings = {
         'You can ask me to read a feed and to list them. How can I help?',
       GOODBYE_MSG: 'Goodbye!',
       REFLECTOR_MSG: 'You just triggered {{intent}}',
-      FALLBACK_MSG: "Sorry, I don't know about that. Please try again.",
-      ERROR_MSG: 'Sorry, I had trouble doing what you asked. Please try again.',
+      FALLBACK_MSG: "Sorry, I don't know about that.",
+      ERROR_MSG: 'Sorry, I had trouble doing what you asked.',
+      TRY_AGAIN_MSG: 'Please try again.',
       FEED_TOO_LONG_ERROR_MSG:
         "Sorry, the feed is too long; I haven't been able to process it. Please, set an item limit for the feed in the Feed the Parrot app to make it shorter.",
+      INVALID_URL_ERROR_MSG: 'Sorry, the feed URL is not valid.',
+      NO_FEED_ERROR_MSG:
+        "Sorry, I haven't been able to find a feed in this URL.",
+      INVALID_FEED_URL_ERROR_MSG:
+        'Please, go to the Feed the Parrot app and check that the URL is correct.',
       NOT_IMPLEMENTED_MSG:
         'Sorry, this feature is yet to be implemented. Try again later.',
       AMPERSAND: 'and',
@@ -50,11 +56,17 @@ export const languageStrings = {
         'Puedes pedirme que te lea una feed o que te diga la lista de feeds disponibles. ¿Cómo puedo ayudar?',
       GOODBYE_MSG: '¡Hasta pronto!',
       REFLECTOR_MSG: 'Acabas de invocar el intent {{intent}}',
-      FALLBACK_MSG: 'Lo siento, no lo sé. Por favor, vuelva a intentarlo.',
+      FALLBACK_MSG: 'Lo siento, no lo sé.',
       ERROR_MSG:
-        'Lo siento, ha habido un error. Por favor, vuelva a intentarlo.',
+        'Lo siento, ha habido un error.',
+      TRY_AGAIN_MSG: 'Por favor, vuelva a intentarlo.',
       FEED_TOO_LONG_ERROR_MSG:
         'Lo siento, la feed es demasiado larga; no he podido procesarla. Por favor, indica un límite de elementos para la feed en la app de al loro para acortarla.',
+      INVALID_URL_ERROR_MSG: 'Lo siento, la URL de la feed no es válida.',
+      NO_FEED_ERROR_MSG:
+        'Lo siento, no he encontrado ninguna feed en esta URL.',
+      INVALID_FEED_URL_ERROR_MSG:
+        'Por favor, ve a la app de Al Loro y comprueba que la URL sea correcta.',
       NOT_IMPLEMENTED_MSG:
         'Lo siento, esta función aún no ha sido implementada. Inténtalo de nuevo más tarde.',
       AMPERSAND: 'y',

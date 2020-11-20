@@ -7,9 +7,7 @@ import { LaunchRequestHandler } from './intents/Launch';
 import { AuthIntentHandler } from './intents/Auth';
 import { ListIntentHandler } from './intents/List';
 
-import {
-  ReadIntentHandler,
-} from './intents/Read/Fetch'
+import { ReadIntentHandler } from './intents/Read/Fetch';
 
 import {
   ReadItemIntentHandler,
@@ -29,6 +27,7 @@ import {
 import {
   FeedIsTooLongErrorHandler,
   GenericErrorHandler,
+  InvalidFeedUrlErrorHandler,
 } from './intents/Error';
 
 // The SkillBuilder acts as the entry point for your skill, routing all request and response
@@ -53,5 +52,9 @@ export const handler = SkillBuilders.custom()
   )
   .addRequestInterceptors(LocalizationRequestInterceptor)
   .addResponseInterceptors(SaveResponseForRepeatingInterceptor)
-  .addErrorHandlers(FeedIsTooLongErrorHandler, GenericErrorHandler)
+  .addErrorHandlers(
+    InvalidFeedUrlErrorHandler,
+    FeedIsTooLongErrorHandler,
+    GenericErrorHandler
+  )
   .lambda();

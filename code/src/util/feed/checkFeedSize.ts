@@ -1,6 +1,6 @@
 import { MAX_RESPONSE_LENGTH } from '../constants';
 import { Feed, FeedItems } from '../../logic/Feed';
-import { FeedIsTooLongError } from '../../intents/Error';
+import { FeedIsTooLongError } from '../../logic/Errors';
 import { calculateMaxCharactersIn } from '../helpers';
 
 export function checkFeedSize(items: FeedItems, feed: Feed) {

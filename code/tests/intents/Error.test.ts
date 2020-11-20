@@ -2,12 +2,12 @@ import { HandlerInput } from 'ask-sdk-core';
 import fc from 'fast-check';
 import { capture, instance, mock, spy, when } from 'ts-mockito';
 import {
-  FeedIsTooLongError,
   FeedIsTooLongErrorHandler,
   GenericErrorHandler,
 } from '../../src/intents/Error';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales } from '../helpers/helperTests';
+import { FeedIsTooLongError } from '../../src/logic/Errors';
 
 describe('Feed is too long error handler', () => {
   test('can handle only FeedIsToLongErrors', () => {
@@ -97,7 +97,7 @@ describe('Generic error handler', () => {
         mocks.mockedResponseBuilder.speak
       ).last();
 
-      expect(responseSpeakOutput).toEqual(mocks.t('ERROR_MSG'));
+      expect(responseSpeakOutput).toContain(mocks.t('ERROR_MSG'));
     }
   );
 });

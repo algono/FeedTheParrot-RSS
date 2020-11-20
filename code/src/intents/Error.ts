@@ -1,18 +1,44 @@
 import { ErrorHandler } from 'ask-sdk-core';
+import { FeedIsTooLongError, InvalidFeedUrlError } from '../logic/Errors';
 import { TFunction } from '../util/localization';
 
-export class FeedIsTooLongError extends Error {
-  constructor() {
-    super();
-    Object.setPrototypeOf(this, FeedIsTooLongError.prototype);
-  }
-}
+export const InvalidFeedUrlErrorHandler: ErrorHandler = {
+  canHandle(_, error) {
+    return error instanceof InvalidFeedUrlError;
+  },
+  handle(handlerInput, error: InvalidFeedUrlError) {
+    const {
+      t,
+    }: {
+      t?: TFunction;
+    } = handlerInput.attributesManager.getRequestAttributes();
+
+    let errorMessageKey = 'ERROR_MSG';
+    switch (error.code) {
+      case 'invalid-url':
+        errorMessageKey = 'INVALID_URL_' + errorMessageKey;
+        break;
+      case 'no-feed':
+        errorMessageKey = 'NO_FEED_' + errorMessageKey;
+        break;
+    }
+
+    const speakOutput = `${t(errorMessageKey)} ${t(
+      'INVALID_FEED_URL_ERROR_MSG'
+    )} ${t('REPROMPT_MSG')}`;
+
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
+      .reprompt(speakOutput)
+      .getResponse();
+  },
+};
 
 export const FeedIsTooLongErrorHandler: ErrorHandler = {
   canHandle(_, error) {
     return error instanceof FeedIsTooLongError;
   },
-  async handle(handlerInput) {
+  handle(handlerInput) {
     const {
       t,
     }: {
@@ -35,7 +61,7 @@ export const GenericErrorHandler: ErrorHandler = {
   canHandle() {
     return true;
   },
-  async handle(handlerInput, error) {
+  handle(handlerInput, error) {
     console.log(`~~~~ Error handled: ${error.stack}`);
 
     const {
@@ -44,7 +70,7 @@ export const GenericErrorHandler: ErrorHandler = {
       t?: TFunction;
     } = handlerInput.attributesManager.getRequestAttributes();
 
-    const speakOutput = t('ERROR_MSG');
+    const speakOutput = `${t('ERROR_MSG')} ${t('TRY_AGAIN_MSG')}`;
 
     return handlerInput.responseBuilder
       .speak(speakOutput)
