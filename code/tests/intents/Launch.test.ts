@@ -14,6 +14,7 @@ import { getUserId } from 'ask-sdk-core';
 import { dialog, Directive } from 'ask-sdk-model';
 import fc from 'fast-check';
 import { mockDatabase } from '../helpers/mocks/mockDatabase';
+import { Feed } from '../../src/logic/Feed';
 
 describe('Launch request', () => {
   testCanHandle({
@@ -22,45 +23,62 @@ describe('Launch request', () => {
     testName: 'can be handled when called',
   });
 
-  test('saves userId from database in session attributes', async () => {
+  function mockLaunchRequest({
+    feeds,
+    feedNames,
+  }: {
+    feeds: { [x: string]: Feed };
+    feedNames: string[];
+  }) {
+    const mockUserData = mock<UserData>();
+
+    const mockUserDataRef = mock<
+      FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
+    >();
+
+    const mockedDatabase = mockDatabase();
+
+    when(mockedDatabase.getUserData(anyString())).thenResolve({
+      userData: instance(mockUserData),
+      userDataRef: instance(mockUserDataRef),
+    });
+
+    when(mockedDatabase.getFeedsFromUser(anything(), anyString())).thenResolve({
+      feeds,
+      feedNames,
+    });
+
+    return { mockUserData, mockUserDataRef, mockedDatabase };
+  }
+
+  test('saves user id and their feed data from database in session attributes', async () => {
     await fc.assert(
       fc.asyncProperty(fc.string(), fc.string(), async (userId, refId) => {
         const mocks = await mockHandlerInput({ locale: null });
 
         mocked(getUserId).mockReturnValue(userId);
 
-        const mockUserData = mock<UserData>();
+        const expectedFeeds = instance(mock<{ [x: string]: Feed }>());
+        const expectedFeedNames = instance(mock<string[]>());
+
+        const { mockUserData, mockUserDataRef } = mockLaunchRequest({
+          feeds: expectedFeeds,
+          feedNames: expectedFeedNames,
+        });
+
         when(mockUserData.userId).thenReturn(userId);
-
-        const mockUserDataRef = mock<
-          FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
-        >();
-
         when(mockUserDataRef.id).thenReturn(refId);
-
-        const mockedDatabase = mockDatabase();
-
-        when(mockedDatabase.getUserData(anyString())).thenResolve({
-          userData: instance(mockUserData),
-          userDataRef: instance(mockUserDataRef),
-        });
-
-        when(
-          mockedDatabase.getFeedsFromUser(anything(), anyString())
-        ).thenResolve({
-          feeds: {},
-          feedNames: [],
-        });
 
         await LaunchRequestHandler.handle(mocks.instanceHandlerInput);
 
-        // We could have also passed a sessionAttributes object before and used it,
-        // but this way we also check that it still works when there are no session attributes at first
-        const [sessionAttributes] = capture(
-          mocks.mockedAttributesManager.setSessionAttributes
-        ).last();
+        const [sessionAttributes]: [
+          LaunchSessionAttributes,
+          ...unknown[]
+        ] = capture(mocks.mockedAttributesManager.setSessionAttributes).last();
 
         expect(sessionAttributes.userIdDB).toEqual(refId);
+        expect(sessionAttributes.feeds).toBe(expectedFeeds);
+        expect(sessionAttributes.feedNames).toBe(expectedFeedNames);
       })
     );
   });
@@ -71,27 +89,27 @@ describe('Launch request', () => {
     return (directive as dialog.DynamicEntitiesDirective).types !== undefined;
   }
 
-  test('takes feed names from session attributes and creates slot values from them', async () => {
+  test('creates slot values from the obtained feed names', async () => {
     await fc.assert(
       fc.asyncProperty(fc.array(fc.string()), async (feedNames) => {
-        const sessionAttributes: LaunchSessionAttributes = Object.freeze({
-          feeds: { testFeed: null }, // This is not used within the code, only checked if it has something in it
-          feedNames,
-        });
         const mocks = await mockHandlerInput({
-          sessionAttributes,
           locale: null,
+        });
+
+        mockLaunchRequest({
+          feeds: instance(mock<{ [x: string]: Feed }>()),
+          feedNames,
         });
 
         await LaunchRequestHandler.handle(mocks.instanceHandlerInput);
 
-        const replaceEntityDirective = capture(
+        const [replaceEntityDirective] = capture(
           mocks.mockedResponseBuilder.addDirective
-        ).last()[0];
+        ).last();
 
         if (directiveHasDynamicEntities(replaceEntityDirective)) {
           expect(replaceEntityDirective.types[0].values).toEqual(
-            sessionAttributes.feedNames.map((value) => ({
+            feedNames.map((value) => ({
               name: {
                 value: value,
               },

@@ -22,46 +22,34 @@ export const LaunchRequestHandler: RequestHandler = {
 
     const speakOutput: string = t('WELCOME_MSG');
 
-    const sessionAttributes: LaunchSessionAttributes =
-      attributesManager.getSessionAttributes() || {};
+    const sessionAttributes: LaunchSessionAttributes = {};
 
-    console.log(
-      '(LaunchRequest) Session Attributes: ' + JSON.stringify(sessionAttributes)
+    console.log('(LaunchRequest) Retrieving user data from database');
+
+    const userId = getUserId(handlerInput.requestEnvelope);
+
+    const { userDataRef } = await Database.instance.getUserData(userId);
+
+    // Get ID from database and store it in session attributes
+    const userIdDB = userDataRef.id;
+    sessionAttributes.userIdDB = userIdDB;
+
+    console.log('(LaunchRequest) User ID: ' + userIdDB);
+    console.log('(LaunchRequest) Retrieving feed data from database');
+
+    const nameField: string = t('FEED_NAME_FIELD');
+    const feedsAndFeedNames = await Database.instance.getFeedsFromUser(
+      userDataRef,
+      nameField
     );
 
-    let feedNames: string[];
-    if (!(sessionAttributes.feeds && sessionAttributes.feedNames)) {
-      console.log('(LaunchRequest) Retrieving feeds data from database');
+    const feeds = feedsAndFeedNames.feeds;
+    const feedNames = feedsAndFeedNames.feedNames;
 
-      const userId = getUserId(handlerInput.requestEnvelope);
+    sessionAttributes.feeds = feeds;
+    sessionAttributes.feedNames = feedNames;
 
-      const { userDataRef } = await Database.instance.getUserData(userId);
-
-      // Get ID from database and store it in session attributes
-      const userIdDB = userDataRef.id;
-      sessionAttributes.userIdDB = userIdDB;
-
-      console.log('(LaunchRequest) User ID: ' + userIdDB);
-
-      const nameField: string = t('FEED_NAME_FIELD');
-      const feedsAndFeedNames = await Database.instance.getFeedsFromUser(
-        userDataRef,
-        nameField
-      );
-
-      const feeds = feedsAndFeedNames.feeds;
-      feedNames = feedsAndFeedNames.feedNames;
-
-      sessionAttributes.feeds = feeds;
-      sessionAttributes.feedNames = feedNames;
-
-      attributesManager.setSessionAttributes(sessionAttributes);
-    } else {
-      console.log(
-        '(LaunchRequest) Feeds data was already in session attributes'
-      );
-      feedNames = sessionAttributes.feedNames;
-    }
+    attributesManager.setSessionAttributes(sessionAttributes);
 
     console.log('(LaunchRequest) Feed names: ' + JSON.stringify(feedNames));
 
