@@ -38,8 +38,8 @@ export function getItems(
       const locale: string = feed.language;
       const t = await initNewInstance(locale);
 
-      // If the locale of the feed doesn't match the one on the device, use SSML to change the voice and language
-      if (locale !== defaultLocale) {
+      // If the locale of the feed doesn't match the one on the device (or none is provided), use SSML to change the voice and language
+      if (!defaultLocale || !defaultLocale.startsWith(locale)) {
         items.langFormatter = getLangFormatter(t);
       }
 
