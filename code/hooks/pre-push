@@ -45,7 +45,7 @@ do
 		echo "Deploy branch is being pushed. Merging and pushing dev branch."
 		git switch $DEV_BRANCH
 		git merge $DEPLOY_BRANCH
-		git push
+		git push --no-verify
 		git switch $DEPLOY_BRANCH
 		echo "Deploy branch is being pushed. Pushing code branch too."
 		git push $CODE_REMOTE $CODE_BRANCH --no-verify
