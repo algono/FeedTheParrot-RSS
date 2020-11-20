@@ -2,10 +2,7 @@ import fc from 'fast-check';
 import FeedParser from 'feedparser';
 import { mocked } from 'ts-jest/utils';
 import { instance, mock, when } from 'ts-mockito';
-import {
-  MAX_CHARACTERS_SPEECH,
-  MAX_RESPONSE_LENGTH,
-} from '../../../src/util/constants';
+import { MAX_CHARACTERS_SPEECH } from '../../../src/util/constants';
 import { cleanHtml } from '../../../src/util/feed/cleanHtml';
 import { processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { truncateAll } from '../../../src/util/truncateAll';
@@ -170,11 +167,11 @@ function mockItemArbitrary({
     .integer({
       min:
         contentSurpassesMaxCharacters === 'always'
-          ? MAX_RESPONSE_LENGTH + 1
+          ? MAX_CHARACTERS_SPEECH + 1
           : undefined,
       max:
         contentSurpassesMaxCharacters === 'never'
-          ? MAX_RESPONSE_LENGTH
+          ? MAX_CHARACTERS_SPEECH
           : undefined,
     })
     .chain((contentLength) => {
