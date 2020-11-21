@@ -22,7 +22,7 @@ export function getSpeakOutput(outputSpeech: ui.OutputSpeech): string {
  * wrapped inside a property from a list of objects with type T
  * @param list The list of objects to get the string lists from
  * @param property The property within the objects that contains the string lists
- * @param topLimit (Optional) Number that should never be exceeded. If it does, this gets immediately returned as the max value.
+ * @param topLimit (Optional) Number (> 0) that should never be equaled or exceeded. If it does, this gets immediately returned as the max value.
  */
 export function calculateMaxCharactersIn<
   P extends keyof T,
