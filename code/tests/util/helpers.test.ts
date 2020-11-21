@@ -37,22 +37,26 @@ describe('calculateMaxCharactersIn', () => {
           .chain(([property, max]) => {
             const state = { anyWithMax: false };
             return fc.tuple(
-              fc.array(
-                fc.record({
-                  [property]: fc.array(
-                    fc.boolean().chain((isMax) => {
-                      if (isMax) state.anyWithMax = isMax;
-                      return fc.string(
-                        isMax
-                          ? { minLength: max, maxLength: max }
-                          : { maxLength: max - 1 }
-                      );
-                    }),
-                    { minLength: 1 }
-                  ),
-                }),
-                { minLength: 1 }
-              ).filter(() => state.anyWithMax),
+              fc
+                .array(
+                  fc.record({
+                    [property]: fc.option(
+                      fc.array(
+                        fc.boolean().chain((isMax) => {
+                          if (isMax) state.anyWithMax = isMax;
+                          return fc.string(
+                            isMax
+                              ? { minLength: max, maxLength: max }
+                              : { maxLength: max - 1 }
+                          );
+                        }),
+                        { minLength: 1 }
+                      )
+                    ),
+                  }),
+                  { minLength: 1 }
+                )
+                .filter(() => state.anyWithMax),
               fc.constant(property),
               fc.constant(max)
             );
