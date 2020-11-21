@@ -4,14 +4,82 @@ import { capture, instance, mock, when } from 'ts-mockito';
 import {
   FeedIsTooLongErrorHandler,
   GenericErrorHandler,
+  InvalidFeedUrlErrorHandler,
 } from '../../src/intents/Error';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales } from '../helpers/helperTests';
-import { FeedIsTooLongError } from '../../src/logic/Errors';
+import {
+  FeedIsTooLongError,
+  InvalidFeedUrlError,
+  InvalidFeedUrlErrorCode,
+} from '../../src/logic/Errors';
 import { lastCallTo } from '../helpers/jest/mockInstanceHelpers';
 
+describe('Invalid feed URL error handler', () => {
+  test('can handle only InvalidFeedUrl errors', () => {
+    const handlerInputMock = mock<HandlerInput>();
+
+    // Returns true when passing FeedIsTooLongError
+    expect(
+      InvalidFeedUrlErrorHandler.canHandle(
+        instance(handlerInputMock),
+        new InvalidFeedUrlError(null)
+      )
+    ).toBe(true);
+
+    // Returns false when passing any other error
+    expect(
+      FeedIsTooLongErrorHandler.canHandle(
+        instance(handlerInputMock),
+        instance(new Error())
+      )
+    ).toBe(false);
+  });
+
+  const errorCodeKeys: { [code in InvalidFeedUrlErrorCode]: string } = {
+    ['invalid-url']: 'INVALID_URL_ERROR_MSG',
+    ['no-feed']: 'NO_FEED_ERROR_MSG',
+  };
+  const errorCodeFallbackKey = 'ERROR_MSG';
+
+  function speaksCorrectErrorMessageOnCode(code: InvalidFeedUrlErrorCode) {
+    return async (locale: string) => {
+      const mocks = await mockHandlerInput({ locale });
+
+      const errorMock = mock<InvalidFeedUrlError>();
+      when(errorMock.code).thenReturn(code);
+
+      await InvalidFeedUrlErrorHandler.handle(
+        mocks.instanceHandlerInput,
+        instance(errorMock)
+      );
+
+      const [responseSpeakOutput] = capture(
+        mocks.mockedResponseBuilder.speak
+      ).last();
+
+      expect(responseSpeakOutput).toContain(
+        mocks.t(errorCodeKeys[code] ?? errorCodeFallbackKey)
+      );
+      expect(responseSpeakOutput).toContain(
+        mocks.t('INVALID_FEED_URL_ERROR_MSG')
+      );
+    };
+  }
+
+  testInAllLocales('speaks correct error message on invalid-url code')(
+    speaksCorrectErrorMessageOnCode('invalid-url')
+  );
+  testInAllLocales('speaks correct error message on no-feed code')(
+    speaksCorrectErrorMessageOnCode('no-feed')
+  );
+  testInAllLocales('speaks correct error message on any other code')(
+    speaksCorrectErrorMessageOnCode(null)
+  );
+});
+
 describe('Feed is too long error handler', () => {
-  test('can handle only FeedIsToLongErrors', () => {
+  test('can handle only FeedIsToLong errors', () => {
     const handlerInputMock = mock<HandlerInput>();
 
     // Returns true when passing FeedIsTooLongError
@@ -22,7 +90,7 @@ describe('Feed is too long error handler', () => {
       )
     ).toBe(true);
 
-    // Returns false when passing any error
+    // Returns false when passing any other error
     expect(
       FeedIsTooLongErrorHandler.canHandle(
         instance(handlerInputMock),
