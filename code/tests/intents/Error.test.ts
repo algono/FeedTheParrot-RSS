@@ -1,6 +1,6 @@
 import { HandlerInput } from 'ask-sdk-core';
 import fc from 'fast-check';
-import { capture, instance, mock, spy, when } from 'ts-mockito';
+import { capture, instance, mock, when } from 'ts-mockito';
 import {
   FeedIsTooLongErrorHandler,
   GenericErrorHandler,
@@ -8,6 +8,7 @@ import {
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales } from '../helpers/helperTests';
 import { FeedIsTooLongError } from '../../src/logic/Errors';
+import { lastCallTo } from '../helpers/jest/mockInstanceHelpers';
 
 describe('Feed is too long error handler', () => {
   test('can handle only FeedIsToLongErrors', () => {
@@ -21,7 +22,7 @@ describe('Feed is too long error handler', () => {
       )
     ).toBe(true);
 
-    // Returns true when passing any error
+    // Returns false when passing any error
     expect(
       FeedIsTooLongErrorHandler.canHandle(
         instance(handlerInputMock),
@@ -68,36 +69,36 @@ describe('Generic error handler', () => {
         const mockError = mock<Error>();
         when(mockError.stack).thenReturn(stack);
 
-        const logSpy = spy(console);
+        const logSpy = jest.spyOn(console, 'log').mockImplementation();
 
         await GenericErrorHandler.handle(
           (await mockHandlerInput({ locale: null })).instanceHandlerInput,
           instance(mockError)
         );
 
-        const [errorLog] = capture(logSpy.log).last();
+        const [errorLog] = lastCallTo(logSpy);
+
+        logSpy.mockRestore();
 
         expect(errorLog).toContain(stack);
       })
     );
   });
 
-  testInAllLocales('speaks error message')(
-    async (locale) => {
-      const mocks = await mockHandlerInput({ locale });
+  testInAllLocales('speaks error message')(async (locale) => {
+    const mocks = await mockHandlerInput({ locale });
 
-      const mockError = mock<Error>();
+    const mockError = mock<Error>();
 
-      await GenericErrorHandler.handle(
-        mocks.instanceHandlerInput,
-        instance(mockError)
-      );
+    await GenericErrorHandler.handle(
+      mocks.instanceHandlerInput,
+      instance(mockError)
+    );
 
-      const [responseSpeakOutput] = capture(
-        mocks.mockedResponseBuilder.speak
-      ).last();
+    const [responseSpeakOutput] = capture(
+      mocks.mockedResponseBuilder.speak
+    ).last();
 
-      expect(responseSpeakOutput).toContain(mocks.t('ERROR_MSG'));
-    }
-  );
+    expect(responseSpeakOutput).toContain(mocks.t('ERROR_MSG'));
+  });
 });
