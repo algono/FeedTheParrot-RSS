@@ -125,6 +125,41 @@ describe('feedparser related tests', () => {
   beforeEach(setupFeedParser);
 
   testInAllLocales(
+    "rejects invalid feed url error when feedparser emits a 'not a feed' error"
+  )((locale) =>
+    fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            fc.lorem(),
+            fc.mixedCase(fc.constant('not a feed')),
+            fc.lorem()
+          )
+          .map((messageParts) =>
+            messageParts.reduce((acc, value) => acc + ' ' + value, '').trim()
+          ),
+        async (errorMessage) => {
+          cleanupEventEmitter();
+
+          const expectedError = new Error(errorMessage);
+          setErrorEventInterval(expectedError);
+
+          await getItems(instance(mock<Feed>()), locale)
+            .then(() => fail('The promise was not rejected'))
+            .catch((err) => {
+              expect(err).toBeInstanceOf(InvalidFeedUrlError);
+              expect((err as InvalidFeedUrlError).code).toEqual<
+                InvalidFeedUrlErrorCode
+              >('no-feed');
+            });
+
+          clearInterval(intervals.error);
+        }
+      )
+    )
+  );
+
+  testInAllLocales(
     'rejects with feedparser response reason when feedparser emits an error'
   )(async (locale) => {
     const expectedError = instance(mock<Error>());
