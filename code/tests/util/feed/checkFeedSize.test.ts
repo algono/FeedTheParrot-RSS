@@ -18,7 +18,7 @@ const checkFeedSizeCall = () =>
 test('throws an error if the feed size exceeds the maximum response length', () =>
   fc.assert(
     fc.property(
-      fc.integer({ min: MAX_RESPONSE_LENGTH }),
+      fc.integer({ min: MAX_RESPONSE_LENGTH + 1 }),
       fc.nat({ max: MAX_CHARACTERS_SPEECH }),
       (feedSize, maxCharacters) => {
         setupMocks(feedSize, maxCharacters);
