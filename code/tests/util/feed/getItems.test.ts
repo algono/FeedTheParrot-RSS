@@ -3,7 +3,11 @@ import fc from 'fast-check';
 import FeedParser from 'feedparser';
 import { mocked } from 'ts-jest/utils';
 import { anyOfClass, instance, mock, when } from 'ts-mockito';
-import { FeedIsTooLongError } from '../../../src/logic/Errors';
+import {
+  FeedIsTooLongError,
+  InvalidFeedUrlError,
+  InvalidFeedUrlErrorCode,
+} from '../../../src/logic/Errors';
 import { Feed, FeedItem } from '../../../src/logic/Feed';
 import { checkFeedSize } from '../../../src/util/feed/checkFeedSize';
 import { getItems } from '../../../src/util/feed/getItems';
@@ -64,6 +68,24 @@ testInAllLocales('throws error when fetch response is not ok')(
       )
     );
   }
+);
+
+testInAllLocales(
+  'rejects invalid feed url error when fetch response is rejected with a TypeError'
+)((locale) =>
+  fc.assert(
+    fc.asyncProperty(fc.lorem(), async (errorMessage) => {
+      mockNodeFetchRejects(new TypeError(errorMessage));
+      await getItems(instance(mock<Feed>()), locale)
+        .then(() => fail('The promise was not rejected'))
+        .catch((err) => {
+          expect(err).toBeInstanceOf(InvalidFeedUrlError);
+          expect((err as InvalidFeedUrlError).code).toEqual<
+            InvalidFeedUrlErrorCode
+          >('invalid-url');
+        });
+    })
+  )
 );
 
 testInAllLocales(
