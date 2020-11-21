@@ -93,7 +93,9 @@ export const ReadItemIntentHandler: RequestHandler = {
         .reprompt(speakOutput) // Ask for confirmation to continue reading
         .getResponse();
     } else {
-      speakOutput += t('END_READING_FEED');
+      speakOutput += t(
+        items.list.length === 0 ? 'EMPTY_FEED_MSG' : 'END_READING_FEED'
+      );
 
       responseBuilder.speak(speakOutput);
 

@@ -31,6 +31,7 @@ import { mockIntent } from '../../helpers/mocks/mockIntent';
 import { feedItemsRecord } from '../../helpers/fast-check/arbitraries/feed';
 import { escapeRegex } from '../../helpers/escapeRegex';
 import { PAUSE_BETWEEN_ITEMS } from '../../../src/util/constants';
+import { FeedItem, FeedItems } from '../../../src/logic/Feed';
 
 function mockReadState({
   reading = true,
@@ -42,6 +43,12 @@ function mockReadState({
     getterSpy: jest.SpyInstance<boolean, []>;
     setterSpy: jest.SpyInstance<void, boolean[]>;
   };
+
+  const feedItemsMock = mock<FeedItems>();
+
+  when(feedItemsMock.list).thenReturn([]);
+
+  when(readStateMock.feedItems).thenCall(() => instance(feedItemsMock));
 
   if (mockReadingSetter) {
     readState = instance(readStateMock);
@@ -56,7 +63,7 @@ function mockReadState({
     readState = instance(readStateMock);
   }
 
-  return { readStateMock, readState, ...propertyMocks };
+  return { readStateMock, readState, ...propertyMocks, feedItemsMock };
 }
 
 const sessionAttributesWhenReading: {
@@ -191,18 +198,48 @@ describe('ReadItemIntent', () => {
 
   testInAllLocales(
     'If there are no items left, tell the user and stop reading'
-  )(async (locale) => {
-    await testReadingEnd(locale, true);
-    await testReadingEnd(locale, false);
-  });
+  )((locale) =>
+    fc.assert(
+      fc.asyncProperty(
+        fc
+          .integer({ min: 1 })
+          .chain((itemsLength) =>
+            fc.tuple(fc.constant(itemsLength), fc.integer({ min: itemsLength }))
+          ),
+        async ([itemsLength, currentIndex]) => {
+          await testReadingEnd(locale, true, itemsLength, currentIndex);
+          await testReadingEnd(locale, false, itemsLength, currentIndex);
+        }
+      )
+    )
+  );
 
-  async function testReadingEnd(locale: string, reading: boolean) {
-    const { readState, setterSpy } = mockReadState({
+  testInAllLocales('If the feed is empty, tell the user and stop reading')(
+    async (locale) => {
+      await testReadingEnd(locale, true, 0);
+      await testReadingEnd(locale, false, 0);
+    }
+  );
+
+  async function testReadingEnd(
+    locale: string,
+    reading: boolean,
+    itemsLength: number,
+    currentIndex?: number
+  ) {
+    const { readStateMock, setterSpy, feedItemsMock } = mockReadState({
       reading,
       mockReadingSetter: () => {},
     });
 
-    const sessionAttributes = { readState };
+    const itemsListMock = mock<FeedItem[]>();
+    when(itemsListMock.length).thenReturn(itemsLength);
+
+    when(feedItemsMock.list).thenCall(() => instance(itemsListMock));
+
+    when(readStateMock.currentIndex).thenReturn(currentIndex);
+
+    const sessionAttributes = { readState: instance(readStateMock) };
     const mocks = await mockHandlerInput({
       locale,
       sessionAttributes,
@@ -214,7 +251,9 @@ describe('ReadItemIntent', () => {
 
     const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
 
-    expect(speakOutput).toContain(mocks.t('END_READING_FEED'));
+    expect(speakOutput).toContain(
+      mocks.t(itemsLength === 0 ? 'EMPTY_FEED_MSG' : 'END_READING_FEED')
+    );
   }
 });
 

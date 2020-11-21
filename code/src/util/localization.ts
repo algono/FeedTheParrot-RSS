@@ -37,6 +37,7 @@ export const languageStrings = {
       CONFIRMATION_CONTINUE_READING_FEED: 'Do you want me to continue reading?',
       CONFIRMATION_GOTO_NEXT_FEED_ITEM: 'Shall I go to the next one?',
       END_READING_FEED: "And that's all there is at the moment.",
+      EMPTY_FEED_MSG: 'Oh! The feed is empty.',
       FEED_NAME_FIELD: 'name-en',
       AUTH_PRE_CODE_MSG: 'The code is:',
       AUTH_EXPLANATION_MSG:
@@ -76,6 +77,7 @@ export const languageStrings = {
       CONFIRMATION_CONTINUE_READING_FEED: '¿Sigo leyendo?',
       CONFIRMATION_GOTO_NEXT_FEED_ITEM: '¿Paso al siguiente?',
       END_READING_FEED: 'Y eso es todo por ahora.',
+      EMPTY_FEED_MSG: '¡Oh! La feed está vacía.',
       FEED_NAME_FIELD: 'name-es',
       AUTH_PRE_CODE_MSG: 'El código es el siguiente:',
       AUTH_EXPLANATION_MSG:
