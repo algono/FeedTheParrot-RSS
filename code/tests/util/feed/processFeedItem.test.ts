@@ -164,23 +164,26 @@ function mockItemArbitrary({
   FeedParser.Item
 > {
   return fc
-    .integer({
-      min:
-        contentSurpassesMaxCharacters === 'always'
-          ? MAX_CHARACTERS_SPEECH + 1
-          : undefined,
-      max:
-        contentSurpassesMaxCharacters === 'never'
-          ? MAX_CHARACTERS_SPEECH
-          : undefined,
-    })
-    .chain((contentLength) => {
+    .tuple(
+      fc.integer({
+        min:
+          contentSurpassesMaxCharacters === 'always'
+            ? MAX_CHARACTERS_SPEECH + 1
+            : undefined,
+        max:
+          contentSurpassesMaxCharacters === 'never'
+            ? MAX_CHARACTERS_SPEECH
+            : undefined,
+      }),
+      fc.boolean()
+    )
+    .chain(([contentLength, hasSummary]) => {
       const contentMock = mock<string>();
       when(contentMock.length).thenReturn(contentLength);
       const content = instance(contentMock);
 
       return mockArbitrary<FeedParser.Item>((itemMock) => {
-        when(itemMock.summary).thenReturn(content);
+        when(itemMock.summary).thenReturn(hasSummary ? content : null);
         when(itemMock.description).thenReturn(content);
       });
     });
