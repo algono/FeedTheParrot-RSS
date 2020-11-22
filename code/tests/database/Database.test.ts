@@ -16,6 +16,7 @@ import {
   Database,
   UserData,
 } from '../../src/database/Database';
+import { NoUserDataError } from '../../src/logic/Errors';
 import { allTranslationsFrom } from '../helpers/allTranslationsFrom';
 import { feedRecord } from '../helpers/fast-check/arbitraries/feed';
 import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
@@ -158,7 +159,7 @@ test(
   )
 );
 
-test('getUserData creates a new user if it does not exist', async () => {
+test('getUserData throws an error if the user does not exist', async () => {
   await fc.assert(
     fc.asyncProperty(fc.string(), async (userId) => {
       clearState();
@@ -167,15 +168,9 @@ test('getUserData creates a new user if it does not exist', async () => {
         collectionMock: mockCollectionFirestore().collectionMock,
       });
 
-      const spyCreateNewUser = jest
-        .spyOn(Database.instance, 'createNewUser')
-        .mockImplementation();
-
-      await Database.instance.getUserData(userId);
-
-      expect(spyCreateNewUser).toHaveBeenLastCalledWith<UserData[]>({
-        userId: userId,
-      });
+      await expect(() =>
+        Database.instance.getUserData(userId)
+      ).rejects.toBeInstanceOf(NoUserDataError);
     })
   );
 });

@@ -1,4 +1,5 @@
 import * as firebaseAdmin from 'firebase-admin';
+import { NoUserDataError } from '../logic/Errors';
 import { Feed, FeedData } from '../logic/Feed';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
@@ -60,9 +61,7 @@ export class Database {
       userDataRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>;
 
     if (userDataQuery.empty) {
-      userData = { userId: userId };
-      console.log('(Database) No user data. Creating new user');
-      userDataRef = await this.createNewUser(userData);
+      throw new NoUserDataError();
     } else {
       console.log('(Database) Existing user. Retrieving user data');
       // Get user data from query

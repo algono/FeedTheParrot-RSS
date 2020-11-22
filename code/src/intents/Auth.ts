@@ -1,4 +1,9 @@
-import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
+import {
+  RequestHandler,
+  getRequestType,
+  getIntentName,
+  getUserId,
+} from 'ask-sdk-core';
 
 import { randomBytes } from 'crypto';
 import { Database } from '../database/Database';
@@ -21,6 +26,15 @@ export const AuthIntentHandler: RequestHandler = {
     } = handlerInput.attributesManager.getRequestAttributes();
 
     const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+    const uid: string =
+      sessionAttributes.userIdDB ??
+      (
+        await Database.instance.createNewUser({
+          userId: getUserId(handlerInput.requestEnvelope),
+        })
+      ).id;
+
     const code = generateSixDigitCode();
 
     console.log('(AuthIntent) Generated code: ' + JSON.stringify(code));
@@ -28,8 +42,8 @@ export const AuthIntentHandler: RequestHandler = {
     const TIME_TO_EXPIRE = 10 * 60 * 1000; // 10 minutes in milliseconds
 
     await Database.instance.addAuthCode({
-      uid: sessionAttributes.userIdDB,
-      code: code,
+      uid,
+      code,
       expirationDate: new Date(Date.now() + TIME_TO_EXPIRE),
     });
 

@@ -17,3 +17,10 @@ export class InvalidFeedUrlError extends Error {
     this.code = code;
   }
 }
+
+export class NoUserDataError extends Error {
+  constructor() {
+    super();
+    Object.setPrototypeOf(this, NoUserDataError.prototype);
+  }
+}
