@@ -1,4 +1,12 @@
+import {
+  AttributesManager,
+  AttributesManagerFactory,
+  getUserId,
+  PersistenceAdapter,
+} from 'ask-sdk-core';
+import { RequestEnvelope } from 'ask-sdk-model';
 import * as firebaseAdmin from 'firebase-admin';
+import { LaunchSessionAttributes } from '../intents/Launch';
 import { NoUserDataError } from '../logic/Errors';
 import { Feed, FeedData } from '../logic/Feed';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
@@ -10,27 +18,29 @@ export const collectionNames = {
 };
 
 export interface AuthCode {
-  uid: string;
   code: string;
   expirationDate: Date;
 }
 
-export interface UserData {
+export interface UserDocData {
   userId: string;
 }
 
-export class Database {
-  private static _instance: Database;
+export interface UserData {
+  feeds: { [x: string]: Feed };
+  feedNames: string[];
 
+  authCode?: AuthCode;
+}
+
+export class FirebasePersistenceAdapter implements PersistenceAdapter {
   private readonly _firestore: FirebaseFirestore.Firestore;
 
-  private constructor() {
-    Database.init();
-    this._firestore = firebaseAdmin.firestore();
-  }
+  private _userRefId: string;
 
-  public static get instance() {
-    return this._instance || (this._instance = new this());
+  public constructor() {
+    const app = FirebasePersistenceAdapter.init();
+    this._firestore = app.firestore();
   }
 
   /**
@@ -46,44 +56,41 @@ export class Database {
     });
   }
 
-  public addAuthCode(code: AuthCode) {
-    return this._firestore.collection(collectionNames.authCodes).add(code);
+  private async getUserRefId(requestEnvelope: RequestEnvelope) {
+    if (!this._userRefId) await this.getUserRef(requestEnvelope);
+    return this._userRefId;
   }
 
-  public async getUserData(userId: string) {
+  private async getUserRef(requestEnvelope: RequestEnvelope) {
+    const userId = getUserId(requestEnvelope);
+
     const userDataQuery = await this._firestore
       .collection(collectionNames.users)
       .where('userId', '==', userId)
       .limit(1)
       .get();
 
-    let userData: UserData,
-      userDataRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>;
-
     if (userDataQuery.empty) {
+      this._userRefId = null;
       throw new NoUserDataError();
-    } else {
-      console.log('(Database) Existing user. Retrieving user data');
-      // Get user data from query
-      const userDataDoc = userDataQuery.docs[0];
-      userDataRef = userDataDoc.ref;
-      userData = userDataDoc.data() as UserData;
     }
+    console.log('(Database) Existing user. Retrieving user data');
+    // Get user data from query
+    const userDoc = userDataQuery.docs[0];
+    const userRef = userDoc.ref;
 
-    return { userData, userDataRef };
+    this._userRefId = userRef.id;
+
+    return userRef;
   }
 
-  public createNewUser(userData: UserData) {
-    return this._firestore.collection(collectionNames.users).add(userData);
-  }
-
-  public async getFeedsFromUser(
-    userDataRef: FirebaseFirestore.DocumentReference<
+  private async getFeedsFromUser(
+    userRef: FirebaseFirestore.DocumentReference<
       FirebaseFirestore.DocumentData
     >,
     nameField: string
-  ) {
-    const feedSnapshots = await userDataRef
+  ): Promise<UserData> {
+    const feedSnapshots = await userRef
       .collection(collectionNames.feeds)
       .orderBy(nameField) // This filters out documents without the field
       .get();
@@ -103,5 +110,82 @@ export class Database {
     });
 
     return { feeds, feedNames };
+  }
+
+  public async getAttributes(
+    requestEnvelope: RequestEnvelope
+  ): Promise<UserData> {
+    const userRef = await this.getUserRef(requestEnvelope);
+
+    const attributesManager = AttributesManagerFactory.init({
+      requestEnvelope,
+    });
+
+    const sessionAttributes: LaunchSessionAttributes = attributesManager.getSessionAttributes();
+
+    const nameField = sessionAttributes.nameField;
+
+    return this.getFeedsFromUser(userRef, nameField);
+  }
+
+  private setAuthCode(docId: string, code: AuthCode) {
+    return this._firestore
+      .collection(collectionNames.authCodes)
+      .doc(docId)
+      .set(code);
+  }
+
+  private async createNewUser(requestEnvelope: RequestEnvelope) {
+    const userDocData: UserDocData = { userId: getUserId(requestEnvelope) };
+    const newUserRef = await this._firestore
+      .collection(collectionNames.users)
+      .add(userDocData);
+
+    this._userRefId = newUserRef.id;
+
+    return newUserRef;
+  }
+
+  public async saveAttributes(
+    requestEnvelope: RequestEnvelope,
+    attributes: UserData
+  ): Promise<void> {
+    // If the user ref id is null, then the user ref was already searched through the database, and it was not found
+    if (this._userRefId === null) {
+      await this.createNewUser(requestEnvelope);
+    } else {
+      try {
+        await this.getUserRefId(requestEnvelope);
+      } catch (err) {
+        if (err instanceof NoUserDataError) {
+          await this.createNewUser(requestEnvelope);
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (attributes.authCode) {
+      await this.setAuthCode(this._userRefId, attributes.authCode);
+    }
+  }
+}
+
+export namespace Database {
+  export function use(attributesManager: AttributesManager) {
+    return new DatabaseHandler(attributesManager);
+  }
+}
+class DatabaseHandler {
+  public constructor(private readonly attributesManager: AttributesManager) {}
+
+  public async setAuthCode(code: AuthCode) {
+    const userData = await this.getUserData();
+    userData.authCode = code;
+    return this.attributesManager.savePersistentAttributes();
+  }
+
+  public async getUserData(): Promise<UserData> {
+    return (await this.attributesManager.getPersistentAttributes()) as UserData;
   }
 }
