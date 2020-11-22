@@ -25,7 +25,7 @@ export const ListIntentHandler: RequestHandler = {
     console.log('(ListIntent) Feed names: ' + JSON.stringify(feedNames));
 
     const speakOutput: string =
-      (feedNames.length > 0
+      (feedNames && feedNames.length > 0
         ? feedListMessage + feedNames.join(', ') + '. '
         : `${feedListEmptyMessage} `) + feedListReprompt;
 
@@ -33,7 +33,7 @@ export const ListIntentHandler: RequestHandler = {
       .speak(speakOutput)
       .withSimpleCard(
         feedListMessage,
-        feedNames.length > 0
+        feedNames && feedNames.length > 0
           ? '- ' + feedNames.join('\n- ')
           : feedListEmptyMessage
       )

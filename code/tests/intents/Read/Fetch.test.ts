@@ -21,6 +21,7 @@ import {
 } from '../../helpers/helperTests';
 import { mockHandlerInput } from '../../helpers/mocks/HandlerInputMocks';
 import { mockIntent } from '../../helpers/mocks/mockIntent';
+import { LaunchSessionAttributes } from '../../../src/intents/Launch';
 
 jest.mock('ask-sdk-core');
 jest.mock('../../../src/util/feed/getItems');
@@ -31,28 +32,37 @@ describe('ReadIntent', () => {
     intentName: 'ReadIntent',
   });
 
-  test('If the feed name has not been received yet, let Alexa continue the dialogue', async () => {
-    const mocks = await mockHandlerInput();
+  test('If the feed name has not been received yet, let Alexa continue the dialogue', () =>
+    fc.assert(
+      fc.asyncProperty(
+        fc.array(fc.string(), { minLength: 1 }),
+        async (feedNames) => {
+          const sessionAttributes: LaunchSessionAttributes = { feedNames };
+          const mocks = await mockHandlerInput({ sessionAttributes });
 
-    mocked(getSlotValue).mockReturnValue(undefined);
+          mocked(getSlotValue).mockReturnValue(undefined);
 
-    const { intentMock } = mockIntent();
+          const { intentMock } = mockIntent();
 
-    await ReadIntentHandler.handle(mocks.instanceHandlerInput);
+          await ReadIntentHandler.handle(mocks.instanceHandlerInput);
 
-    verify(mocks.mockedResponseBuilder.speak(anyString())).never();
+          verify(mocks.mockedResponseBuilder.speak(anyString())).never();
 
-    verify(
-      mocks.mockedResponseBuilder.addDelegateDirective(instance(intentMock))
-    ).once();
-  });
+          verify(
+            mocks.mockedResponseBuilder.addDelegateDirective(
+              instance(intentMock)
+            )
+          ).once();
+        }
+      )
+    ));
 
   testInAllLocales(
     'If the feed is not on our list, invalidate the feed name given, warn the user and try again'
   )((locale) =>
     fc.assert(
       fc.asyncProperty(
-        fc.array(fc.string()),
+        fc.array(fc.string(), { minLength: 1 }),
         fc.string({ minLength: 1 }),
         async (feedNames, feedName) => {
           fc.pre(!feedNames.includes(feedName));

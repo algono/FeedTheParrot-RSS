@@ -1,10 +1,17 @@
-import { RequestHandler, getRequestType, getIntentName, getSlotValue, getRequest, getLocale } from "ask-sdk-core";
-import { IntentRequest } from "ask-sdk-model";
-import { TFunction } from "i18next";
-import { Feed } from "../../logic/Feed";
-import { getItems } from "../../util/feed/getItems";
-import { feedSlotName } from "../../util/constants";
-import { ReadState, ReadItemIntentHandler } from "./Item";
+import {
+  RequestHandler,
+  getRequestType,
+  getIntentName,
+  getSlotValue,
+  getRequest,
+  getLocale,
+} from 'ask-sdk-core';
+import { IntentRequest } from 'ask-sdk-model';
+import { TFunction } from 'i18next';
+import { Feed } from '../../logic/Feed';
+import { getItems } from '../../util/feed/getItems';
+import { feedSlotName } from '../../util/constants';
+import { ReadState, ReadItemIntentHandler } from './Item';
 
 export const ReadIntentHandler: RequestHandler = {
   canHandle(handlerInput) {
@@ -25,6 +32,20 @@ export const ReadIntentHandler: RequestHandler = {
     const feedName = getSlotValue(requestEnvelope, feedSlotName);
     console.log('(ReadIntent) Feed name received: ' + feedName);
 
+    const sessionAttributes = attributesManager.getSessionAttributes();
+    const feedNames: string[] = sessionAttributes.feedNames;
+
+    console.log('(ReadIntent) Feed names: ' + JSON.stringify(feedNames));
+
+    // If there are no feeds available, warn the user
+    if (!feedNames || feedNames.length === 0) {
+      const speakOutput = `${t('FEED_LIST_EMPTY_MSG')} ${t('REPROMPT_MSG')}`;
+      return responseBuilder
+        .speak(speakOutput)
+        .reprompt(speakOutput)
+        .getResponse();
+    }
+
     // If the feed name has not been received yet, let Alexa continue the dialogue
     if (!feedName) {
       return responseBuilder
@@ -32,14 +53,8 @@ export const ReadIntentHandler: RequestHandler = {
         .getResponse();
     }
 
-    const sessionAttributes = attributesManager.getSessionAttributes();
-
-    const feedNames: string[] = sessionAttributes.feedNames;
-
-    console.log('(ReadIntent) Feed names: ' + JSON.stringify(feedNames));
-
     // If the feed is not on our list, return and warn the user
-    if (!(feedNames && feedNames.includes(feedName))) {
+    if (!feedNames.includes(feedName)) {
       const nextIntent = getRequest<IntentRequest>(requestEnvelope).intent;
       nextIntent.slots[feedSlotName].confirmationStatus = 'DENIED'; // Invalidate the feed name given
 
