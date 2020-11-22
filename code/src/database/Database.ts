@@ -202,7 +202,9 @@ class DatabaseHandler {
       return (await this.attributesManager.getPersistentAttributes()) as UserData;
     } catch (err) {
       if (!throwIfUserWasNotFound && err instanceof NoUserDataError) {
-        return { feeds: null, feedNames: null };
+        const userData: UserData = { feeds: null, feedNames: null };
+        this.attributesManager.setPersistentAttributes(userData);
+        return userData;
       } else {
         throw err;
       }
