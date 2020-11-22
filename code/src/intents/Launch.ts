@@ -29,7 +29,9 @@ export const LaunchRequestHandler: RequestHandler = {
     console.log('(LaunchRequest) Retrieving user data from database');
 
     try {
-      const userData = await Database.use(attributesManager).getUserData();
+      const userData = await Database.use(attributesManager).getUserData({
+        throwIfUserWasNotFound: true,
+      });
 
       const feedNames = userData.feedNames;
 

@@ -38,6 +38,11 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
 
   private _userRefId: string;
 
+  private userWasNotFound() {
+    // If the user ref id is null, then the user ref was already searched through the database, and it was not found
+    return this._userRefId === null;
+  }
+
   public constructor() {
     const app = FirebasePersistenceAdapter.init();
     this._firestore = app.firestore();
@@ -115,6 +120,12 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
   public async getAttributes(
     requestEnvelope: RequestEnvelope
   ): Promise<UserData> {
+    // If the database was already searched and no user was found,
+    // there is no need to search for it again until the user is created
+    if (this.userWasNotFound()) {
+      throw new NoUserDataError();
+    }
+
     const userRef = await this.getUserRef(requestEnvelope);
 
     const attributesManager = AttributesManagerFactory.init({
@@ -150,8 +161,7 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
     requestEnvelope: RequestEnvelope,
     attributes: UserData
   ): Promise<void> {
-    // If the user ref id is null, then the user ref was already searched through the database, and it was not found
-    if (this._userRefId === null) {
+    if (this.userWasNotFound()) {
       await this.createNewUser(requestEnvelope);
     } else {
       try {
@@ -185,7 +195,17 @@ class DatabaseHandler {
     return this.attributesManager.savePersistentAttributes();
   }
 
-  public async getUserData(): Promise<UserData> {
-    return (await this.attributesManager.getPersistentAttributes()) as UserData;
+  public async getUserData({ throwIfUserWasNotFound = false } = {}): Promise<
+    UserData
+  > {
+    try {
+      return (await this.attributesManager.getPersistentAttributes()) as UserData;
+    } catch (err) {
+      if (!throwIfUserWasNotFound && err instanceof NoUserDataError) {
+        return { feeds: null, feedNames: null };
+      } else {
+        throw err;
+      }
+    }
   }
 }
