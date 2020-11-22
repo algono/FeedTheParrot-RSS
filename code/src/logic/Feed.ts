@@ -18,6 +18,7 @@ export interface FeedData {
   readonly url: string;
   language?: string;
 
+  readFullContent?: boolean;
   truncateContentAt?: number;
   itemLimit?: number;
 }

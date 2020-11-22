@@ -26,7 +26,9 @@ export function processFeedItem(
     content: [],
   };
 
-  const summary = feedItem.summary || feedItem.description;
+  const summary = feed.readFullContent
+    ? feedItem.description || feedItem.summary
+    : feedItem.summary || feedItem.description;
 
   feedItem.content = processContent(
     summary,
