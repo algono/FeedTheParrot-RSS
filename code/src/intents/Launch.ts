@@ -20,12 +20,6 @@ export const LaunchRequestHandler: RequestHandler = {
 
     const speakOutput: string = t('WELCOME_MSG');
 
-    const nameField: string = t('FEED_NAME_FIELD');
-
-    const sessionAttributes: LaunchSessionAttributes = { nameField };
-
-    attributesManager.setSessionAttributes(sessionAttributes);
-
     console.log('(LaunchRequest) Retrieving user data from database');
 
     try {

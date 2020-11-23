@@ -1,14 +1,9 @@
-import {
-  AttributesManager,
-  AttributesManagerFactory,
-  getUserId,
-  PersistenceAdapter,
-} from 'ask-sdk-core';
+import { AttributesManager, getUserId, PersistenceAdapter } from 'ask-sdk-core';
 import { RequestEnvelope } from 'ask-sdk-model';
 import * as firebaseAdmin from 'firebase-admin';
-import { LaunchSessionAttributes } from '../intents/Launch';
 import { NoUserDataError } from '../logic/Errors';
 import { Feed, FeedData } from '../logic/Feed';
+import { t } from '../util/localization';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
 export const collectionNames = {
@@ -90,11 +85,10 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
   }
 
   private async getFeedsFromUser(
-    userRef: FirebaseFirestore.DocumentReference<
-      FirebaseFirestore.DocumentData
-    >,
-    nameField: string
+    userRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
   ): Promise<UserData> {
+    const nameField = t('FEED_NAME_FIELD');
+
     const feedSnapshots = await userRef
       .collection(collectionNames.feeds)
       .orderBy(nameField) // This filters out documents without the field
@@ -128,15 +122,7 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
 
     const userRef = await this.getUserRef(requestEnvelope);
 
-    const attributesManager = AttributesManagerFactory.init({
-      requestEnvelope,
-    });
-
-    const sessionAttributes: LaunchSessionAttributes = attributesManager.getSessionAttributes();
-
-    const nameField = sessionAttributes.nameField;
-
-    return this.getFeedsFromUser(userRef, nameField);
+    return this.getFeedsFromUser(userRef);
   }
 
   private setAuthCode(docId: string, code: AuthCode) {

@@ -58,8 +58,7 @@ export const languageStrings = {
       GOODBYE_MSG: '¡Hasta pronto!',
       REFLECTOR_MSG: 'Acabas de invocar el intent {{intent}}',
       FALLBACK_MSG: 'Lo siento, no lo sé.',
-      ERROR_MSG:
-        'Lo siento, ha habido un error.',
+      ERROR_MSG: 'Lo siento, ha habido un error.',
       TRY_AGAIN_MSG: 'Por favor, vuelva a intentarlo.',
       FEED_TOO_LONG_ERROR_MSG:
         'Lo siento, la feed es demasiado larga; no he podido procesarla. Por favor, indica un límite de elementos para la feed en la app de al loro para acortarla.',
@@ -111,3 +110,5 @@ export const LocalizationRequestInterceptor: RequestInterceptor = {
     };
   },
 };
+
+export const t = i18next.t;
