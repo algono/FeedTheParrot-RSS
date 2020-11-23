@@ -110,5 +110,3 @@ export const LocalizationRequestInterceptor: RequestInterceptor = {
     };
   },
 };
-
-export const t = i18next.t;

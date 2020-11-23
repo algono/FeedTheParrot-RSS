@@ -1,9 +1,14 @@
-import { AttributesManager, getUserId, PersistenceAdapter } from 'ask-sdk-core';
+import {
+  AttributesManager,
+  getLocale,
+  getUserId,
+  PersistenceAdapter,
+} from 'ask-sdk-core';
 import { RequestEnvelope } from 'ask-sdk-model';
 import * as firebaseAdmin from 'firebase-admin';
 import { NoUserDataError } from '../logic/Errors';
 import { Feed, FeedData } from '../logic/Feed';
-import { t } from '../util/localization';
+import { init } from '../util/localization';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
 export const collectionNames = {
@@ -85,8 +90,10 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
   }
 
   private async getFeedsFromUser(
+    requestEnvelope: RequestEnvelope,
     userRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
   ): Promise<UserData> {
+    const t = await init(getLocale(requestEnvelope));
     const nameField = t('FEED_NAME_FIELD');
 
     const feedSnapshots = await userRef
@@ -122,7 +129,7 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
 
     const userRef = await this.getUserRef(requestEnvelope);
 
-    return this.getFeedsFromUser(userRef);
+    return this.getFeedsFromUser(requestEnvelope, userRef);
   }
 
   private setAuthCode(docId: string, code: AuthCode) {
