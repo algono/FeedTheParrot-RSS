@@ -8,7 +8,7 @@
             "name": "Debug Alexa Skill",
             "type": "node",
             "request": "launch",
-            "preLaunchTask": "npm: build - debug",
+            "preLaunchTask": "${defaultBuildTask}",
             "program": "${command:ask.debugAdapterPath}",
             "args": [
                 "--accessToken",
