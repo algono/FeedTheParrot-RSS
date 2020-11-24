@@ -44,7 +44,7 @@ do
 		# Deploy: Merging main branch into dev branch and pushing it
 		git_alexa switch $DEPLOY_DEV_BRANCH
 		git_alexa merge $DEPLOY_MAIN_BRANCH
-		git_alexa push
+		git_alexa push --no-verify
 		git_alexa switch $DEPLOY_MAIN_BRANCH
 	fi
 done
