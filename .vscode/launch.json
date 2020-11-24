@@ -18,9 +18,9 @@
                 "--handlerName",
                 "handler",
                 "--skillEntryFile",
-                "${workspaceFolder}/lambda/index.js"
+                "${workspaceFolder}/build/lambda/index.js"
             ],
-            "outFiles": ["${workspaceFolder}/lambda/**/*.js", "!${workspaceFolder}/lambda/node_modules/**/*"],
+            "outFiles": ["${workspaceFolder}/build/lambda/**/*.js", "!${workspaceFolder}/build/lambda/node_modules/**/*"],
             "smartStep": true
         },
         {
@@ -36,9 +36,9 @@
                 "--handlerName",
                 "handler",
                 "--skillEntryFile",
-                "${workspaceFolder}/lambda/index.js"
+                "${workspaceFolder}/build/lambda/index.js"
             ],
-            "outFiles": ["${workspaceFolder}/lambda/**/*.js", "!${workspaceFolder}/lambda/node_modules/**/*"],
+            "outFiles": ["${workspaceFolder}/build/lambda/**/*.js", "!${workspaceFolder}/build/lambda/node_modules/**/*"],
             "smartStep": true
         },
         {

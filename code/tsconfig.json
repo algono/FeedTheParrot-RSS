@@ -7,7 +7,7 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "sourceMap": true,
-        "outDir": "../lambda/",
+        "outDir": "../build/lambda/",
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "allowSyntheticDefaultImports": true,
