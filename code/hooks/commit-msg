@@ -17,6 +17,7 @@
 MAIN_BRANCH="main"
 BUILD_FOLDER="build"
 CODE_FOLDER="code"
+SRC_FOLDER="$CODE_FOLDER/src"
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 
@@ -29,8 +30,23 @@ then
 		echo "$BUILD_FOLDER" | ask init --hosted-skill-id "$skillId"
 	fi
 
-	npm -C "$CODE_FOLDER" run build
-	[ $? -ne 0 ] && exit 1 # If the build command failed, exit with an error
+	git_diff="$(git diff --cached --name-only)"
+	files_in_dir_changed()
+	{
+		echo "$git_diff" | grep --quiet "$1"
+	}
+
+	if (files_in_dir_changed "skill-package")
+	then
+		npm -C "$CODE_FOLDER" run build:skill-package
+		[ $? -ne 0 ] && exit 1 # If the skill-package build script failed, exit with an error
+	fi
+
+	if (files_in_dir_changed "$CODE_FOLDER/package.json" || files_in_dir_changed "$SRC_FOLDER")
+	then
+		npm -C "$CODE_FOLDER" run build
+		[ $? -ne 0 ] && exit 1 # If the build script failed, exit with an error
+	fi
 
 	commit_msg="$(cat "$1")"
 
