@@ -4,20 +4,14 @@
 # exit with non-zero status after issuing an appropriate message if
 # it wants to stop the commit.
 
-##########################################################################
-## This hook does multiple things:                                       #
-## - Checks if the commit is being done to the code branch,              #
-##   and rejects it if that is the case.                                 #
-##                                                                       #
-## - Checks if the package.json file exists in the build folder.         #
-##   If it does not, we assume that the build failed at some point.      #
-##                                                                       #
-## - Checks if any changes were made to the code (or package.json)       #
-##   and the build has not changed.                                      #
-##                                                                       #
-##   If that happens, it means that the developer forgot to run a build. #
-##   Throw an error and warn them about it.                              #
-##########################################################################
+############################################################################
+## This hook does the following:                                           #
+##                                                                         #
+## Checks if the commit is being done to the main branch.                  #
+## If it is, it creates a build and commits the changes to the Alexa repo. #
+##                                                                         #
+## Note: If the Alexa repo is not present locally, it is cloned.           #
+############################################################################
 
 MAIN_BRANCH="main"
 BUILD_FOLDER="build"
