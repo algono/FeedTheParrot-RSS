@@ -66,7 +66,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "cd .. && ./code/hooks/pre-commit",
+      "commit-msg": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/commit-msg $HUSKY_GIT_PARAMS)",
       "pre-push": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/pre-push $HUSKY_GIT_PARAMS)"
     }
   },

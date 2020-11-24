@@ -1,8 +1,9 @@
 #!/bin/sh
 #
-# Called by "git commit" with no arguments.  The hook should
-# exit with non-zero status after issuing an appropriate message if
-# it wants to stop the commit.
+# Called by "git commit" with one argument, the name of the file
+# that has the commit message.  The hook should exit with non-zero
+# status after issuing an appropriate message if it wants to stop the
+# commit.  The hook is allowed to edit the commit message file..
 
 ############################################################################
 ## This hook does the following:                                           #
@@ -31,7 +32,7 @@ then
 	npm -C "$CODE_FOLDER" run build
 	[ $? -ne 0 ] && exit 1 # If the build command failed, exit with an error
 
-	commit_msg="$(git log -1 --pretty=%B)"
+	commit_msg="$(cat "$1")"
 
 	git --git-dir="$BUILD_FOLDER/.git" --work-tree="$BUILD_FOLDER" commit -am "$commit_msg"
 fi
