@@ -26,8 +26,17 @@ then
 	# If the skill build is not present, clone it
 	if [ ! -d "$BUILD_FOLDER" ]
 	then
-		skillId=$(tr -d '\n' < ./.ask/ask-states.json | tr -d ' ' | sed -n 's/.*"profiles":{"[^{]*":{"skillId":"\(.*\)".*/\1/p' | sed 's/".*//')
-		echo "$BUILD_FOLDER" | ask init --hosted-skill-id "$skillId"
+		skillId=$(tr -d '\n' < "./$SRC_FOLDER/index.ts"| tr -d ' ' | sed -n 's/.*withSkillId\(.*\)/\1/p' | cut -f1 -d ")" | tr -d "()\"'")
+		if [ -n "$skillId" ]
+		then
+			echo "$BUILD_FOLDER" | ask init --hosted-skill-id "$skillId"
+			[ $? -ne 0 ] && exit 1 # If the ask init command failed, exit with an error
+		else
+			echo "Error: The $BUILD_FOLDER folder does not exist, and the skill id could not be obtained."
+			echo "Please, look up the skill id for this skill and run the following command in the root folder:"
+			echo "\"echo \"$BUILD_FOLDER\" | ask init --hosted-skill-id <skill-id>\""
+			exit 1
+		fi
 	fi
 
 	git_diff="$(git diff --cached --name-only)"
