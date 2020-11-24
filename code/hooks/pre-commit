@@ -15,6 +15,7 @@
 
 MAIN_BRANCH="main"
 BUILD_FOLDER="build"
+CODE_FOLDER="code"
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 
@@ -27,7 +28,8 @@ then
 		echo "$BUILD_FOLDER" | ask init --hosted-skill-id "$skillId"
 	fi
 
-	npm run build
+	npm -C "$CODE_FOLDER" run build
+	[ $? -ne 0 ] && exit 1 # If the build command failed, exit with an error
 
 	commit_msg="$(git log -1 --pretty=%B)"
 
