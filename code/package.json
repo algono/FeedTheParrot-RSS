@@ -23,6 +23,7 @@
     "lint:check": "gts check",
     "lint:clean": "gts clean",
     "lint:fix": "gts fix",
+    "build:init": "cd .. && sh ./code/scripts/init-build.sh",
     "build:ci": "npm run setup-ci && npm run build:minimal",
     "build:minimal": "npm run lint:check && npm run compile && npm run build:final",
     "build:full": "npm run clean && npm run build:minimal && npm run build:install",
