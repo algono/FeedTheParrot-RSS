@@ -32,20 +32,17 @@ do
 	then
 		echo "Main branch is being pushed. Deploying changes to Alexa."
 
-		git_alexa()
-		{
-			git --git-dir="$BUILD_FOLDER/.git" --work-tree="$BUILD_FOLDER" "$@"
-		}
+		cd "$BUILD_FOLDER"
 
 		# Deploy: Pushing main branch
-		git_alexa switch $DEPLOY_MAIN_BRANCH
-		git_alexa push
+		git switch $DEPLOY_MAIN_BRANCH
+		git push
 		
-		# Deploy: Merging main branch into dev branch and pushing it
-		git_alexa switch $DEPLOY_DEV_BRANCH
-		git_alexa merge $DEPLOY_MAIN_BRANCH
-		git_alexa push --no-verify
-		git_alexa switch $DEPLOY_MAIN_BRANCH
+		# D Merging main branch into dev branch and pushing it
+		git switch $DEPLOY_DEV_BRANCH
+		git merge $DEPLOY_MAIN_BRANCH
+		git push --no-verify
+		git switch $DEPLOY_MAIN_BRANCH
 	fi
 done
 
