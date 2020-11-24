@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": "../build",
+			"name": "build",
+		},
+		{
+			"path": "..",
+			"name": "code",
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			// Default
+			"**/.git": true,
+			"**/.svn": true,
+			"**/.hg": true,
+			"**/CVS": true,
+			"**/.DS_Store": true,
+		
+			// Custom
+			"build": true,
+		},
+		"terminal.integrated.cwd": "code"
+	}
+}
