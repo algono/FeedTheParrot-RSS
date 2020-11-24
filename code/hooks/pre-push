@@ -34,7 +34,7 @@ do
 
 		git_alexa()
 		{
-			git --git-dir="$BUILD_FOLDER/.git" --work-tree="$BUILD_FOLDER"
+			git --git-dir="$BUILD_FOLDER/.git" --work-tree="$BUILD_FOLDER" "$@"
 		}
 
 		# Deploy: Pushing main branch
@@ -48,3 +48,5 @@ do
 		git_alexa switch $DEPLOY_MAIN_BRANCH
 	fi
 done
+
+exit 0
