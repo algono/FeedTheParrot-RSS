@@ -1,20 +1,17 @@
-import {
-  LaunchRequestHandler,
-  LaunchSessionAttributes,
-} from '../../src/intents/Launch';
+import { LaunchRequestHandler } from '../../src/intents/Launch';
 import { testCanHandle } from '../helpers/helperTests';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
-import { mocked } from 'ts-jest/utils';
-import { anyString, anything, capture, instance, mock, when } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 
-import { UserData } from '../../src/database/Database';
+import { GetUserDataOptions, UserData } from '../../src/database/Database';
 
 jest.mock('ask-sdk-core');
-import { getUserId } from 'ask-sdk-core';
 import { dialog, Directive } from 'ask-sdk-model';
 import fc from 'fast-check';
 import { mockDatabase } from '../helpers/mocks/mockDatabase';
 import { Feed } from '../../src/logic/Feed';
+import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
+import { NoUserDataError } from '../../src/logic/Errors';
 
 describe('Launch request', () => {
   testCanHandle({
@@ -24,63 +21,70 @@ describe('Launch request', () => {
   });
 
   function mockLaunchRequest({
-    feeds,
-    feedNames,
+    feeds = instance(mock<{ [x: string]: Feed }>()),
+    feedNames = instance(mock<string[]>()),
   }: {
-    feeds: { [x: string]: Feed };
-    feedNames: string[];
-  }) {
+    feeds?: { [x: string]: Feed };
+    feedNames?: string[];
+  } = {}) {
     const mockUserData = mock<UserData>();
 
-    const mockUserDataRef = mock<
-      FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
-    >();
+    when(mockUserData.feeds).thenReturn(feeds);
+    when(mockUserData.feedNames).thenReturn(feedNames);
 
     const mockedDatabase = mockDatabase();
 
-    when(mockedDatabase.getUserData(anyString())).thenResolve({
-      userData: instance(mockUserData),
-      userDataRef: instance(mockUserDataRef),
-    });
+    when(mockedDatabase.getUserData(anything())).thenResolve(
+      resolvableInstance(mockUserData)
+    );
 
-    when(mockedDatabase.getFeedsFromUser(anything(), anyString())).thenResolve({
-      feeds,
-      feedNames,
-    });
-
-    return { mockUserData, mockUserDataRef, mockedDatabase };
+    return { mockUserData, mockedDatabase };
   }
 
-  test('saves user id and their feed data from database in session attributes', async () => {
-    await fc.assert(
-      fc.asyncProperty(fc.string(), fc.string(), async (userId, refId) => {
-        const mocks = await mockHandlerInput({ locale: null });
+  test('Gets user data with the "throw if user was not found" flag set to true', async () => {
+    const mocks = await mockHandlerInput({
+      locale: null,
+    });
 
-        mocked(getUserId).mockReturnValue(userId);
+    const { mockedDatabase } = mockLaunchRequest();
 
-        const expectedFeeds = instance(mock<{ [x: string]: Feed }>());
-        const expectedFeedNames = instance(mock<string[]>());
+    await LaunchRequestHandler.handle(mocks.instanceHandlerInput);
 
-        const { mockUserData, mockUserDataRef } = mockLaunchRequest({
-          feeds: expectedFeeds,
-          feedNames: expectedFeedNames,
-        });
+    verify(mockedDatabase.getUserData(anything())).once();
+    const [getUserDataOptions] = capture(mockedDatabase.getUserData).last();
+    expect(getUserDataOptions).toMatchObject<GetUserDataOptions>({
+      throwIfUserWasNotFound: true,
+    });
+  });
 
-        when(mockUserData.userId).thenReturn(userId);
-        when(mockUserDataRef.id).thenReturn(refId);
+  test('If the getUserData function throws an error stating that no user was found, the launch handler does not fail and no directive is added to the response', async () => {
+    const mocks = await mockHandlerInput({
+      locale: null,
+    });
 
-        await LaunchRequestHandler.handle(mocks.instanceHandlerInput);
-
-        const [sessionAttributes]: [
-          LaunchSessionAttributes,
-          ...unknown[]
-        ] = capture(mocks.mockedAttributesManager.setSessionAttributes).last();
-
-        expect(sessionAttributes.userIdDB).toEqual(refId);
-        expect(sessionAttributes.feeds).toBe(expectedFeeds);
-        expect(sessionAttributes.feedNames).toBe(expectedFeedNames);
-      })
+    const mockedDatabase = mockDatabase();
+    when(mockedDatabase.getUserData(anything())).thenThrow(
+      new NoUserDataError()
     );
+
+    await LaunchRequestHandler.handle(mocks.instanceHandlerInput);
+
+    verify(mocks.mockedResponseBuilder.addDirective(anything())).never();
+  });
+
+  test('If any unexpected error is found, it is thrown', async () => {
+    const mocks = await mockHandlerInput({
+      locale: null,
+    });
+
+    const expectedError = new Error();
+
+    const mockedDatabase = mockDatabase();
+    when(mockedDatabase.getUserData(anything())).thenThrow(expectedError);
+
+    expect(() =>
+      LaunchRequestHandler.handle(mocks.instanceHandlerInput)
+    ).rejects.toBe(expectedError);
   });
 
   function directiveHasDynamicEntities(
@@ -89,19 +93,24 @@ describe('Launch request', () => {
     return (directive as dialog.DynamicEntitiesDirective).types !== undefined;
   }
 
-  test('creates slot values from the obtained feed names', async () => {
-    await fc.assert(
+  test("Obtains the user's feed data and creates slot values from their feed names", () =>
+    fc.assert(
       fc.asyncProperty(fc.array(fc.string()), async (feedNames) => {
         const mocks = await mockHandlerInput({
           locale: null,
         });
 
-        mockLaunchRequest({
-          feeds: instance(mock<{ [x: string]: Feed }>()),
+        const { mockedDatabase } = mockLaunchRequest({
           feedNames,
         });
 
         await LaunchRequestHandler.handle(mocks.instanceHandlerInput);
+
+        verify(mockedDatabase.getUserData(anything())).once();
+        const [getUserDataOptions] = capture(mockedDatabase.getUserData).last();
+        expect(getUserDataOptions).toMatchObject<GetUserDataOptions>({
+          throwIfUserWasNotFound: true,
+        });
 
         const [replaceEntityDirective] = capture(
           mocks.mockedResponseBuilder.addDirective
@@ -119,6 +128,5 @@ describe('Launch request', () => {
           fail(TypeError('Added Directive was not a DynamicEntitiesDirective'));
         }
       })
-    );
-  });
+    ));
 });
