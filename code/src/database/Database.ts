@@ -175,11 +175,23 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
 }
 
 export namespace Database {
-  export function use(attributesManager: AttributesManager) {
-    return new DatabaseHandler(attributesManager);
+  export function use(attributesManager: AttributesManager): DatabaseHandler {
+    return new DatabaseHandlerImpl(attributesManager);
   }
 }
-class DatabaseHandler {
+
+export interface GetUserDataOptions {
+  throwIfUserWasNotFound?: boolean;
+}
+
+export interface DatabaseHandler {
+  setAuthCode(code: AuthCode): Promise<void>;
+  getUserData({
+    throwIfUserWasNotFound,
+  }?: GetUserDataOptions): Promise<UserData>;
+}
+
+class DatabaseHandlerImpl implements DatabaseHandler {
   public constructor(private readonly attributesManager: AttributesManager) {}
 
   public async setAuthCode(code: AuthCode) {
