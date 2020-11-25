@@ -5,11 +5,14 @@
   "main": "index.js",
   "private": "true",
   "scripts": {
-    "clean": "rimraf \"../lambda/!(node_modules)\"",
-    "clean-full": "rimraf ../lambda",
+    "clean": "rimraf \"../build/lambda/!(node_modules)\"",
+    "clean:skill-package": "rimraf ../build/skill-package",
+    "clean:full": "rimraf ../build/{lambda,skill-package}",
+    "clean:all": "rimraf ../build",
     "compile": "tsc --build tsconfig.prod.json --pretty",
-    "build:final": "cpy package.json ../lambda",
-    "build:install": "cd ../lambda/ && npm install --production",
+    "build:skill-package": "npm run clean:skill-package && cpy ../skill-package/* ../build/skill-package --parents",
+    "build:final": "cpy package.json ../build/lambda",
+    "build:install": "npm -C ../build/lambda/ install --production",
     "analyse": "npm run test:coverage && node analyse.js",
     "setup-ci": "echo \"{}\" > src/database/firebaseServiceAccountKey.json",
     "test": "jest --silent",
@@ -20,12 +23,13 @@
     "lint:check": "gts check",
     "lint:clean": "gts clean",
     "lint:fix": "gts fix",
+    "build:init": "cd .. && sh ./code/scripts/init-build.sh",
     "build:ci": "npm run setup-ci && npm run build:minimal",
-    "build:debug": "npm run clean && npm run compile && npm run build:final",
-    "build:minimal": "npm run lint:check && npm run compile && npm run build:final && npm run build:install",
-    "build:no-clean": "npm run test && npm run build:minimal",
-    "build": "npm run clean && npm run build:no-clean",
-    "rebuild": "npm run clean-full && npm run build:no-clean"
+    "build:minimal": "npm run lint:check && npm run compile && npm run build:final",
+    "build:full": "npm run clean && npm run build:minimal && npm run build:install",
+    "build": "npm run clean && npm run build:minimal",
+    "rebuild": "npm run clean:full && npm run build:minimal",
+    "rebuild:full": "npm run clean:full && npm run build:full"
   },
   "author": "algono",
   "license": "ISC",
@@ -64,8 +68,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/pre-commit $HUSKY_GIT_PARAMS)",
-      "post-commit": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/post-commit $HUSKY_GIT_PARAMS)",
+      "commit-msg": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/commit-msg $HUSKY_GIT_PARAMS)",
       "pre-push": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/pre-push $HUSKY_GIT_PARAMS)"
     }
   },

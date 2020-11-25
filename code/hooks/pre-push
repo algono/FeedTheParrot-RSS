@@ -18,46 +18,32 @@
 #   <local ref> <local sha1> <remote ref> <remote sha1>                        #
 ################################################################################
 
-# code repo custom pre-push hook
+MAIN_BRANCH="main"
 
-remote=$1
+DEPLOY_MAIN_BRANCH="master"
+DEPLOY_DEV_BRANCH="dev"
 
-DEPLOY_BRANCH="master"
-DEV_BRANCH="dev"
-CODE_BRANCH="codebase"
-
-CODE_REMOTE="github"
-
-echo "Pushing to remote: $remote"
+BUILD_FOLDER="build"
 
 while read local_ref local_sha remote_ref remote_sha
 do
 	echo "Pushing branch: $local_ref"
-	if [ "$remote" = "$CODE_REMOTE" ] && [ "$local_ref" != "refs/heads/$CODE_BRANCH" ]
+	if [ "$local_ref" = "refs/heads/$MAIN_BRANCH" ]
 	then
-		# Non-code branch, reject push
-		echo >&2 "Trying to push non-code branch to GitHub repo. Not pushing (rejected)."
-		exit 1
-	fi
-	
-	if [ "$local_ref" = "refs/heads/$DEPLOY_BRANCH" ]
-	then
-		echo "Deploy branch is being pushed. Merging and pushing dev branch."
-		git switch $DEV_BRANCH
-		git merge $DEPLOY_BRANCH
+		echo "Main branch is being pushed. Deploying changes to Alexa."
+
+		cd "$BUILD_FOLDER"
+
+		# Deploy: Pushing main branch
+		git switch $DEPLOY_MAIN_BRANCH
+		git push
+		
+		# D Merging main branch into dev branch and pushing it
+		git switch $DEPLOY_DEV_BRANCH
+		git merge $DEPLOY_MAIN_BRANCH
 		git push --no-verify
-		git switch $DEPLOY_BRANCH
-		echo "Deploy branch is being pushed. Pushing code branch too."
-		git push $CODE_REMOTE $CODE_BRANCH --no-verify
+		git switch $DEPLOY_MAIN_BRANCH
 	fi
 done
 
-# ASK tools pre-push hook
-
-profile=$(tr -d '\n' < ./.ask/ask-states.json | tr -d ' ' | sed -n 's/.*"profiles":{"\([^{]*\)":.*/\1/p' | sed 's/".*//')
-skillId=$(tr -d '\n' < ./.ask/ask-states.json | tr -d ' ' | sed -n 's/.*"profiles":{"[^{]*":{"skillId":"\(.*\)".*/\1/p' | sed 's/".*//')
-locale=$(tr -d '\n' < ./skill-package/skill.json | tr -d ' ' | sed -n 's/.*"locales":{"\([^{]*\)":.*/\1/p' | sed 's/".*//' | sed -n 's/-/_/p' )
-currentBranch=$(git rev-parse --abbrev-ref HEAD)
-customRepo=$2
-
-bash ~/.ask/scripts/ask-pre-push $profile $skillId $locale $currentBranch $customRepo
+exit 0

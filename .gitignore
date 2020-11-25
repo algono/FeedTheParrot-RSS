@@ -2,7 +2,7 @@
 **/node_modules
 
 # Build folder
-lambda/
+build/
 
 # API keys
 **/*[Kk]ey.json
