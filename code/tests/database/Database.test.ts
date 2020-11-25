@@ -14,6 +14,7 @@ import {
   AuthCode,
   collectionNames,
   Database,
+  FirebasePersistenceAdapter,
   UserData,
 } from '../../src/database/Database';
 import { NoUserDataError } from '../../src/logic/Errors';
@@ -32,15 +33,13 @@ jest.mock('firebase-admin', () => ({
 jest.mock('../../src/database/firebaseServiceAccountKey', () => null);
 
 function clearState() {
-  // Reset the database instance to avoid passing state between tests
-  // (it might not be the best way to do it, but it is the only one I have found for now)
-  Database['_instance'] = undefined;
+  // TODO: Implement an updated version of this function
 }
 
 beforeEach(clearState);
 
-test('Getting a Database instance initializes the database', () => {
-  Database.instance;
+test('Creating a new Firebase Persistence Adapter initializes the database', () => {
+  new FirebasePersistenceAdapter();
   expect(mocked(initializeApp)).toHaveBeenCalled();
 });
 
