@@ -26,7 +26,7 @@
     "build:init": "cd .. && sh ./code/scripts/init-build.sh",
     "build:ci": "npm run setup-ci && npm run build:minimal",
     "build:minimal": "npm run lint:check && npm run compile && npm run build:final",
-    "build:full": "npm run clean && npm run build:minimal && npm run build:install",
+    "build:full": "npm run clean:full && npm run build:skill-package && npm run build:minimal",
     "build": "npm run clean && npm run build:minimal",
     "rebuild": "npm run clean:full && npm run build:minimal",
     "rebuild:full": "npm run clean:full && npm run build:full"
