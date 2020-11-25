@@ -46,7 +46,8 @@ then
 
 	commit_msg="$(cat "$1")"
 
-	git --git-dir="$BUILD_FOLDER/.git" --work-tree="$BUILD_FOLDER" commit -am "$commit_msg"
+	cd "$BUILD_FOLDER"
+	git commit -am "$commit_msg"
 fi
 
 exit 0
