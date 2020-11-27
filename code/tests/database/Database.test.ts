@@ -20,6 +20,7 @@ import {
 import { NoUserDataError } from '../../src/logic/Errors';
 import { allTranslationsFrom } from '../helpers/allTranslationsFrom';
 import { feedRecord } from '../helpers/fast-check/arbitraries/feed';
+import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
 
 jest.mock('firebase-admin', () => ({
@@ -145,13 +146,53 @@ function testIfAddedToCollectionFn<T>(
   };
 }
 
+async function createDatabaseHandler() {
+  const persistenceAdapter = new FirebasePersistenceAdapter();
+
+  const {
+    mockedAttributesManager,
+    instanceRequestEnvelope,
+  } = await mockHandlerInput();
+
+  const persistentAttributesHolder: { attributes?: UserData } = {};
+
+  when(mockedAttributesManager.getPersistentAttributes()).thenCall(() =>
+    persistentAttributesHolder.attributes
+      ? persistentAttributesHolder.attributes
+      : persistenceAdapter.getAttributes(instanceRequestEnvelope)
+  );
+
+  when(mockedAttributesManager.setPersistentAttributes(anything())).thenCall(
+    (attributes) => {
+      persistentAttributesHolder.attributes = attributes;
+    }
+  );
+
+  when(mockedAttributesManager.savePersistentAttributes()).thenCall(() =>
+    persistenceAdapter.saveAttributes(
+      instanceRequestEnvelope,
+      persistentAttributesHolder.attributes
+    )
+  );
+
+  const attributesManager = instance(mockedAttributesManager);
+  const databaseHandler = Database.use(attributesManager);
+
+  return {
+    mockedAttributesManager,
+    attributesManager,
+    persistentAttributesHolder,
+    databaseHandler,
+  };
+}
+
 test(
-  'addAuthCode adds code to auth codes collection',
+  'setAuthCode sets a code with the user id in auth codes collection',
   testIfAddedToCollectionFn<AuthCode>(
     collectionNames.authCodes,
-    (data) => Database.instance.addAuthCode(data),
+    async (data) =>
+      (await createDatabaseHandler()).databaseHandler.setAuthCode(data),
     {
-      uid: fc.string(),
       code: fc.string(),
       expirationDate: fc.date({ min: new Date() }),
     }
