@@ -1,4 +1,5 @@
 import fc from 'fast-check';
+import { AUTH_CODE_LENGTH } from '../../../../src/util/constants';
 
 export type MayHappenOption = 'sometimes' | 'always' | 'never';
 
@@ -25,3 +26,7 @@ export const alphaAndUnderscoreString = fc.stringOf(
     { num: 1, build: () => '_' } // _
   )
 );
+
+export const authCodeString = fc
+  .integer({ min: 0, max: 10 ** AUTH_CODE_LENGTH - 1 })
+  .map((code) => code.toFixed().padStart(AUTH_CODE_LENGTH, '0'));

@@ -1,18 +1,16 @@
 import { firestore } from 'firebase-admin';
-import { mocked } from 'ts-jest/utils';
 import {
   anyNumber,
   anyString,
   anything,
   instance,
   mock,
-
-  when
+  when,
 } from 'ts-mockito';
 import { collectionNames } from '../../../src/database/FirebasePersistenceAdapter';
 import { resolvableInstance } from '../ts-mockito/resolvableInstance';
 
-function mockCollection() {
+export function mockCollection() {
   const collectionMock = mock<
     FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData>
   >();
@@ -21,19 +19,46 @@ function mockCollection() {
 
   return collectionMock;
 }
-export function mockCollectionFirestore(collectionPath?: string) {
-  const collectionMock = mockCollection();
 
-  const firestoreMock = mock<FirebaseFirestore.Firestore>();
+export function mockCollectionFirestore({
+  firestoreMock = mock<FirebaseFirestore.Firestore>(),
+  collectionPath,
+}: {
+  firestoreMock?: FirebaseFirestore.Firestore;
+  collectionPath?: string;
+} = {}) {
+  const collectionMock = mockCollection();
 
   when(
     firestoreMock.collection(collectionPath ? collectionPath : anyString())
   ).thenCall(() => resolvableInstance(collectionMock));
 
-  mocked(firestore).mockImplementation(() => instance(firestoreMock));
   return { firestoreMock, collectionMock };
 }
-function mockQuery({
+
+export function mockRef(): firestore.DocumentReference<firestore.DocumentData> {
+  return mock<
+    FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
+  >();
+}
+
+export function mockCollectionFromRef({
+  collectionMock = mockCollection(),
+  refMock = mockRef(),
+}: {
+  collectionMock?: FirebaseFirestore.CollectionReference<
+    FirebaseFirestore.DocumentData
+  >;
+  refMock?: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>;
+} = {}) {
+  when(refMock.collection(anyString())).thenCall(() =>
+    resolvableInstance(collectionMock)
+  );
+
+  return { refMock, collectionMock };
+}
+
+export function mockQuery({
   empty = false,
   collectionMock = mockCollectionFirestore().collectionMock,
 }: {
@@ -42,10 +67,12 @@ function mockQuery({
     FirebaseFirestore.DocumentData
   >;
 } = {}) {
-  when(collectionMock.limit(anyNumber())).thenCall(() => resolvableInstance(collectionMock)
+  when(collectionMock.limit(anyNumber())).thenCall(() =>
+    resolvableInstance(collectionMock)
   );
 
-  when(collectionMock.orderBy(anyString())).thenCall(() => resolvableInstance(collectionMock)
+  when(collectionMock.orderBy(anyString())).thenCall(() =>
+    resolvableInstance(collectionMock)
   );
 
   const querySnapshotMock = mock<
@@ -54,24 +81,41 @@ function mockQuery({
 
   when(querySnapshotMock.empty).thenReturn(empty);
 
-  when(collectionMock.get()).thenCall(() => Promise.resolve(resolvableInstance(querySnapshotMock))
+  when(collectionMock.get()).thenCall(() =>
+    Promise.resolve(resolvableInstance(querySnapshotMock))
   );
 
-  when(collectionMock.where(anything(), anything(), anything())).thenCall(() => instance(collectionMock)
+  when(collectionMock.where(anything(), anything(), anything())).thenCall(() =>
+    instance(collectionMock)
   );
 
   return { queryMock: collectionMock, querySnapshotMock };
 }
-export function mockUserRefId(id?: string) {
+
+export function mockUserRefId({
+  firestoreMock,
+  id,
+}: { firestoreMock?: firestore.Firestore; id?: string } = {}) {
+  const { collectionMock } = mockCollectionFirestore({
+    firestoreMock,
+    collectionPath: collectionNames.users,
+  });
+
   const { querySnapshotMock } = mockQuery({
-    collectionMock: mockCollectionFirestore(collectionNames.users)
-      .collectionMock,
+    collectionMock,
   });
 
   const queryDocumentSnapshotMock = mock<
     FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>
   >();
 
+  const { refMock } = mockCollectionFromRef({ collectionMock });
+
+  when(refMock.id).thenReturn(id);
+
+  when(queryDocumentSnapshotMock.ref).thenCall(() =>
+    resolvableInstance(refMock)
+  );
   when(queryDocumentSnapshotMock.id).thenReturn(id);
 
   when(querySnapshotMock.docs).thenCall(() => [

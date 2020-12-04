@@ -30,7 +30,7 @@ export function createPersistenceAdapter() {
 }
 
 export async function createDatabaseHandler() {
-  const { persistenceAdapter } = createPersistenceAdapter();
+  const { persistenceAdapter, firestoreMock } = createPersistenceAdapter();
 
   const {
     mockedAttributesManager,
@@ -39,10 +39,12 @@ export async function createDatabaseHandler() {
 
   const persistentAttributesHolder: { attributes?: UserData } = {};
 
-  when(mockedAttributesManager.getPersistentAttributes()).thenCall(() =>
-    persistentAttributesHolder.attributes
-      ? persistentAttributesHolder.attributes
-      : persistenceAdapter.getAttributes(instanceRequestEnvelope)
+  when(mockedAttributesManager.getPersistentAttributes()).thenCall(async () =>
+    persistentAttributesHolder.attributes !== undefined
+      ? Promise.resolve(persistentAttributesHolder.attributes)
+      : (persistentAttributesHolder.attributes = await persistenceAdapter.getAttributes(
+          instanceRequestEnvelope
+        ))
   );
 
   when(mockedAttributesManager.setPersistentAttributes(anything())).thenCall(
@@ -62,6 +64,7 @@ export async function createDatabaseHandler() {
   const databaseHandler = Database.use(attributesManager);
 
   return {
+    firestoreMock,
     mockedAttributesManager,
     attributesManager,
     persistentAttributesHolder,
