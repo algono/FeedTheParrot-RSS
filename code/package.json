@@ -16,7 +16,7 @@
     "analyse": "npm run test:coverage && node analyse.js",
     "setup-ci": "echo \"{}\" > src/database/firebaseServiceAccountKey.json",
     "test": "jest --silent",
-    "test:coverage": "jest --clearCache && jest --coverage --silent",
+    "test:coverage": "jest --coverage --silent",
     "test:ci": "npm run setup-ci && npm run test -- --ci",
     "format": "prettier --write \"**/*.ts\"",
     "lint:init": "eslint --init",
@@ -26,7 +26,7 @@
     "build:init": "cd .. && sh ./code/scripts/init-build.sh",
     "build:ci": "npm run setup-ci && npm run build:minimal",
     "build:minimal": "npm run lint:check && npm run compile && npm run build:final",
-    "build:full": "npm run clean && npm run build:minimal && npm run build:install",
+    "build:full": "npm run clean:full && npm run build:skill-package && npm run build:minimal",
     "build": "npm run clean && npm run build:minimal",
     "rebuild": "npm run clean:full && npm run build:minimal",
     "rebuild:full": "npm run clean:full && npm run build:full"
@@ -61,7 +61,7 @@
     "prettier": "2.1.2",
     "rimraf": "^3.0.2",
     "sonarqube-scanner": "^2.7.0",
-    "ts-jest": "^26.4.3",
+    "ts-jest": "^26.4.4",
     "ts-mockito": "^2.6.1",
     "ts-node": "^9.0.0",
     "typescript": "^3.9.7"
