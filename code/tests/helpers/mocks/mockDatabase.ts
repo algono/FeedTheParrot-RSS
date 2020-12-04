@@ -1,3 +1,5 @@
+import { app, initializeApp } from 'firebase-admin';
+import { mocked } from 'ts-jest/utils';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Database, DatabaseHandler } from '../../../src/database/Database';
 import { FirebasePersistenceAdapter } from '../../../src/database/FirebasePersistenceAdapter';
@@ -12,8 +14,23 @@ export function mockDatabase() {
   return mockedDatabase;
 }
 
+export function createPersistenceAdapter() {
+  const appMock = mock<app.App>();
+
+  const firestoreMock = mock<FirebaseFirestore.Firestore>();
+  when(appMock.firestore()).thenCall(() => instance(firestoreMock));
+
+  mocked(initializeApp).mockImplementation(() => instance(appMock));
+
+  return {
+    persistenceAdapter: new FirebasePersistenceAdapter(),
+    appMock,
+    firestoreMock,
+  };
+}
+
 export async function createDatabaseHandler() {
-  const persistenceAdapter = new FirebasePersistenceAdapter();
+  const { persistenceAdapter } = createPersistenceAdapter();
 
   const {
     mockedAttributesManager,

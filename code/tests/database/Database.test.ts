@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase-admin';
 import { mocked } from 'ts-jest/utils';
-import { FirebasePersistenceAdapter } from '../../src/database/FirebasePersistenceAdapter';
+import { verify } from 'ts-mockito';
+import { createPersistenceAdapter } from '../helpers/mocks/mockDatabase';
 
 jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
@@ -12,9 +13,11 @@ jest.mock('firebase-admin', () => ({
 
 jest.mock('../../src/database/firebaseServiceAccountKey', () => null);
 
-test('Creating a new Firebase Persistence Adapter initializes the database', () => {
-  new FirebasePersistenceAdapter();
+test('Creating a new persistence adapter initializes the database', () => {
+  const { appMock } = createPersistenceAdapter();
+
   expect(mocked(initializeApp)).toHaveBeenCalled();
+  verify(appMock.firestore()).once();
 });
 
 describe('setAuthCode', () => {
