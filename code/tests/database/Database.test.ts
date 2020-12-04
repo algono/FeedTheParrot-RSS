@@ -10,13 +10,12 @@ import {
   mock,
   when,
 } from 'ts-mockito';
+import { Database } from '../../src/database/Database';
 import {
-  AuthCode,
   collectionNames,
-  Database,
   FirebasePersistenceAdapter,
-  UserData,
-} from '../../src/database/Database';
+} from '../../src/database/FirebasePersistenceAdapter';
+import { AuthCode, UserData } from '../../src/database/UserData';
 import { NoUserDataError } from '../../src/logic/Errors';
 import { allTranslationsFrom } from '../helpers/allTranslationsFrom';
 import { feedRecord } from '../helpers/fast-check/arbitraries/feed';
