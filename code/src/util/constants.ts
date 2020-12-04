@@ -22,4 +22,5 @@ export const EXTRA_LONG_PAUSE = '<break strength="x-strong"/>';
 export const PAUSE_BETWEEN_ITEMS = `${EXTRA_LONG_PAUSE}<audio src="soundbank://soundlibrary/computers/beeps_tones/beeps_tones_08"/>${EXTRA_LONG_PAUSE}`;
 
 // Other
+export const AUTH_CODE_LENGTH = 6;
 export const AUTH_CODE_TIME_TO_EXPIRE = 10 * 60 * 1000; // 10 minutes in milliseconds

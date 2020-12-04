@@ -1,13 +1,13 @@
-import {
-  RequestHandler,
-  getRequestType,
-  getIntentName,
-} from 'ask-sdk-core';
+import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
 
 import { randomBytes } from 'crypto';
 import { Database } from '../database/Database';
 
-import { AUTH_CODE_TIME_TO_EXPIRE, LONG_PAUSE } from '../util/constants';
+import {
+  AUTH_CODE_LENGTH,
+  AUTH_CODE_TIME_TO_EXPIRE,
+  LONG_PAUSE,
+} from '../util/constants';
 import { TFunction } from '../util/localization';
 
 export const AuthIntentHandler: RequestHandler = {
@@ -18,7 +18,7 @@ export const AuthIntentHandler: RequestHandler = {
     );
   },
   async handle(handlerInput) {
-    const {attributesManager} = handlerInput;
+    const { attributesManager } = handlerInput;
 
     const {
       t,
@@ -47,7 +47,7 @@ export const AuthIntentHandler: RequestHandler = {
 };
 
 function generateSixDigitCode() {
-  return (parseInt(randomBytes(4).toString('hex'), 16) % 1000000)
+  return (parseInt(randomBytes(4).toString('hex'), 16) % 10 ** AUTH_CODE_LENGTH)
     .toString()
-    .padStart(6, '0');
+    .padStart(AUTH_CODE_LENGTH, '0');
 }
