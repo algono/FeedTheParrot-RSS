@@ -11,7 +11,8 @@ import {
   when,
 } from 'ts-mockito';
 import { collectionNames } from '../../src/database/FirebasePersistenceAdapter';
-import { AuthCode, UserDocData } from '../../src/database/UserData';
+import { AuthCode, UserData, UserDocData } from '../../src/database/UserData';
+import { NoUserDataError } from '../../src/logic/Errors';
 import { authCodeString } from '../helpers/fast-check/arbitraries/misc';
 import {
   createDatabaseHandler,
@@ -138,7 +139,33 @@ describe('setAuthCode', () => {
 });
 
 describe('getUserData', () => {
-  test.todo('throws an error if the user does not exist');
+  test('throws an error if the user does not exist and the "throwIfUserWasNotFound" flag is true', async () => {
+    const { databaseHandler, firestoreMock } = await createDatabaseHandler();
+
+    mockUserRefId({ firestoreMock, id: null });
+
+    await expect(() =>
+      databaseHandler.getUserData({ throwIfUserWasNotFound: true })
+    ).rejects.toBeInstanceOf(NoUserDataError);
+  });
+
+  test('returns an UserData object with null feeds and feedNames if the user does not exist and the "throwIfUserWasNotFound" flag is false, null or undefined', async () => {
+    const flagStates: readonly boolean[] = [false, null, undefined] as const;
+    flagStates.forEach(async (throwIfUserWasNotFound) => {
+      const { databaseHandler, firestoreMock } = await createDatabaseHandler();
+
+      mockUserRefId({ firestoreMock, id: null });
+
+      const userData = await databaseHandler.getUserData({
+        throwIfUserWasNotFound,
+      });
+
+      expect(userData).toMatchObject<UserData>({
+        feeds: null,
+        feedNames: null,
+      });
+    });
+  });
 
   test.todo('retrieves user data (based on locale) and ref if it exists');
 });

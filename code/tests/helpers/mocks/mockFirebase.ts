@@ -106,6 +106,7 @@ export function mockUserRefId({
   });
 
   const { querySnapshotMock } = mockQuery({
+    empty: id === null,
     collectionMock,
   });
 
