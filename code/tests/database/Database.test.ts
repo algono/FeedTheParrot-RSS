@@ -1,18 +1,28 @@
+import { getUserId } from 'ask-sdk-core';
 import fc from 'fast-check';
 import { initializeApp } from 'firebase-admin';
 import { mocked } from 'ts-jest/utils';
-import { deepEqual, instance, verify, when } from 'ts-mockito';
+import {
+  anything,
+  capture,
+  deepEqual,
+  instance,
+  verify,
+  when,
+} from 'ts-mockito';
 import { collectionNames } from '../../src/database/FirebasePersistenceAdapter';
-import { AuthCode } from '../../src/database/UserData';
+import { AuthCode, UserDocData } from '../../src/database/UserData';
 import { authCodeString } from '../helpers/fast-check/arbitraries/misc';
 import {
   createDatabaseHandler,
+  CreateDatabaseHandlerResult,
   createPersistenceAdapter,
 } from '../helpers/mocks/mockDatabase';
 import {
   mockUserRefId,
   mockCollectionFirestore,
   mockRef,
+  mockQuery,
 } from '../helpers/mocks/mockFirebase';
 
 jest.mock('firebase-admin', () => ({
@@ -35,54 +45,96 @@ test('Creating a new persistence adapter initializes the database', () => {
 });
 
 describe('setAuthCode', () => {
-  test.todo('if the user does not exist, it creates a new one');
+  function testSetAuthCode(
+    callback: (
+      userId: string,
+      code: AuthCode,
+      isUserDataCached: boolean,
+      result: CreateDatabaseHandlerResult
+    ) => void | Promise<void>
+  ) {
+    return async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1 }),
+          fc.record<AuthCode, fc.RecordConstraints>(
+            {
+              code: authCodeString,
+              expirationDate: fc.date({ min: new Date() }),
+            },
+            {
+              withDeletedKeys: false,
+            }
+          ),
+          fc.boolean(),
+          async (userId, code: AuthCode, isUserDataCached) => {
+            const result = await createDatabaseHandler();
 
-  test('if the user exists, sets the code in a document with the same id as the user in auth codes collection', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.string({ minLength: 1 }),
-        fc.record<AuthCode, fc.RecordConstraints>(
-          {
-            code: authCodeString,
-            expirationDate: fc.date({ min: new Date() }),
-          },
-          {
-            withDeletedKeys: false,
+            if (isUserDataCached) {
+              result.persistentAttributesHolder.attributes = {
+                feeds: null,
+                feedNames: null,
+              };
+            }
+
+            await callback(userId, code, isUserDataCached, result);
           }
-        ),
-        fc.boolean(),
-        async (userId, code, isUserDataCached) => {
-          const {
-            databaseHandler,
-            firestoreMock,
-            persistentAttributesHolder,
-          } = await createDatabaseHandler();
+        )
+      );
+    };
+  }
 
-          if (isUserDataCached) {
-            persistentAttributesHolder.attributes = {
-              feeds: null,
-              feedNames: null,
-            };
-          }
+  test(
+    'if the user does not exist, it creates a new one',
+    testSetAuthCode(async (userId, code, _, result) => {
+      const { databaseHandler, firestoreMock } = result;
 
-          mockUserRefId({ firestoreMock, id: userId });
+      mocked(getUserId).mockReturnValue(userId);
 
-          const { collectionMock } = mockCollectionFirestore({
-            firestoreMock,
-            collectionPath: collectionNames.authCodes,
-          });
+      const { collectionMock } = mockCollectionFirestore({
+        firestoreMock,
+        collectionPath: collectionNames.users,
+      });
 
-          const refMock = mockRef();
+      mockQuery({ empty: true, collectionMock });
 
-          when(collectionMock.doc(userId)).thenCall(() => instance(refMock));
+      const { collectionMock: authCollectionMock } = mockCollectionFirestore({
+        firestoreMock,
+        collectionPath: collectionNames.authCodes,
+      });
 
-          await databaseHandler.setAuthCode(code);
+      when(authCollectionMock.doc(anything())).thenReturn(instance(mockRef()));
 
-          verify(refMock.set(deepEqual(code))).once();
-        }
-      )
-    );
-  });
+      await databaseHandler.setAuthCode(code);
+
+      verify(collectionMock.add(anything())).once();
+
+      const [userDocData] = capture(collectionMock.add).last();
+      expect(userDocData).toMatchObject<UserDocData>({ userId });
+    })
+  );
+
+  test(
+    'if the user exists, sets the code in a document with the same id as the user in auth codes collection',
+    testSetAuthCode(async (userId, code, _, result) => {
+      const { databaseHandler, firestoreMock } = result;
+
+      mockUserRefId({ firestoreMock, id: userId });
+
+      const { collectionMock } = mockCollectionFirestore({
+        firestoreMock,
+        collectionPath: collectionNames.authCodes,
+      });
+
+      const refMock = mockRef();
+
+      when(collectionMock.doc(userId)).thenCall(() => instance(refMock));
+
+      await databaseHandler.setAuthCode(code);
+
+      verify(refMock.set(deepEqual(code))).once();
+    })
+  );
 });
 
 describe('getUserData', () => {

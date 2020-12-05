@@ -1,3 +1,4 @@
+import { AttributesManager } from 'ask-sdk-core';
 import { app, initializeApp } from 'firebase-admin';
 import { mocked } from 'ts-jest/utils';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -29,7 +30,19 @@ export function createPersistenceAdapter() {
   };
 }
 
-export async function createDatabaseHandler() {
+export interface CreateDatabaseHandlerResult {
+  firestoreMock: FirebaseFirestore.Firestore;
+  mockedAttributesManager: AttributesManager;
+  attributesManager: AttributesManager;
+  persistentAttributesHolder: {
+    attributes?: UserData;
+  };
+  databaseHandler: DatabaseHandler;
+}
+
+export async function createDatabaseHandler(): Promise<
+  CreateDatabaseHandlerResult
+> {
   const { persistenceAdapter, firestoreMock } = createPersistenceAdapter();
 
   const {

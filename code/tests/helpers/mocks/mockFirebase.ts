@@ -15,7 +15,9 @@ export function mockCollection() {
     FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData>
   >();
 
-  when(collectionMock.add(anything())).thenResolve(null);
+  when(collectionMock.add(anything())).thenResolve(
+    resolvableInstance(mockRef())
+  );
 
   return collectionMock;
 }
@@ -36,7 +38,9 @@ export function mockCollectionFirestore({
   return { firestoreMock, collectionMock };
 }
 
-export function mockRef(): firestore.DocumentReference<firestore.DocumentData> {
+export function mockRef(): FirebaseFirestore.DocumentReference<
+  FirebaseFirestore.DocumentData
+> {
   return mock<
     FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
   >();
