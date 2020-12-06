@@ -1,6 +1,7 @@
 import { CustomSkillBuilder, SkillBuilders } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
 import { anyString, instance, mock, verify, when } from 'ts-mockito';
+import { FirebasePersistenceAdapter } from '../src/database/FirebasePersistenceAdapter';
 import { GenericErrorHandler } from '../src/intents/Error';
 import { ReadItemIntentHandler } from '../src/intents/Read/Item';
 import { IntentReflectorHandler } from '../src/intents/Reflector';
@@ -12,6 +13,9 @@ import { LocalizationRequestInterceptor } from '../src/util/localization';
 import { lastCallTo } from './helpers/jest/mockInstanceHelpers';
 
 jest.mock('ask-sdk-core');
+
+jest.mock('../src/database/Database');
+jest.mock('../src/database/FirebasePersistenceAdapter');
 
 const customSkillBuilderMock = mock<CustomSkillBuilder>();
 
@@ -40,6 +44,10 @@ const addRequestInterceptorsSpy = jest
 
 const addResponseInterceptorsSpy = jest
   .spyOn(customSkillBuilder, 'addResponseInterceptors')
+  .mockReturnThis();
+
+const withPersistenceAdapterSpy = jest
+  .spyOn(customSkillBuilder, 'withPersistenceAdapter')
   .mockReturnThis();
 
 when(customSkillBuilderMock.lambda()).thenReturn(null);
@@ -75,6 +83,14 @@ test('Custom skill has SaveResponseForRepeatingInterceptor', () => {
   expect(addResponseInterceptorsSpy).toHaveBeenCalled();
   expect(lastCallTo(addResponseInterceptorsSpy)).toContain(
     SaveResponseForRepeatingInterceptor
+  );
+});
+
+test('Custom skill has one Firebase Persistence Adapter', () => {
+  expect(withPersistenceAdapterSpy).toHaveBeenCalled();
+  expect(mocked(FirebasePersistenceAdapter)).toHaveBeenCalledTimes(1);
+  expect(lastCallTo(withPersistenceAdapterSpy)[0]).toBeInstanceOf(
+    FirebasePersistenceAdapter
   );
 });
 

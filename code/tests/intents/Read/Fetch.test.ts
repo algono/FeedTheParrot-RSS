@@ -21,7 +21,7 @@ import {
 } from '../../helpers/helperTests';
 import { mockHandlerInput } from '../../helpers/mocks/HandlerInputMocks';
 import { mockIntent } from '../../helpers/mocks/mockIntent';
-import { LaunchSessionAttributes } from '../../../src/intents/Launch';
+import { UserData } from '../../../src/database/UserData';
 
 jest.mock('ask-sdk-core');
 jest.mock('../../../src/util/feed/getItems');
@@ -37,8 +37,12 @@ describe('ReadIntent', () => {
       fc.asyncProperty(
         fc.array(fc.string(), { minLength: 1 }),
         async (feedNames) => {
-          const sessionAttributes: LaunchSessionAttributes = { feedNames };
-          const mocks = await mockHandlerInput({ sessionAttributes });
+          const mocks = await mockHandlerInput();
+
+          const userData: UserData = { feeds: null, feedNames };
+          when(
+            mocks.mockedAttributesManager.getPersistentAttributes()
+          ).thenResolve(userData);
 
           mocked(getSlotValue).mockReturnValue(undefined);
 
@@ -69,10 +73,12 @@ describe('ReadIntent', () => {
 
           const mocks = await mockHandlerInput({
             locale,
-            sessionAttributes: {
-              feedNames,
-            },
           });
+
+          const userData: UserData = { feeds: null, feedNames };
+          when(
+            mocks.mockedAttributesManager.getPersistentAttributes()
+          ).thenResolve(userData);
 
           mocked(getSlotValue).mockReturnValue(feedName);
 
@@ -149,18 +155,18 @@ describe('ReadIntent', () => {
           feedItems: FeedItems
         ) => {
           const sessionAttributes: {
-            feeds: { [x: string]: Feed };
-            feedNames: string[];
             readState?: ReadState;
-          } = {
-            feeds,
-            feedNames,
-          };
+          } = {};
 
           const mocks = await mockHandlerInput({
             locale,
             sessionAttributes,
           });
+
+          const userData: UserData = { feeds, feedNames };
+          when(
+            mocks.mockedAttributesManager.getPersistentAttributes()
+          ).thenResolve(userData);
 
           mocked(getLocale).mockReturnValue(locale);
 

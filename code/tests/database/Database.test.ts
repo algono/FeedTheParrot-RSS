@@ -1,25 +1,36 @@
+import { getLocale, getUserId } from 'ask-sdk-core';
 import fc from 'fast-check';
-import { firestore, initializeApp } from 'firebase-admin';
+import { initializeApp } from 'firebase-admin';
 import { mocked } from 'ts-jest/utils';
 import {
-  anyNumber,
-  anyString,
   anything,
   capture,
+  deepEqual,
   instance,
   mock,
+  resetCalls,
+  verify,
   when,
 } from 'ts-mockito';
-import {
-  AuthCode,
-  collectionNames,
-  Database,
-  UserData,
-} from '../../src/database/Database';
+import { collectionNames } from '../../src/database/FirebasePersistenceAdapter';
+import { AuthCode, UserData, UserDocData } from '../../src/database/UserData';
 import { NoUserDataError } from '../../src/logic/Errors';
-import { allTranslationsFrom } from '../helpers/allTranslationsFrom';
 import { feedRecord } from '../helpers/fast-check/arbitraries/feed';
-import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
+import { authCodeString } from '../helpers/fast-check/arbitraries/misc';
+import { availableLocales } from '../helpers/helperTests';
+import {
+  createDatabaseHandler,
+  CreateDatabaseHandlerResult,
+  createPersistenceAdapter,
+} from '../helpers/mocks/mockDatabase';
+import {
+  mockUserRefId,
+  mockCollectionFirestore,
+  mockRef,
+  mockQuery,
+  mockCollectionFromRef,
+  mockQueryDocumentSnapshot,
+} from '../helpers/mocks/mockFirebase';
 
 jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
@@ -31,266 +42,268 @@ jest.mock('firebase-admin', () => ({
 
 jest.mock('../../src/database/firebaseServiceAccountKey', () => null);
 
-function clearState() {
-  // Reset the database instance to avoid passing state between tests
-  // (it might not be the best way to do it, but it is the only one I have found for now)
-  Database['_instance'] = undefined;
-}
+jest.mock('ask-sdk-core');
 
-beforeEach(clearState);
+test('Creating a new persistence adapter initializes the database', () => {
+  const { appMock } = createPersistenceAdapter();
 
-test('Getting a Database instance initializes the database', () => {
-  Database.instance;
   expect(mocked(initializeApp)).toHaveBeenCalled();
+  verify(appMock.firestore()).once();
 });
 
-function mockCollection() {
-  const collectionMock = mock<
-    FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData>
-  >();
+describe('setAuthCode', () => {
+  function testSetAuthCode(
+    callback: (
+      userId: string,
+      code: AuthCode,
+      isUserDataCached: boolean,
+      result: CreateDatabaseHandlerResult
+    ) => void | Promise<void>
+  ) {
+    return async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1 }),
+          fc.record<AuthCode, fc.RecordConstraints>(
+            {
+              code: authCodeString,
+              expirationDate: fc.date({ min: new Date() }),
+            },
+            {
+              withDeletedKeys: false,
+            }
+          ),
+          fc.boolean(),
+          async (userId, code: AuthCode, isUserDataCached) => {
+            const result = await createDatabaseHandler();
 
-  when(collectionMock.add(anything())).thenResolve(null);
+            if (isUserDataCached) {
+              result.persistentAttributesHolder.attributes = {
+                feeds: null,
+                feedNames: null,
+              };
+            }
 
-  return collectionMock;
-}
+            await callback(userId, code, isUserDataCached, result);
+          }
+        )
+      );
+    };
+  }
 
-function mockCollectionFirestore() {
-  const collectionMock = mockCollection();
+  test(
+    'if the user does not exist, it creates a new one',
+    testSetAuthCode(async (userId, code, _, result) => {
+      const { databaseHandler, firestoreMock } = result;
 
-  const firestoreMock = mock<FirebaseFirestore.Firestore>();
+      mocked(getUserId).mockReturnValue(userId);
 
-  when(firestoreMock.collection(anyString())).thenCall(() =>
-    resolvableInstance(collectionMock)
+      const { collectionMock } = mockCollectionFirestore({
+        firestoreMock,
+        collectionPath: collectionNames.users,
+      });
+
+      mockQuery({ empty: true, queryMock: collectionMock });
+
+      const { collectionMock: authCollectionMock } = mockCollectionFirestore({
+        firestoreMock,
+        collectionPath: collectionNames.authCodes,
+      });
+
+      when(authCollectionMock.doc(anything())).thenReturn(instance(mockRef()));
+
+      await databaseHandler.setAuthCode(code);
+
+      verify(collectionMock.add(anything())).once();
+
+      const [userDocData] = capture(collectionMock.add).last();
+      expect(userDocData).toMatchObject<UserDocData>({ userId });
+    })
   );
 
-  mocked(firestore).mockImplementation(() => instance(firestoreMock));
-  return { firestoreMock, collectionMock };
-}
+  test(
+    'if the user exists, sets the code in a document with the same id as the user in auth codes collection',
+    testSetAuthCode(async (userId, code, _, result) => {
+      const { databaseHandler, firestoreMock } = result;
 
-function mockCollectionFromRef() {
-  const collectionMock = mockCollection();
+      mockUserRefId({ firestoreMock, id: userId });
 
-  const refMock = mock<
-    FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
-  >();
+      const { collectionMock } = mockCollectionFirestore({
+        firestoreMock,
+        collectionPath: collectionNames.authCodes,
+      });
 
-  when(refMock.collection(anyString())).thenCall(() =>
-    resolvableInstance(collectionMock)
+      const refMock = mockRef();
+
+      when(collectionMock.doc(userId)).thenCall(() => instance(refMock));
+
+      await databaseHandler.setAuthCode(code);
+
+      verify(refMock.set(deepEqual(code))).once();
+    })
   );
 
-  return { refMock, collectionMock };
-}
+  test('If there is an unhandled error while retrieving the user id from the database (in the process of saving the auth code), the error is thrown', async () => {
+    const {
+      databaseHandler,
+      firestoreMock,
+      persistentAttributesHolder,
+    } = await createDatabaseHandler();
 
-function mockQuery({
-  empty,
-  collectionMock,
-}: {
-  empty: boolean;
-  collectionMock: FirebaseFirestore.CollectionReference<
-    FirebaseFirestore.DocumentData
-  >;
-}) {
-  when(collectionMock.limit(anyNumber())).thenCall(() =>
-    resolvableInstance(collectionMock)
-  );
+    // To prevent the user id being retrieved when getting persistent attributes, we cache some null values
+    persistentAttributesHolder.attributes = {
+      feeds: null,
+      feedNames: null,
+    };
 
-  when(collectionMock.orderBy(anyString())).thenCall(() =>
-    resolvableInstance(collectionMock)
-  );
+    const expectedError = new Error();
+    when(firestoreMock.collection(anything())).thenThrow(expectedError);
 
-  const querySnapshotMock = mock<
-    FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>
-  >();
+    await expect(() =>
+      databaseHandler.setAuthCode(instance(mock<AuthCode>()))
+    ).rejects.toBe(expectedError);
+  });
 
-  when(querySnapshotMock.empty).thenReturn(empty);
+  test('If the auth code is null or undefined, the auth codes collection in the database is never used/called', async () => {
+    const authCodeValues: readonly AuthCode[] = [null, undefined] as const;
 
-  when(collectionMock.get()).thenCall(() =>
-    Promise.resolve(resolvableInstance(querySnapshotMock))
-  );
+    for (const authCode of authCodeValues) {
+      const {
+        databaseHandler,
+        firestoreMock,
+        persistentAttributesHolder,
+      } = await createDatabaseHandler();
 
-  when(collectionMock.where(anything(), anything(), anything())).thenCall(() =>
-    instance(collectionMock)
-  );
+      persistentAttributesHolder.attributes = {
+        feeds: null,
+        feedNames: null,
+      };
 
-  return { queryMock: collectionMock, querySnapshotMock };
-}
+      mockUserRefId({ firestoreMock });
 
-function testIfAddedToCollectionFn<T>(
-  expectedCollectionName: string,
-  method: { (data: T): Promise<any> },
-  recordModel: { [K in keyof T]: fc.Arbitrary<T[K]> }
-) {
-  return async () => {
+      when(firestoreMock.collection(collectionNames.authCodes)).thenCall(() => {
+        throw new Error(
+          'The auth codes collection in the database was used/called'
+        );
+      });
+
+      await databaseHandler.setAuthCode(authCode);
+    }
+  });
+});
+
+describe('getUserData', () => {
+  test('throws an error if the user does not exist and the "throwIfUserWasNotFound" flag is true', async () => {
+    const { databaseHandler, firestoreMock } = await createDatabaseHandler();
+
+    mockUserRefId({ firestoreMock, id: null });
+
+    await expect(() =>
+      databaseHandler.getUserData({ throwIfUserWasNotFound: true })
+    ).rejects.toBeInstanceOf(NoUserDataError);
+  });
+
+  test('returns an UserData object with null feeds and feedNames if the user does not exist and the "throwIfUserWasNotFound" flag is false, null or undefined', async () => {
+    const flagStates: readonly boolean[] = [false, null, undefined] as const;
+    for (const throwIfUserWasNotFound of flagStates) {
+      const { databaseHandler, firestoreMock } = await createDatabaseHandler();
+
+      mockUserRefId({ firestoreMock, id: null });
+
+      const userData = await databaseHandler.getUserData({
+        throwIfUserWasNotFound,
+      });
+
+      expect(userData).toMatchObject<UserData>({
+        feeds: null,
+        feedNames: null,
+      });
+    }
+  });
+
+  test('If it is called a second time and the first time the user did not exist, it does not call the database to check it again', async () => {
+    const { databaseHandler, firestoreMock } = await createDatabaseHandler();
+
+    mockUserRefId({ firestoreMock, id: null });
+
+    await expect(() =>
+      databaseHandler.getUserData({
+        throwIfUserWasNotFound: true,
+      })
+    ).rejects.toBeInstanceOf(NoUserDataError);
+
+    resetCalls(firestoreMock);
+
+    await expect(() =>
+      databaseHandler.getUserData({
+        throwIfUserWasNotFound: true,
+      })
+    ).rejects.toBeInstanceOf(NoUserDataError);
+
+    verify(firestoreMock.collection(anything())).never();
+  });
+
+  test('retrieves user data (based on locale) and ref if it exists', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.record<T, fc.RecordConstraints>(recordModel, {
-          withDeletedKeys: false,
-        }),
-        async (data: T) => {
-          clearState();
+        fc.string({ minLength: 1 }),
+        fc.boolean(),
+        fc.constantFrom(...availableLocales),
+        fc.array(feedRecord()),
+        async (userId, throwIfUserWasNotFound, locale, expectedFeeds) => {
+          mocked(getLocale).mockReturnValue(locale);
 
-          const { firestoreMock, collectionMock } = mockCollectionFirestore();
+          const {
+            databaseHandler,
+            firestoreMock,
+            t,
+          } = await createDatabaseHandler({ locale });
 
-          await method(data);
+          const nameField = t('FEED_NAME_FIELD');
 
-          const [collectionName] = capture(firestoreMock.collection).last();
+          const feedSnapshots = expectedFeeds.map((feed) => {
+            const { name, ...data } = feed;
+            data[nameField] = name;
 
-          expect(collectionName).toEqual(expectedCollectionName);
+            const snapshot = mockQueryDocumentSnapshot();
 
-          const [addedData] = capture(collectionMock.add).last();
+            when(snapshot.data()).thenReturn(data);
 
-          expect(addedData).toEqual(data);
+            return instance(snapshot);
+          });
+
+          const { refMock } = mockUserRefId({ firestoreMock, id: userId });
+
+          const { collectionMock } = mockCollectionFromRef({ refMock });
+
+          const { queryMock, querySnapshotMock } = mockQuery({
+            queryMock: collectionMock,
+          });
+
+          when(querySnapshotMock.forEach(anything())).thenCall((callback) =>
+            feedSnapshots.forEach(callback)
+          );
+
+          const { feeds, feedNames } = await databaseHandler.getUserData({
+            throwIfUserWasNotFound,
+          });
+
+          const [collectionName] = capture(refMock.collection).last();
+          expect(collectionName).toEqual(collectionNames.feeds);
+
+          const [orderByField] = capture(queryMock.orderBy).last();
+          expect(orderByField).toEqual(nameField);
+
+          expect(feeds).toMatchObject(
+            // object with properties like {"feed.name": "feed"}
+            expectedFeeds.reduce((acc, value) => {
+              acc[value.name] = value;
+              return acc;
+            }, {})
+          );
+          expect(feedNames).toEqual(expectedFeeds.map((feed) => feed.name));
         }
       )
     );
-  };
-}
-
-test(
-  'addAuthCode adds code to auth codes collection',
-  testIfAddedToCollectionFn<AuthCode>(
-    collectionNames.authCodes,
-    (data) => Database.instance.addAuthCode(data),
-    {
-      uid: fc.string(),
-      code: fc.string(),
-      expirationDate: fc.date({ min: new Date() }),
-    }
-  )
-);
-
-test('getUserData throws an error if the user does not exist', async () => {
-  await fc.assert(
-    fc.asyncProperty(fc.string(), async (userId) => {
-      clearState();
-      mockQuery({
-        empty: true,
-        collectionMock: mockCollectionFirestore().collectionMock,
-      });
-
-      await expect(() =>
-        Database.instance.getUserData(userId)
-      ).rejects.toBeInstanceOf(NoUserDataError);
-    })
-  );
-});
-
-test('getUserData retrieves user data and ref if it exists', async () => {
-  await fc.assert(
-    fc.asyncProperty(
-      fc.record<UserData, fc.RecordConstraints>(
-        { userId: fc.string() },
-        { withDeletedKeys: false }
-      ),
-      async (expectedUserData: UserData) => {
-        clearState();
-
-        const { querySnapshotMock } = mockQuery({
-          empty: false,
-          collectionMock: mockCollectionFirestore().collectionMock,
-        });
-
-        const queryDocumentSnapshotMock = mock<
-          FirebaseFirestore.QueryDocumentSnapshot<
-            FirebaseFirestore.DocumentData
-          >
-        >();
-
-        const documentReferenceMock = mock<
-          FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
-        >();
-
-        when(queryDocumentSnapshotMock.ref).thenReturn(documentReferenceMock);
-
-        when(queryDocumentSnapshotMock.data()).thenReturn(expectedUserData);
-
-        when(querySnapshotMock.docs).thenCall(() => [
-          instance(queryDocumentSnapshotMock),
-        ]);
-
-        const { userData, userDataRef } = await Database.instance.getUserData(
-          expectedUserData.userId
-        );
-
-        expect(userData).toStrictEqual(expectedUserData);
-
-        /**
-         * Equality check done this way because something like
-         * 'expect(userDataRef).toBe(documentReferenceMock)'
-         * throws a weird exception if it fails, due to the mock being a proxy
-         * It seems to be an issue with jest, so this is a fine workaround
-         */
-        expect(userDataRef === documentReferenceMock).toBe(true);
-      }
-    )
-  );
-});
-
-test(
-  'Creating a new user adds user data to users collection',
-  testIfAddedToCollectionFn<UserData>(
-    collectionNames.users,
-    (data) => Database.instance.createNewUser(data),
-    { userId: fc.string() }
-  )
-);
-
-test('getFeedsFromUser gets feeds and feedNames based on the name field', async () => {
-  await fc.assert(
-    fc.asyncProperty(
-      fc.constantFrom(
-        ...(await allTranslationsFrom<string>('FEED_NAME_FIELD'))
-      ),
-      fc.array(feedRecord()),
-      async (nameField, expectedFeeds) => {
-        clearState();
-
-        const feedSnapshots = expectedFeeds.map((feed) => {
-          const { name, ...data } = feed;
-          data[nameField] = name;
-
-          const snapshot = mock<
-            FirebaseFirestore.QueryDocumentSnapshot<
-              FirebaseFirestore.DocumentData
-            >
-          >();
-
-          when(snapshot.data()).thenReturn(data);
-
-          return instance(snapshot);
-        });
-
-        const { refMock, collectionMock } = mockCollectionFromRef();
-
-        const { queryMock, querySnapshotMock } = mockQuery({
-          empty: false,
-          collectionMock,
-        });
-
-        when(querySnapshotMock.forEach(anything())).thenCall((callback) =>
-          feedSnapshots.forEach(callback)
-        );
-
-        const { feeds, feedNames } = await Database.instance.getFeedsFromUser(
-          resolvableInstance(refMock),
-          nameField
-        );
-
-        const [collectionName] = capture(refMock.collection).last();
-        expect(collectionName).toEqual(collectionNames.feeds);
-
-        const [orderByField] = capture(queryMock.orderBy).last();
-        expect(orderByField).toEqual(nameField);
-
-        expect(feeds).toMatchObject(
-          // object with properties like {"feed.name": "feed"}
-          expectedFeeds.reduce((acc, value) => {
-            acc[value.name] = value;
-            return acc;
-          }, {})
-        );
-        expect(feedNames).toEqual(expectedFeeds.map((feed) => feed.name));
-      }
-    )
-  );
+  });
 });

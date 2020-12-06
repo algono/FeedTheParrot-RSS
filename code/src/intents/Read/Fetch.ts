@@ -8,10 +8,10 @@ import {
 } from 'ask-sdk-core';
 import { IntentRequest } from 'ask-sdk-model';
 import { TFunction } from 'i18next';
-import { Feed } from '../../logic/Feed';
 import { getItems } from '../../util/feed/getItems';
 import { feedSlotName } from '../../util/constants';
 import { ReadState, ReadItemIntentHandler } from './Item';
+import { Database } from '../../database/Database';
 
 export const ReadIntentHandler: RequestHandler = {
   canHandle(handlerInput) {
@@ -32,8 +32,8 @@ export const ReadIntentHandler: RequestHandler = {
     const feedName = getSlotValue(requestEnvelope, feedSlotName);
     console.log('(ReadIntent) Feed name received: ' + feedName);
 
-    const sessionAttributes = attributesManager.getSessionAttributes();
-    const feedNames: string[] = sessionAttributes.feedNames;
+    const userData = await Database.use(attributesManager).getUserData();
+    const feedNames = userData.feedNames;
 
     console.log('(ReadIntent) Feed names: ' + JSON.stringify(feedNames));
 
@@ -67,7 +67,7 @@ export const ReadIntentHandler: RequestHandler = {
 
     const locale = getLocale(requestEnvelope);
 
-    const feed: Feed = sessionAttributes.feeds[feedName];
+    const feed = userData.feeds[feedName];
 
     const items = await getItems(feed, locale);
 
@@ -79,9 +79,9 @@ export const ReadIntentHandler: RequestHandler = {
       currentIndex: 0,
     };
 
-    sessionAttributes.readState = readState;
+    const sessionAttributes = attributesManager.getSessionAttributes();
 
-    attributesManager.setSessionAttributes(sessionAttributes);
+    sessionAttributes.readState = readState;
 
     console.log(
       'Session attributes in ReadIntent: ' + JSON.stringify(sessionAttributes)

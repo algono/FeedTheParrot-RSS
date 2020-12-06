@@ -1,16 +1,18 @@
 import { AttributesManager, HandlerInput, ResponseBuilder } from 'ask-sdk-core';
-import { Response, ui } from 'ask-sdk-model';
+import { RequestEnvelope, Response, ui } from 'ask-sdk-model';
 import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import { init, TFunction } from '../../../src/util/localization';
 import { resolvableInstance } from '../ts-mockito/resolvableInstance';
 
 export interface HandlerInputMocks {
   mockedHandlerInput: HandlerInput;
+  mockedRequestEnvelope: RequestEnvelope;
   mockedAttributesManager: AttributesManager;
   mockedResponseBuilder: ResponseBuilder;
   mockedResponse?: Response;
 
   instanceHandlerInput: HandlerInput;
+  instanceRequestEnvelope: RequestEnvelope;
   instanceAttributesManager: AttributesManager;
   instanceResponseBuilder: ResponseBuilder;
   instanceResponse?: Response;
@@ -70,7 +72,10 @@ export async function mockHandlerInput({
     mockedAttributesManager.setSessionAttributes(anything())
   ).thenCall(() => {});
 
-  when(mockedHandlerInput.requestEnvelope).thenReturn(null);
+  const mockedRequestEnvelope = mock<RequestEnvelope>();
+  const instanceRequestEnvelope = instance(mockedRequestEnvelope)
+
+  when(mockedHandlerInput.requestEnvelope).thenReturn(instanceRequestEnvelope);
 
   const instanceAttributesManager = instance(mockedAttributesManager);
 
@@ -115,11 +120,13 @@ export async function mockHandlerInput({
 
   const mocks: HandlerInputMocks = {
     mockedHandlerInput,
+    mockedRequestEnvelope,
     mockedAttributesManager,
     mockedResponseBuilder,
     mockedResponse,
 
     instanceHandlerInput,
+    instanceRequestEnvelope,
     instanceAttributesManager,
     instanceResponseBuilder,
     instanceResponse,

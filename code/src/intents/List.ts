@@ -1,4 +1,5 @@
 import { RequestHandler, getRequestType, getIntentName } from 'ask-sdk-core';
+import { Database } from '../database/Database';
 import { TFunction } from '../util/localization';
 
 export const ListIntentHandler: RequestHandler = {
@@ -8,19 +9,20 @@ export const ListIntentHandler: RequestHandler = {
       getIntentName(handlerInput.requestEnvelope) === 'ListIntent'
     );
   },
-  handle(handlerInput) {
+  async handle(handlerInput) {
+    const { attributesManager, responseBuilder } = handlerInput;
     const {
       t,
     }: {
       t?: TFunction;
-    } = handlerInput.attributesManager.getRequestAttributes();
+    } = attributesManager.getRequestAttributes();
 
     const feedListMessage = t('FEED_LIST_MSG');
     const feedListEmptyMessage = t('FEED_LIST_EMPTY_MSG');
     const feedListReprompt = t('REPROMPT_MSG');
 
-    const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-    const feedNames: string[] = sessionAttributes.feedNames;
+    const userData = await Database.use(attributesManager).getUserData();
+    const feedNames: string[] = userData.feedNames;
 
     console.log('(ListIntent) Feed names: ' + JSON.stringify(feedNames));
 
@@ -29,7 +31,7 @@ export const ListIntentHandler: RequestHandler = {
         ? feedListMessage + feedNames.join(', ') + '. '
         : `${feedListEmptyMessage} `) + feedListReprompt;
 
-    return handlerInput.responseBuilder
+    return responseBuilder
       .speak(speakOutput)
       .withSimpleCard(
         feedListMessage,
