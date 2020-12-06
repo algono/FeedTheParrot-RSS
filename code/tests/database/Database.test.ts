@@ -7,6 +7,7 @@ import {
   capture,
   deepEqual,
   instance,
+  mock,
   resetCalls,
   verify,
   when,
@@ -141,6 +142,54 @@ describe('setAuthCode', () => {
       verify(refMock.set(deepEqual(code))).once();
     })
   );
+
+  test('If there is an unhandled error while retrieving the user id from the database (in the process of saving the auth code), the error is thrown', async () => {
+    const {
+      databaseHandler,
+      firestoreMock,
+      persistentAttributesHolder,
+    } = await createDatabaseHandler();
+
+    // To prevent the user id being retrieved when getting persistent attributes, we cache some null values
+    persistentAttributesHolder.attributes = {
+      feeds: null,
+      feedNames: null,
+    };
+
+    const expectedError = new Error();
+    when(firestoreMock.collection(anything())).thenThrow(expectedError);
+
+    await expect(() =>
+      databaseHandler.setAuthCode(instance(mock<AuthCode>()))
+    ).rejects.toBe(expectedError);
+  });
+
+  test('If the auth code is null or undefined, the auth codes collection in the database is never used/called', async () => {
+    const authCodeValues: readonly AuthCode[] = [null, undefined] as const;
+
+    for (const authCode of authCodeValues) {
+      const {
+        databaseHandler,
+        firestoreMock,
+        persistentAttributesHolder,
+      } = await createDatabaseHandler();
+
+      persistentAttributesHolder.attributes = {
+        feeds: null,
+        feedNames: null,
+      };
+
+      mockUserRefId({ firestoreMock });
+
+      when(firestoreMock.collection(collectionNames.authCodes)).thenCall(() => {
+        throw new Error(
+          'The auth codes collection in the database was used/called'
+        );
+      });
+
+      await databaseHandler.setAuthCode(authCode);
+    }
+  });
 });
 
 describe('getUserData', () => {
@@ -156,7 +205,7 @@ describe('getUserData', () => {
 
   test('returns an UserData object with null feeds and feedNames if the user does not exist and the "throwIfUserWasNotFound" flag is false, null or undefined', async () => {
     const flagStates: readonly boolean[] = [false, null, undefined] as const;
-    flagStates.forEach(async (throwIfUserWasNotFound) => {
+    for (const throwIfUserWasNotFound of flagStates) {
       const { databaseHandler, firestoreMock } = await createDatabaseHandler();
 
       mockUserRefId({ firestoreMock, id: null });
@@ -169,7 +218,7 @@ describe('getUserData', () => {
         feeds: null,
         feedNames: null,
       });
-    });
+    }
   });
 
   test('If it is called a second time and the first time the user did not exist, it does not call the database to check it again', async () => {
