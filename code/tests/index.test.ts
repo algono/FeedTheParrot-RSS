@@ -1,7 +1,7 @@
 import { CustomSkillBuilder, SkillBuilders } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
 import { anyString, instance, mock, verify, when } from 'ts-mockito';
-import { FirebasePersistenceAdapter } from '../src/database/Database';
+import { FirebasePersistenceAdapter } from '../src/database/FirebasePersistenceAdapter';
 import { GenericErrorHandler } from '../src/intents/Error';
 import { ReadItemIntentHandler } from '../src/intents/Read/Item';
 import { IntentReflectorHandler } from '../src/intents/Reflector';

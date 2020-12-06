@@ -3,15 +3,17 @@ import { testCanHandle } from '../helpers/helperTests';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 
-import { GetUserDataOptions, UserData } from '../../src/database/Database';
+import { GetUserDataOptions } from '../../src/database/Database';
 
-jest.mock('ask-sdk-core');
 import { dialog, Directive } from 'ask-sdk-model';
 import fc from 'fast-check';
 import { mockDatabase } from '../helpers/mocks/mockDatabase';
 import { Feed } from '../../src/logic/Feed';
 import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
 import { NoUserDataError } from '../../src/logic/Errors';
+import { UserData } from '../../src/database/UserData';
+
+jest.mock('ask-sdk-core');
 
 describe('Launch request', () => {
   testCanHandle({
