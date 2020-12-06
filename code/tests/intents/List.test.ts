@@ -1,9 +1,10 @@
-import { capture } from 'ts-mockito';
+import { capture, when } from 'ts-mockito';
 import { ListIntentHandler } from '../../src/intents/List';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
 import fc from 'fast-check';
 import { escapeRegex } from '../helpers/escapeRegex';
+import { UserData } from '../../src/database/UserData';
 
 jest.mock('ask-sdk-core');
 
@@ -15,10 +16,14 @@ describe('List intent', () => {
   )(async (locale) => {
     const mocks = await mockHandlerInput({
       locale,
-      sessionAttributes: { feedNames: [] },
     });
 
-    ListIntentHandler.handle(mocks.instanceHandlerInput);
+    const userData: UserData = { feeds: null, feedNames: [] };
+    when(mocks.mockedAttributesManager.getPersistentAttributes()).thenResolve(
+      userData
+    );
+
+    await ListIntentHandler.handle(mocks.instanceHandlerInput);
 
     const [responseSpeakOutput] = capture(
       mocks.mockedResponseBuilder.speak
@@ -34,22 +39,24 @@ describe('List intent', () => {
   });
 
   testInAllLocales('shows all feeds')(async (locale) => {
-    const sessionAttributes: { feedNames?: string[] } = {};
-
     const mocks = await mockHandlerInput({
       locale,
-      sessionAttributes: sessionAttributes,
     });
 
-    fc.assert(
-      fc.property(
+    const userData: UserData = { feeds: null, feedNames: null };
+    when(mocks.mockedAttributesManager.getPersistentAttributes()).thenResolve(
+      userData
+    );
+
+    await fc.assert(
+      fc.asyncProperty(
         // Allow only non-empty arrays (we have another test for empty ones)
         fc.array(fc.string(), { minLength: 1 }),
 
-        (feedNames) => {
-          sessionAttributes.feedNames = feedNames;
+        async (feedNames) => {
+          userData.feedNames = feedNames;
 
-          ListIntentHandler.handle(mocks.instanceHandlerInput);
+          await ListIntentHandler.handle(mocks.instanceHandlerInput);
 
           const [responseSpeakOutput] = capture(
             mocks.mockedResponseBuilder.speak
