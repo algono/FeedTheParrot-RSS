@@ -1,0 +1,31 @@
+{
+  "translation": {
+    "WELCOME_MSG": "Bienvenido, puedes pedirme que te lea una feed o que te diga la lista. ¿Cuál quieres probar?",
+    "FEED_LIST_MSG": "Esta es la lista de feeds disponibles: ",
+    "FEED_LIST_EMPTY_MSG": "No hay ninguna feed disponible. Añade una a través de la app de al loro.",
+    "REPROMPT_MSG": "¿Qué quieres que haga ahora?",
+    "NO_FEED_MSG": "Lo siento, no sé cuál es esa feed. Volvamos a intentarlo.",
+    "HELP_MSG": "Puedes pedirme que te lea una feed o que te diga la lista de feeds disponibles. ¿Cómo puedo ayudar?",
+    "GOODBYE_MSG": "¡Hasta pronto!",
+    "REFLECTOR_MSG": "Acabas de invocar el intent {{intent}}",
+    "FALLBACK_MSG": "Lo siento, no lo sé.",
+    "ERROR_MSG": "Lo siento, ha habido un error.",
+    "TRY_AGAIN_MSG": "Por favor, vuelva a intentarlo.",
+    "FEED_TOO_LONG_ERROR_MSG": "Lo siento, la feed es demasiado larga; no he podido procesarla. Por favor, indica un límite de elementos para la feed en la app de al loro para acortarla.",
+    "INVALID_URL_ERROR_MSG": "Lo siento, la URL de la feed no es válida.",
+    "NO_FEED_ERROR_MSG": "Lo siento, no he encontrado ninguna feed en esta URL.",
+    "INVALID_FEED_URL_ERROR_MSG": "Por favor, ve a la app de Al Loro y comprueba que la URL sea correcta.",
+    "NOT_IMPLEMENTED_MSG": "Lo siento, esta función aún no ha sido implementada. Inténtalo de nuevo más tarde.",
+    "AMPERSAND": "y",
+    "DEFAULT_VOICE": "Enrique",
+    "DEFAULT_VOICE_LOCALE": "es-ES",
+    "READING_FEED": "Vale. Leyendo la feed \"{{feed}}\":",
+    "CONFIRMATION_CONTINUE_READING_FEED": "¿Sigo leyendo?",
+    "CONFIRMATION_GOTO_NEXT_FEED_ITEM": "¿Paso al siguiente?",
+    "END_READING_FEED": "Y eso es todo por ahora.",
+    "EMPTY_FEED_MSG": "¡Oh! La feed está vacía.",
+    "FEED_NAME_FIELD": "name-es",
+    "AUTH_PRE_CODE_MSG": "El código es el siguiente:",
+    "AUTH_EXPLANATION_MSG": "Utiliza este código en la app de al loro para iniciar sesión."
+  }
+}
