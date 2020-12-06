@@ -7,6 +7,7 @@ import {
   capture,
   deepEqual,
   instance,
+  resetCalls,
   verify,
   when,
 } from 'ts-mockito';
@@ -165,6 +166,28 @@ describe('getUserData', () => {
         feedNames: null,
       });
     });
+  });
+
+  test('If it is called a second time and the first time the user did not exist, it does not call the database to check it again', async () => {
+    const { databaseHandler, firestoreMock } = await createDatabaseHandler();
+
+    mockUserRefId({ firestoreMock, id: null });
+
+    await expect(() =>
+      databaseHandler.getUserData({
+        throwIfUserWasNotFound: true,
+      })
+    ).rejects.toBeInstanceOf(NoUserDataError);
+
+    resetCalls(firestoreMock);
+
+    await expect(() =>
+      databaseHandler.getUserData({
+        throwIfUserWasNotFound: true,
+      })
+    ).rejects.toBeInstanceOf(NoUserDataError);
+
+    verify(firestoreMock.collection(anything())).never();
   });
 
   test.todo('retrieves user data (based on locale) and ref if it exists');
