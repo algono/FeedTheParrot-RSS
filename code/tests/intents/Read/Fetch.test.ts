@@ -2,7 +2,15 @@ import { getSlotValue, getLocale } from 'ask-sdk-core';
 import { Slot, SlotConfirmationStatus } from 'ask-sdk-model';
 import fc from 'fast-check';
 import { mocked } from 'ts-jest/utils';
-import { anyString, instance, when, spy, anything, verify } from 'ts-mockito';
+import {
+  anyString,
+  instance,
+  when,
+  spy,
+  anything,
+  verify,
+  capture,
+} from 'ts-mockito';
 import { ReadIntentHandler } from '../../../src/intents/Read/Fetch';
 import {
   ReadState,
@@ -31,6 +39,29 @@ describe('ReadIntent', () => {
     handler: ReadIntentHandler,
     intentName: 'ReadIntent',
   });
+
+  testInAllLocales('If there are no feeds available, warn the user')(
+    async (locale) => {
+      const feedNamesValues: readonly string[][] = [undefined, null, []];
+
+      for (const feedNames of feedNamesValues) {
+        const mocks = await mockHandlerInput({ locale });
+
+        const userData: UserData = { feeds: null, feedNames };
+        when(
+          mocks.mockedAttributesManager.getPersistentAttributes()
+        ).thenResolve(userData);
+
+        mocked(getSlotValue).mockReturnValue(undefined);
+
+        await ReadIntentHandler.handle(mocks.instanceHandlerInput);
+
+        const [speakOutput] = capture(mocks.mockedResponseBuilder.speak).last();
+
+        expect(speakOutput).toContain(mocks.t('FEED_LIST_EMPTY_MSG'));
+      }
+    }
+  );
 
   test('If the feed name has not been received yet, let Alexa continue the dialogue', () =>
     fc.assert(
