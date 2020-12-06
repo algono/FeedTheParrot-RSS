@@ -15,6 +15,7 @@ import { lastCallTo } from './helpers/jest/mockInstanceHelpers';
 jest.mock('ask-sdk-core');
 
 jest.mock('../src/database/Database');
+jest.mock('../src/database/FirebasePersistenceAdapter');
 
 const customSkillBuilderMock = mock<CustomSkillBuilder>();
 
