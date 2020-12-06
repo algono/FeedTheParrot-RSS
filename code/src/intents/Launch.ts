@@ -5,10 +5,6 @@ import { NoUserDataError } from '../logic/Errors';
 
 import { TFunction } from '../util/localization';
 
-export interface LaunchSessionAttributes {
-  nameField: string;
-}
-
 export const LaunchRequestHandler: RequestHandler = {
   canHandle(handlerInput) {
     return getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
