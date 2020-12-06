@@ -2,7 +2,7 @@ import { capture } from 'ts-mockito';
 import { ListIntentHandler } from '../../src/intents/List';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
 import { testInAllLocales, testIntentCanHandle } from '../helpers/helperTests';
-import * as fc from 'fast-check';
+import fc from 'fast-check';
 import { escapeRegex } from '../helpers/escapeRegex';
 
 jest.mock('ask-sdk-core');
