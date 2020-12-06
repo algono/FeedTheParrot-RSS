@@ -5,6 +5,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Database, DatabaseHandler } from '../../../src/database/Database';
 import { FirebasePersistenceAdapter } from '../../../src/database/FirebasePersistenceAdapter';
 import { UserData } from '../../../src/database/UserData';
+import { TFunction } from '../../../src/util/localization';
 import { mockHandlerInput } from './HandlerInputMocks';
 
 export function mockDatabase() {
@@ -38,17 +39,19 @@ export interface CreateDatabaseHandlerResult {
     attributes?: UserData;
   };
   databaseHandler: DatabaseHandler;
+  t: TFunction;
 }
 
-export async function createDatabaseHandler(): Promise<
-  CreateDatabaseHandlerResult
-> {
+export async function createDatabaseHandler({
+  locale,
+}: { locale?: string } = {}): Promise<CreateDatabaseHandlerResult> {
   const { persistenceAdapter, firestoreMock } = createPersistenceAdapter();
 
   const {
     mockedAttributesManager,
     instanceRequestEnvelope,
-  } = await mockHandlerInput();
+    t,
+  } = await mockHandlerInput({ locale });
 
   const persistentAttributesHolder: { attributes?: UserData } = {};
 
@@ -82,5 +85,6 @@ export async function createDatabaseHandler(): Promise<
     attributesManager,
     persistentAttributesHolder,
     databaseHandler,
+    t,
   };
 }

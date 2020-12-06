@@ -1,4 +1,4 @@
-import { getUserId } from 'ask-sdk-core';
+import { getLocale, getUserId } from 'ask-sdk-core';
 import fc from 'fast-check';
 import { initializeApp } from 'firebase-admin';
 import { mocked } from 'ts-jest/utils';
@@ -14,7 +14,9 @@ import {
 import { collectionNames } from '../../src/database/FirebasePersistenceAdapter';
 import { AuthCode, UserData, UserDocData } from '../../src/database/UserData';
 import { NoUserDataError } from '../../src/logic/Errors';
+import { feedRecord } from '../helpers/fast-check/arbitraries/feed';
 import { authCodeString } from '../helpers/fast-check/arbitraries/misc';
+import { availableLocales } from '../helpers/helperTests';
 import {
   createDatabaseHandler,
   CreateDatabaseHandlerResult,
@@ -25,6 +27,8 @@ import {
   mockCollectionFirestore,
   mockRef,
   mockQuery,
+  mockCollectionFromRef,
+  mockQueryDocumentSnapshot,
 } from '../helpers/mocks/mockFirebase';
 
 jest.mock('firebase-admin', () => ({
@@ -98,7 +102,7 @@ describe('setAuthCode', () => {
         collectionPath: collectionNames.users,
       });
 
-      mockQuery({ empty: true, collectionMock });
+      mockQuery({ empty: true, queryMock: collectionMock });
 
       const { collectionMock: authCollectionMock } = mockCollectionFirestore({
         firestoreMock,
@@ -190,5 +194,67 @@ describe('getUserData', () => {
     verify(firestoreMock.collection(anything())).never();
   });
 
-  test.todo('retrieves user data (based on locale) and ref if it exists');
+  test('retrieves user data (based on locale) and ref if it exists', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.string({ minLength: 1 }),
+        fc.boolean(),
+        fc.constantFrom(...availableLocales),
+        fc.array(feedRecord()),
+        async (userId, throwIfUserWasNotFound, locale, expectedFeeds) => {
+          mocked(getLocale).mockReturnValue(locale);
+
+          const {
+            databaseHandler,
+            firestoreMock,
+            t,
+          } = await createDatabaseHandler({ locale });
+
+          const nameField = t('FEED_NAME_FIELD');
+
+          const feedSnapshots = expectedFeeds.map((feed) => {
+            const { name, ...data } = feed;
+            data[nameField] = name;
+
+            const snapshot = mockQueryDocumentSnapshot();
+
+            when(snapshot.data()).thenReturn(data);
+
+            return instance(snapshot);
+          });
+
+          const { refMock } = mockUserRefId({ firestoreMock, id: userId });
+
+          const { collectionMock } = mockCollectionFromRef({ refMock });
+
+          const { queryMock, querySnapshotMock } = mockQuery({
+            queryMock: collectionMock,
+          });
+
+          when(querySnapshotMock.forEach(anything())).thenCall((callback) =>
+            feedSnapshots.forEach(callback)
+          );
+
+          const { feeds, feedNames } = await databaseHandler.getUserData({
+            throwIfUserWasNotFound,
+          });
+
+          const [collectionName] = capture(refMock.collection).last();
+          expect(collectionName).toEqual(collectionNames.feeds);
+
+          const [orderByField] = capture(queryMock.orderBy).last();
+          expect(orderByField).toEqual(nameField);
+
+          expect(feeds).toMatchObject(
+            // object with properties like {"feed.name": "feed"}
+            expectedFeeds.reduce((acc, value) => {
+              acc[value.name] = value;
+              return acc;
+            }, {})
+          );
+          expect(feedNames).toEqual(expectedFeeds.map((feed) => feed.name));
+        }
+      )
+    );
+  });
 });

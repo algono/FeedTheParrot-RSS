@@ -1,4 +1,3 @@
-import { firestore } from 'firebase-admin';
 import {
   anyNumber,
   anyString,
@@ -63,20 +62,18 @@ export function mockCollectionFromRef({
 }
 
 export function mockQuery({
+  queryMock,
   empty = false,
-  collectionMock = mockCollectionFirestore().collectionMock,
 }: {
+  queryMock: FirebaseFirestore.Query<FirebaseFirestore.DocumentData>;
   empty?: boolean;
-  collectionMock?: FirebaseFirestore.CollectionReference<
-    FirebaseFirestore.DocumentData
-  >;
-} = {}) {
-  when(collectionMock.limit(anyNumber())).thenCall(() =>
-    resolvableInstance(collectionMock)
+}) {
+  when(queryMock.limit(anyNumber())).thenCall(() =>
+    resolvableInstance(queryMock)
   );
 
-  when(collectionMock.orderBy(anyString())).thenCall(() =>
-    resolvableInstance(collectionMock)
+  when(queryMock.orderBy(anyString())).thenCall(() =>
+    resolvableInstance(queryMock)
   );
 
   const querySnapshotMock = mock<
@@ -85,21 +82,21 @@ export function mockQuery({
 
   when(querySnapshotMock.empty).thenReturn(empty);
 
-  when(collectionMock.get()).thenCall(() =>
+  when(queryMock.get()).thenCall(() =>
     Promise.resolve(resolvableInstance(querySnapshotMock))
   );
 
-  when(collectionMock.where(anything(), anything(), anything())).thenCall(() =>
-    instance(collectionMock)
+  when(queryMock.where(anything(), anything(), anything())).thenCall(() =>
+    instance(queryMock)
   );
 
-  return { queryMock: collectionMock, querySnapshotMock };
+  return { queryMock, querySnapshotMock };
 }
 
 export function mockUserRefId({
   firestoreMock,
   id,
-}: { firestoreMock?: firestore.Firestore; id?: string } = {}) {
+}: { firestoreMock?: FirebaseFirestore.Firestore; id?: string } = {}) {
   const { collectionMock } = mockCollectionFirestore({
     firestoreMock,
     collectionPath: collectionNames.users,
@@ -107,12 +104,10 @@ export function mockUserRefId({
 
   const { querySnapshotMock } = mockQuery({
     empty: id === null,
-    collectionMock,
+    queryMock: collectionMock,
   });
 
-  const queryDocumentSnapshotMock = mock<
-    FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>
-  >();
+  const queryDocumentSnapshotMock = mockQueryDocumentSnapshot();
 
   const { refMock } = mockCollectionFromRef({ collectionMock });
 
@@ -127,5 +122,16 @@ export function mockUserRefId({
     instance(queryDocumentSnapshotMock),
   ]);
 
-  return { querySnapshotMock, queryDocumentSnapshotMock };
+  return {
+    collectionMock,
+    querySnapshotMock,
+    queryDocumentSnapshotMock,
+    refMock,
+  };
+}
+
+export function mockQueryDocumentSnapshot() {
+  return mock<
+    FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>
+  >();
 }
