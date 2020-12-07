@@ -1,20 +1,18 @@
 {
-    "compilerOptions": {
-        "alwaysStrict": true,
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "target": "ES2017",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "sourceMap": true,
-        "outDir": "../build/lambda/",
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "allowSyntheticDefaultImports": true,
-        "skipLibCheck": true
-    },
-    "include": [
-        "src/**/*.ts",
-        "tests/**/*.ts"
-    ]
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "target": "ES2017",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "../build/lambda/",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "removeComments": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.json", "tests/**/*.ts"]
 }
