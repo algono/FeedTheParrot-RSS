@@ -38,7 +38,6 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
       credential: firebaseAdmin.credential.cert(
         firebaseCredentials as firebaseAdmin.ServiceAccount
       ),
-      databaseURL: 'https://feedtheparrot-rss.firebaseio.com',
     });
   }
 
