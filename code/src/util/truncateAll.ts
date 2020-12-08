@@ -9,7 +9,7 @@ export function truncateAll(
   let remaining = str;
   while (remaining) {
     const current = truncate(remaining, n);
-    res.push(readable ? current.readable : current.str);
+    res.push(readable ? current.readable || current.str : current.str);
     remaining = remaining.substring(current.str.length);
   }
 
