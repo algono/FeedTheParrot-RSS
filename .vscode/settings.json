@@ -2,172 +2,180 @@
   "terminal.integrated.cwd": "code",
   "json.schemas": [
     {
-      "fileMatch": ["/**/locales/**/translation.json"],
+      "fileMatch": ["/**/localization/locale-*.json"],
       "schema": {
         "type": "object",
-        "required": [
-          "WELCOME_MSG",
-
-          "FEED_LIST_MSG",
-
-          "FEED_LIST_EMPTY_MSG",
-
-          "REPROMPT_MSG",
-
-          "NO_FEED_MSG",
-
-          "HELP_MSG",
-
-          "GOODBYE_MSG",
-
-          "REFLECTOR_MSG",
-
-          "FALLBACK_MSG",
-
-          "ERROR_MSG",
-
-          "TRY_AGAIN_MSG",
-
-          "FEED_TOO_LONG_ERROR_MSG",
-
-          "INVALID_URL_ERROR_MSG",
-
-          "NO_FEED_ERROR_MSG",
-
-          "INVALID_FEED_URL_ERROR_MSG",
-
-          "NOT_IMPLEMENTED_MSG",
-
-          "AMPERSAND",
-
-          "DEFAULT_VOICE",
-
-          "DEFAULT_VOICE_LOCALE",
-
-          "READING_FEED",
-
-          "CONFIRMATION_CONTINUE_READING_FEED",
-
-          "CONFIRMATION_GOTO_NEXT_FEED_ITEM",
-
-          "END_READING_FEED",
-
-          "EMPTY_FEED_MSG",
-
-          "FEED_NAME_FIELD",
-
-          "AUTH_PRE_CODE_MSG",
-
-          "AUTH_EXPLANATION_MSG"
-        ],
+        "required": ["translation"],
         "properties": {
-          "WELCOME_MSG": {
-            "type": "string",
-            "description": "Welcome message, said each time the skill is launched"
-          },
-          "FEED_LIST_MSG": {
-            "type": "string",
-            "description": "Message said before reading the list of available feeds"
-          },
-          "FEED_LIST_EMPTY_MSG": {
-            "type": "string",
-            "description": "Message said to indicate that there are no feeds available"
-          },
-          "REPROMPT_MSG": {
-            "type": "string",
-            "description": "Message prompting the user for a new voice request"
-          },
-          "NO_FEED_MSG": {
-            "type": "string",
-            "description": "Message said when the user asks for a feed that the skill does not recognize"
-          },
-          "HELP_MSG": {
-            "type": "string",
-            "description": "Message said when the user asks for help"
-          },
-          "GOODBYE_MSG": {
-            "type": "string",
-            "description": "Goodbye message, when the user tells the skill to stop or cancel and it exits"
-          },
-          "REFLECTOR_MSG": {
-            "type": "string",
-            "description": "Message for interaction testing and debugging that repeats back the intent you triggered"
-          },
-          "FALLBACK_MSG": {
-            "type": "string",
-            "description": "Fallback message, used when the request did not match anything the skill understood"
-          },
-          "ERROR_MSG": {
-            "type": "string",
-            "description": "Generic error message, for warning the user"
-          },
-          "TRY_AGAIN_MSG": {
-            "type": "string",
-            "description": "Message asking the user to try again"
-          },
-          "FEED_TOO_LONG_ERROR_MSG": {
-            "type": "string",
-            "description": "Error message when a feed was too long for Alexa to be able to process it"
-          },
-          "INVALID_URL_ERROR_MSG": {
-            "type": "string",
-            "description": "Error message when a URL was deemed invalid"
-          },
-          "NO_FEED_ERROR_MSG": {
-            "type": "string",
-            "description": "Error message when no feed was found in the provided URL"
-          },
-          "INVALID_FEED_URL_ERROR_MSG": {
-            "type": "string",
-            "description": "Error message when a feed URL was not valid,\n the reason being either:\n the URL itself being invalid\n or no feed was found in it.\n This message will follow the specific error message for the reason of the URL not being valid"
-          },
-          "NOT_IMPLEMENTED_MSG": {
-            "type": "string",
-            "description": "Message when a feature is yet to be implemented"
-          },
-          "AMPERSAND": {
-            "type": "string",
-            "description": "Spoken version for the ampersand symbol ('&') in written language.\n For instance, in English it would be 'and'"
-          },
-          "DEFAULT_VOICE": {
-            "type": "string",
-            "description": "Alexa's default voice when the user's device language is not this one, but the feed's is.\n\n List of supported voices: https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html#supported-voices"
-          },
-          "DEFAULT_VOICE_LOCALE": {
-            "type": "string",
-            "description": "The locale for the 'DEFAULT_VOICE' property.\nCheck the list of supported voices to see each voice's locale: https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html#supported-voices"
-          },
-          "READING_FEED": {
-            "type": "string",
-            "description": "Message for indicating which feed is going to be read to the user"
-          },
-          "CONFIRMATION_CONTINUE_READING_FEED": {
-            "type": "string",
-            "description": "Prompt for confirmation on whether the user wants Alexa to continue reading the feed, after the title has been read to them"
-          },
-          "CONFIRMATION_GOTO_NEXT_FEED_ITEM": {
-            "type": "string",
-            "description": "Prompt for confirmation on whether the user wants Alexa to go an read the next feed item, after the entire content of a feed item has been read to them"
-          },
-          "END_READING_FEED": {
-            "type": "string",
-            "description": "Message when the end of a feed has been reached"
-          },
-          "EMPTY_FEED_MSG": {
-            "type": "string",
-            "description": "Message indicating the user that a feed is empty"
-          },
-          "FEED_NAME_FIELD": {
-            "type": "string",
-            "description": "Field in the database specifying the name of a feed in this language"
-          },
-          "AUTH_PRE_CODE_MSG": {
-            "type": "string",
-            "description": "Short message said right before spelling out the authentication code"
-          },
-          "AUTH_EXPLANATION_MSG": {
-            "type": "string",
-            "description": "Message said after the authentication code has been spelled out, explaining how to use it to login"
+          "translation": {
+            "type": "object",
+            "description": "Key-value pairs of translations for the i18next library",
+            "required": [
+              "WELCOME_MSG",
+
+              "FEED_LIST_MSG",
+
+              "FEED_LIST_EMPTY_MSG",
+
+              "REPROMPT_MSG",
+
+              "NO_FEED_MSG",
+
+              "HELP_MSG",
+
+              "GOODBYE_MSG",
+
+              "REFLECTOR_MSG",
+
+              "FALLBACK_MSG",
+
+              "ERROR_MSG",
+
+              "TRY_AGAIN_MSG",
+
+              "FEED_TOO_LONG_ERROR_MSG",
+
+              "INVALID_URL_ERROR_MSG",
+
+              "NO_FEED_ERROR_MSG",
+
+              "INVALID_FEED_URL_ERROR_MSG",
+
+              "NOT_IMPLEMENTED_MSG",
+
+              "AMPERSAND",
+
+              "DEFAULT_VOICE",
+
+              "DEFAULT_VOICE_LOCALE",
+
+              "READING_FEED",
+
+              "CONFIRMATION_CONTINUE_READING_FEED",
+
+              "CONFIRMATION_GOTO_NEXT_FEED_ITEM",
+
+              "END_READING_FEED",
+
+              "EMPTY_FEED_MSG",
+
+              "FEED_NAME_FIELD",
+
+              "AUTH_PRE_CODE_MSG",
+
+              "AUTH_EXPLANATION_MSG"
+            ],
+            "properties": {
+              "WELCOME_MSG": {
+                "type": "string",
+                "description": "Welcome message, said each time the skill is launched"
+              },
+              "FEED_LIST_MSG": {
+                "type": "string",
+                "description": "Message said before reading the list of available feeds"
+              },
+              "FEED_LIST_EMPTY_MSG": {
+                "type": "string",
+                "description": "Message said to indicate that there are no feeds available"
+              },
+              "REPROMPT_MSG": {
+                "type": "string",
+                "description": "Message prompting the user for a new voice request"
+              },
+              "NO_FEED_MSG": {
+                "type": "string",
+                "description": "Message said when the user asks for a feed that the skill does not recognize"
+              },
+              "HELP_MSG": {
+                "type": "string",
+                "description": "Message said when the user asks for help"
+              },
+              "GOODBYE_MSG": {
+                "type": "string",
+                "description": "Goodbye message, when the user tells the skill to stop or cancel and it exits"
+              },
+              "REFLECTOR_MSG": {
+                "type": "string",
+                "description": "Message for interaction testing and debugging that repeats back the intent you triggered"
+              },
+              "FALLBACK_MSG": {
+                "type": "string",
+                "description": "Fallback message, used when the request did not match anything the skill understood"
+              },
+              "ERROR_MSG": {
+                "type": "string",
+                "description": "Generic error message, for warning the user"
+              },
+              "TRY_AGAIN_MSG": {
+                "type": "string",
+                "description": "Message asking the user to try again"
+              },
+              "FEED_TOO_LONG_ERROR_MSG": {
+                "type": "string",
+                "description": "Error message when a feed was too long for Alexa to be able to process it"
+              },
+              "INVALID_URL_ERROR_MSG": {
+                "type": "string",
+                "description": "Error message when a URL was deemed invalid"
+              },
+              "NO_FEED_ERROR_MSG": {
+                "type": "string",
+                "description": "Error message when no feed was found in the provided URL"
+              },
+              "INVALID_FEED_URL_ERROR_MSG": {
+                "type": "string",
+                "description": "Error message when a feed URL was not valid,\n the reason being either:\n the URL itself being invalid\n or no feed was found in it.\n This message will follow the specific error message for the reason of the URL not being valid"
+              },
+              "NOT_IMPLEMENTED_MSG": {
+                "type": "string",
+                "description": "Message when a feature is yet to be implemented"
+              },
+              "AMPERSAND": {
+                "type": "string",
+                "description": "Spoken version for the ampersand symbol ('&') in written language.\n For instance, in English it would be 'and'"
+              },
+              "DEFAULT_VOICE": {
+                "type": "string",
+                "description": "Alexa's default voice when the user's device language is not this one, but the feed's is.\n\n List of supported voices: https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html#supported-voices"
+              },
+              "DEFAULT_VOICE_LOCALE": {
+                "type": "string",
+                "description": "The locale for the 'DEFAULT_VOICE' property.\nCheck the list of supported voices to see each voice's locale: https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html#supported-voices"
+              },
+              "READING_FEED": {
+                "type": "string",
+                "description": "Message for indicating which feed is going to be read to the user"
+              },
+              "CONFIRMATION_CONTINUE_READING_FEED": {
+                "type": "string",
+                "description": "Prompt for confirmation on whether the user wants Alexa to continue reading the feed, after the title has been read to them"
+              },
+              "CONFIRMATION_GOTO_NEXT_FEED_ITEM": {
+                "type": "string",
+                "description": "Prompt for confirmation on whether the user wants Alexa to go an read the next feed item, after the entire content of a feed item has been read to them"
+              },
+              "END_READING_FEED": {
+                "type": "string",
+                "description": "Message when the end of a feed has been reached"
+              },
+              "EMPTY_FEED_MSG": {
+                "type": "string",
+                "description": "Message indicating the user that a feed is empty"
+              },
+              "FEED_NAME_FIELD": {
+                "type": "string",
+                "description": "Field in the database specifying the name of a feed in this language"
+              },
+              "AUTH_PRE_CODE_MSG": {
+                "type": "string",
+                "description": "Short message said right before spelling out the authentication code"
+              },
+              "AUTH_EXPLANATION_MSG": {
+                "type": "string",
+                "description": "Message said after the authentication code has been spelled out, explaining how to use it to login"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false

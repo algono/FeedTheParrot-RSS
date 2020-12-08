@@ -1,38 +1,31 @@
 import { getLocale, RequestInterceptor } from 'ask-sdk-core';
-import i18next, { i18n, TFunction } from 'i18next';
-import Backend, { i18nextFsBackend } from 'i18next-fs-backend';
-import { join } from 'path';
+import i18next, { TFunction } from 'i18next';
+
+import * as en from './localization/locale-en.json';
+import * as es from './localization/locale-es.json';
 
 // Export this interface to abstract the localization library from the rest of the code
 export { TFunction };
 
-const backendOptions: i18nextFsBackend.i18nextFsBackendOptions = {
-  // path where resources get loaded from, or a function
-  // returning a path:
-  // function (lngs, namespaces) { return customPath; }
-  // the returned path will interpolate lng, ns if provided like giving a static path
-  loadPath: join(__dirname, './locales/{{lng}}/{{ns}}.json'),
+export const languageStrings = {
+  en,
+  es,
 };
 
-i18next.use(Backend);
-
-function initInstance(instance: i18n, locale: string) {
-  return instance.init({
+export function init(locale: string) {
+  return i18next.init({
     lng: locale,
-    backend: backendOptions,
+    resources: languageStrings,
   });
 }
 
-export function init(locale: string) {
-  return initInstance(i18next, locale);
-}
-
 export function initNewInstance(locale: string) {
-  const newInstance = i18next.createInstance();
-
-  newInstance.use(Backend);
-
-  return initInstance(newInstance, locale);
+  return i18next
+    .createInstance({
+      lng: locale,
+      resources: languageStrings,
+    })
+    .init();
 }
 
 export const LocalizationRequestInterceptor: RequestInterceptor = {
