@@ -1,5 +1,5 @@
 import { getLocale, RequestInterceptor } from 'ask-sdk-core';
-import i18next, { TFunction } from 'i18next';
+import i18next, { i18n, TFunction } from 'i18next';
 import Backend, { i18nextFsBackend } from 'i18next-fs-backend';
 import { join } from 'path';
 
@@ -16,20 +16,23 @@ const backendOptions: i18nextFsBackend.i18nextFsBackendOptions = {
 
 i18next.use(Backend);
 
-export function init(locale: string) {
-  return i18next.init({
+function initInstance(instance: i18n, locale: string) {
+  return instance.init({
     lng: locale,
     backend: backendOptions,
   });
 }
 
+export function init(locale: string) {
+  return initInstance(i18next, locale);
+}
+
 export function initNewInstance(locale: string) {
-  return i18next
-    .createInstance({
-      lng: locale,
-      backend: backendOptions,
-    })
-    .init();
+  const newInstance = i18next.createInstance();
+
+  newInstance.use(Backend);
+
+  return initInstance(newInstance, locale);
 }
 
 export const LocalizationRequestInterceptor: RequestInterceptor = {
