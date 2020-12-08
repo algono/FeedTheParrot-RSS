@@ -32,7 +32,10 @@ const metaRecord: fc.Arbitrary<Meta> = fc.record<Meta, fc.RecordConstraints>(
   { withDeletedKeys: false }
 );
 
-export const itemRecord = fc.record<Item, fc.RecordConstraints>(
+export const itemRecord: fc.Arbitrary<Item> = fc.record<
+  Item,
+  fc.RecordConstraints
+>(
   {
     title: fc.lorem(),
     description: fc.lorem({ mode: 'sentences' }),

@@ -10,11 +10,13 @@ export function feedRecord({
   hasTruncateContentAt = 'sometimes',
   locales = availableLocales,
   maxItemLimit,
+  readFullContentCustomArb,
 }: {
   hasItemLimit?: MayHappenOption;
   hasTruncateContentAt?: MayHappenOption;
   locales?: readonly AvailableLocale[];
   maxItemLimit?: number;
+  readFullContentCustomArb?: fc.Arbitrary<boolean>;
 } = {}): fc.Arbitrary<Feed> {
   return fc.record<Feed, fc.RecordConstraints>(
     {
@@ -29,6 +31,10 @@ export function feedRecord({
         fc.integer({ min: 1 }),
         hasTruncateContentAt
       ),
+      readFullContent:
+        readFullContentCustomArb !== undefined
+          ? readFullContentCustomArb
+          : fc.boolean(),
     },
     { withDeletedKeys: false }
   );

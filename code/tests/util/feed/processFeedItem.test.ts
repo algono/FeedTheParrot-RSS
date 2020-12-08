@@ -2,9 +2,15 @@ import fc from 'fast-check';
 import { mocked } from 'ts-jest/utils';
 import { MAX_CHARACTERS_SPEECH } from '../../../src/util/constants';
 import { cleanHtml } from '../../../src/util/feed/cleanHtml';
-import { processFeedItem } from '../../../src/util/feed/processFeedItem';
+import {
+  getContent,
+  processFeedItem,
+} from '../../../src/util/feed/processFeedItem';
 import { truncateAll } from '../../../src/util/truncateAll';
-import { feedRecord } from '../../helpers/fast-check/arbitraries/feed';
+import {
+  feedItemRecord,
+  feedRecord,
+} from '../../helpers/fast-check/arbitraries/feed';
 import { itemRecord } from '../../helpers/fast-check/arbitraries/feedParser';
 import { mockArbitrary } from '../../helpers/fast-check/arbitraries/mockArbitrary';
 import { lastCallTo } from '../../helpers/jest/mockInstanceHelpers';
@@ -100,7 +106,7 @@ test('returns the whole content if it does not have to be truncated', () => {
         expect(truncateAll).not.toHaveBeenCalled();
 
         expect(feedItem.content.length).toEqual(1);
-        expect(feedItem.content[0]).toBe(item.summary || item.description);
+        expect(feedItem.content[0]).toBe(getContent(feed, item));
       }
     )
   );
@@ -120,7 +126,7 @@ test('returns the readable result of truncating all content if the feed has the 
         const feedItem = processFeedItem(item, feed, ampersandReplacement);
 
         expect(truncateAll).toHaveBeenCalledWith(
-          item.summary || item.description,
+          getContent(feed, item),
           feed.truncateContentAt,
           { readable: true }
         );
@@ -146,7 +152,7 @@ test('returns the readable result of truncating all content if the content surpa
         expect(feedItem.content).toBe(expectedResult);
 
         const callToTruncateAll = lastCallTo(mocked(truncateAll));
-        expect(callToTruncateAll[0]).toBe(item.summary || item.description);
+        expect(callToTruncateAll[0]).toBe(getContent(feed, item));
         expect(callToTruncateAll[1]).toEqual(
           feed.truncateContentAt || MAX_CHARACTERS_SPEECH
         );
@@ -154,4 +160,33 @@ test('returns the readable result of truncating all content if the content surpa
       }
     )
   );
+});
+
+describe('getContent', () => {
+  test('If readFullContent is true, it prioritises the description and uses the summary as fallback', () => {
+    fc.assert(
+      fc.property(
+        feedRecord({ readFullContentCustomArb: fc.constant(true) }),
+        fc.oneof(itemRecord, feedItemRecord()),
+        (feed, item) => {
+          const content = getContent(feed, item);
+          expect(content).toEqual(item.description || item.summary);
+        }
+      )
+    );
+  });
+  test('If readFullContent is false, null or undefined, it prioritises the summary and uses the description as fallback', () => {
+    fc.assert(
+      fc.property(
+        feedRecord({
+          readFullContentCustomArb: fc.constantFrom(false, null, undefined),
+        }),
+        fc.oneof(itemRecord, feedItemRecord()),
+        (feed, item) => {
+          const content = getContent(feed, item);
+          expect(content).toEqual(item.summary || item.description);
+        }
+      )
+    );
+  });
 });

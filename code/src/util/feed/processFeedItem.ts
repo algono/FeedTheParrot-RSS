@@ -26,17 +26,21 @@ export function processFeedItem(
     content: [],
   };
 
-  const summary = feed.readFullContent
-    ? feedItem.description || feedItem.summary
-    : feedItem.summary || feedItem.description;
+  const content = getContent(feed, feedItem);
 
   feedItem.content = processContent(
-    summary,
+    content,
     MAX_CHARACTERS_SPEECH,
     feed.truncateContentAt
   );
 
   return feedItem;
+}
+
+export function getContent(feed: Feed, item: Item | FeedItem) {
+  return feed.readFullContent
+    ? item.description || item.summary
+    : item.summary || item.description;
 }
 
 function processContent(
