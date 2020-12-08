@@ -35,7 +35,7 @@ describe('tests with truncate mocked', () => {
   function getTruncateSpyResults({ readable }: { readable?: boolean } = {}) {
     return truncateSpy.mock.results.map((res) => {
       if (hasReturned(res)) {
-        return readable ? res.value.readable : res.value.str;
+        return readable ? res.value.readable || res.value.str : res.value.str;
       } else {
         fail('One of the results was not returned, but instead: ' + res.type);
       }
@@ -53,7 +53,7 @@ describe('tests with truncate mocked', () => {
           const res = truncateAll(str, len);
 
           expect(truncateSpy).toHaveBeenCalled();
-          expect(getTruncateSpyResults()).toEqual(res);
+          expect(res).toEqual(getTruncateSpyResults());
         }
       )
     ));
@@ -69,7 +69,7 @@ describe('tests with truncate mocked', () => {
           const res = truncateAll(str, len, { readable: false });
 
           expect(truncateSpy).toHaveBeenCalled();
-          expect(getTruncateSpyResults({ readable: false })).toEqual(res);
+          expect(res).toEqual(getTruncateSpyResults({ readable: false }));
         }
       )
     ));
@@ -85,7 +85,7 @@ describe('tests with truncate mocked', () => {
           const res = truncateAll(str, len, { readable: true });
 
           expect(truncateSpy).toHaveBeenCalled();
-          expect(getTruncateSpyResults({ readable: true })).toEqual(res);
+          expect(res).toEqual(getTruncateSpyResults({ readable: true }));
         }
       )
     ));
