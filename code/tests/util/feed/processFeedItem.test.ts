@@ -27,7 +27,7 @@ beforeEach(() => {
 test('properly cleans the title, description and summary', () => {
   fc.assert(
     fc.property(
-      itemRecord,
+      itemRecord(),
       feedRecord(),
       fc.lorem({ maxCount: 1 }),
       fc.record(
@@ -82,7 +82,7 @@ test('properly cleans the title, description and summary', () => {
 test('returns the date in UTC string format', () => {
   fc.assert(
     fc.property(
-      itemRecord,
+      itemRecord(),
       feedRecord(),
       fc.lorem({ maxCount: 1 }),
       (item, feed, ampersandReplacement) => {
@@ -115,7 +115,7 @@ test('returns the whole content if it does not have to be truncated', () => {
 test('returns the readable result of truncating all content if the feed has the truncateContentAt attribute defined', () => {
   fc.assert(
     fc.property(
-      itemRecord,
+      itemRecord(),
       feedRecord({ hasTruncateContentAt: 'always' }),
       fc.lorem({ maxCount: 1 }),
       fc.array(fc.lorem({ mode: 'sentences' }), { minLength: 1 }),
@@ -167,7 +167,10 @@ describe('getContent', () => {
     fc.assert(
       fc.property(
         feedRecord({ readFullContentCustomArb: fc.constant(true) }),
-        fc.oneof(itemRecord, feedItemRecord()),
+        fc.oneof(
+          itemRecord({ hasDescription: 'sometimes' }),
+          feedItemRecord({ hasDescription: 'sometimes' })
+        ),
         (feed, item) => {
           const content = getContent(feed, item);
           expect(content).toEqual(item.description || item.summary);
@@ -181,7 +184,10 @@ describe('getContent', () => {
         feedRecord({
           readFullContentCustomArb: fc.constantFrom(false, null, undefined),
         }),
-        fc.oneof(itemRecord, feedItemRecord()),
+        fc.oneof(
+          itemRecord({ hasSummary: 'sometimes' }),
+          feedItemRecord({ hasSummary: 'sometimes' })
+        ),
         (feed, item) => {
           const content = getContent(feed, item);
           expect(content).toEqual(item.summary || item.description);

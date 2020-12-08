@@ -49,10 +49,22 @@ function content({ minLength = 0 } = {}) {
 export function feedItemRecord({
   readingContent = false,
   contentMinLength = 0,
+  hasDescription = 'always',
+  hasSummary = 'always',
+}: {
+  readingContent?: boolean;
+  contentMinLength?: number;
+  hasDescription?: MayHappenOption;
+  hasSummary?: MayHappenOption;
 } = {}): fc.Arbitrary<FeedItem> {
   const contentArb = content({ minLength: contentMinLength });
   return fc.record<FeedItem, fc.RecordConstraints>(
-    feedItemRecordModel({ readingContent, contentArb }),
+    feedItemRecordModel({
+      readingContent,
+      contentArb,
+      hasDescription,
+      hasSummary,
+    }),
     { withDeletedKeys: false }
   );
 }
@@ -60,14 +72,21 @@ export function feedItemRecord({
 export function feedItemRecordModel({
   readingContent,
   contentArb,
+  hasDescription = 'always',
+  hasSummary = 'always',
 }: {
   readingContent?: boolean;
   contentArb?: fc.Arbitrary<string[]>;
+  hasDescription?: MayHappenOption;
+  hasSummary?: MayHappenOption;
 } = {}) {
   return {
     title: fc.lorem(),
-    description: fc.lorem({ mode: 'sentences' }),
-    summary: fc.lorem({ mode: 'sentences' }),
+    description: mayHappenArbitrary(
+      fc.lorem({ mode: 'sentences' }),
+      hasDescription
+    ),
+    summary: mayHappenArbitrary(fc.lorem({ mode: 'sentences' }), hasSummary),
     date: fc.date({ min: new Date(0) }).map((date) => date.toUTCString()),
     link: fc.webUrl(),
     imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
