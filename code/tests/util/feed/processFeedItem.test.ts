@@ -1,16 +1,14 @@
 import fc from 'fast-check';
-import FeedParser from 'feedparser';
 import { mocked } from 'ts-jest/utils';
-import { instance, mock, when } from 'ts-mockito';
 import { MAX_CHARACTERS_SPEECH } from '../../../src/util/constants';
 import { cleanHtml } from '../../../src/util/feed/cleanHtml';
 import { processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { truncateAll } from '../../../src/util/truncateAll';
 import { feedRecord } from '../../helpers/fast-check/arbitraries/feed';
 import { itemRecord } from '../../helpers/fast-check/arbitraries/feedParser';
-import { MayHappenOption } from '../../helpers/fast-check/arbitraries/misc';
 import { mockArbitrary } from '../../helpers/fast-check/arbitraries/mockArbitrary';
 import { lastCallTo } from '../../helpers/jest/mockInstanceHelpers';
+import { mockItemArbitrary } from '../../helpers/mocks/mockItemArbitrary';
 
 jest.mock('../../../src/util/feed/cleanHtml');
 jest.mock('../../../src/util/truncateAll');
@@ -157,34 +155,3 @@ test('returns the readable result of truncating all content if the content surpa
     )
   );
 });
-
-function mockItemArbitrary({
-  contentSurpassesMaxCharacters = 'sometimes',
-}: { contentSurpassesMaxCharacters?: MayHappenOption } = {}): fc.Arbitrary<
-  FeedParser.Item
-> {
-  return fc
-    .tuple(
-      fc.integer({
-        min:
-          contentSurpassesMaxCharacters === 'always'
-            ? MAX_CHARACTERS_SPEECH + 1
-            : undefined,
-        max:
-          contentSurpassesMaxCharacters === 'never'
-            ? MAX_CHARACTERS_SPEECH
-            : undefined,
-      }),
-      fc.boolean()
-    )
-    .chain(([contentLength, hasSummary]) => {
-      const contentMock = mock<string>();
-      when(contentMock.length).thenReturn(contentLength);
-      const content = instance(contentMock);
-
-      return mockArbitrary<FeedParser.Item>((itemMock) => {
-        when(itemMock.summary).thenReturn(hasSummary ? content : null);
-        when(itemMock.description).thenReturn(content);
-      });
-    });
-}
