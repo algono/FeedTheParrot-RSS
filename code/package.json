@@ -6,6 +6,7 @@
   "private": "true",
   "scripts": {
     "clean": "rimraf \"../build/lambda/!(node_modules)\"",
+    "clean:lambda": "rimraf ../build/lambda",
     "clean:skill-package": "rimraf ../build/skill-package",
     "clean:full": "rimraf ../build/{lambda,skill-package}",
     "clean:all": "rimraf ../build",
