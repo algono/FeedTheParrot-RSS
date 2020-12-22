@@ -1,12 +1,14 @@
 import { PersistenceAdapter } from 'ask-sdk-core';
 import { DynamoDbPersistenceAdapter } from 'ask-sdk-dynamodb-persistence-adapter';
 import { RequestEnvelope } from 'ask-sdk-model';
+import AWS from 'aws-sdk';
 import { FirebasePersistenceAdapter } from './FirebasePersistenceAdapter';
 import { AuthCode, UserData } from './UserData';
 
-export const tableNames = {
-  authCodes: 'auth-codes',
-} as const;
+interface DynamoDbProcessEnv extends NodeJS.ProcessEnv {
+  DYNAMODB_PERSISTENCE_TABLE_NAME: string;
+  DYNAMODB_PERSISTENCE_REGION: string;
+}
 
 export class FirebaseWithDynamoDbPersistenceAdapter
   implements PersistenceAdapter {
@@ -15,13 +17,19 @@ export class FirebaseWithDynamoDbPersistenceAdapter
 
   public constructor() {
     this._firebasePersistenceAdapter = new FirebasePersistenceAdapter();
-    this.initDynamoDB();
+    this.initDynamoDb();
   }
 
-  private initDynamoDB() {
+  private initDynamoDb() {
+    const dynamoDbProcessEnv: DynamoDbProcessEnv = process.env as DynamoDbProcessEnv;
+
     this._dynamoDbPersistenceAdapter = new DynamoDbPersistenceAdapter({
-      tableName: tableNames.authCodes,
-      createTable: true,
+      tableName: dynamoDbProcessEnv.DYNAMODB_PERSISTENCE_TABLE_NAME,
+      createTable: false,
+      dynamoDBClient: new AWS.DynamoDB({
+        apiVersion: 'latest',
+        region: dynamoDbProcessEnv.DYNAMODB_PERSISTENCE_REGION,
+      }),
     });
   }
 
