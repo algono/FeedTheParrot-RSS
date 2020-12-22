@@ -29,7 +29,7 @@ import {
   GenericErrorHandler,
   InvalidFeedUrlErrorHandler,
 } from './intents/Error';
-import { FirebasePersistenceAdapter } from './database/FirebasePersistenceAdapter';
+import { FirebaseWithDynamoDbPersistenceAdapter } from './database/FirebaseWithDynamoDbPersistenceAdapter';
 
 // The SkillBuilder acts as the entry point for your skill, routing all request and response
 // payloads to the handlers above. Make sure any new handlers or interceptors you've
@@ -58,5 +58,5 @@ export const handler = SkillBuilders.custom()
     FeedIsTooLongErrorHandler,
     GenericErrorHandler
   )
-  .withPersistenceAdapter(new FirebasePersistenceAdapter())
+  .withPersistenceAdapter(new FirebaseWithDynamoDbPersistenceAdapter())
   .lambda();

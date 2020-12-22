@@ -3,16 +3,15 @@ import { RequestEnvelope } from 'ask-sdk-model';
 import { NoUserDataError } from '../logic/Errors';
 import { Feed, FeedData } from '../logic/Feed';
 import { init } from '../util/localization';
-import { UserData, AuthCode, UserDocData } from './UserData';
+import { UserData, UserDocData } from './UserData';
 
 import * as firebaseAdmin from 'firebase-admin';
 import * as firebaseCredentials from './firebaseServiceAccountKey.json';
 
 export const collectionNames = {
-  authCodes: 'auth-codes',
   users: 'users',
   feeds: 'feeds',
-};
+} as const;
 
 export class FirebasePersistenceAdapter implements PersistenceAdapter {
   private readonly _firestore: FirebaseFirestore.Firestore;
@@ -41,7 +40,7 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
     });
   }
 
-  private async getUserRefId(requestEnvelope: RequestEnvelope) {
+  public async getUserRefId(requestEnvelope: RequestEnvelope) {
     if (!this._userRefId) await this.getUserRef(requestEnvelope);
     return this._userRefId;
   }
@@ -112,13 +111,6 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
     return this.getFeedsFromUser(requestEnvelope, userRef);
   }
 
-  private setAuthCode(docId: string, code: AuthCode) {
-    return this._firestore
-      .collection(collectionNames.authCodes)
-      .doc(docId)
-      .set(code);
-  }
-
   private async createNewUser(requestEnvelope: RequestEnvelope) {
     const userDocData: UserDocData = { userId: getUserId(requestEnvelope) };
     const newUserRef = await this._firestore
@@ -130,10 +122,7 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
     return newUserRef;
   }
 
-  public async saveAttributes(
-    requestEnvelope: RequestEnvelope,
-    attributes: UserData
-  ): Promise<void> {
+  public async saveAttributes(requestEnvelope: RequestEnvelope): Promise<void> {
     if (this.userWasNotFound()) {
       await this.createNewUser(requestEnvelope);
     } else {
@@ -146,10 +135,6 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
           throw err;
         }
       }
-    }
-
-    if (attributes.authCode) {
-      await this.setAuthCode(this._userRefId, attributes.authCode);
     }
   }
 }
