@@ -34,8 +34,8 @@ export interface MockHandlerInputOptions {
 
 export async function mockHandlerInput({
   locale,
-  sessionAttributes,
-  requestAttributes,
+  sessionAttributes = {},
+  requestAttributes = {},
   outputSpeech,
   addTFunctionToRequestAttributes = true,
 }: MockHandlerInputOptions = {}): Promise<HandlerInputMocks> {
@@ -73,7 +73,7 @@ export async function mockHandlerInput({
   ).thenCall(() => {});
 
   const mockedRequestEnvelope = mock<RequestEnvelope>();
-  const instanceRequestEnvelope = instance(mockedRequestEnvelope)
+  const instanceRequestEnvelope = instance(mockedRequestEnvelope);
 
   when(mockedHandlerInput.requestEnvelope).thenReturn(instanceRequestEnvelope);
 
