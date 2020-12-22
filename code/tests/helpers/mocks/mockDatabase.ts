@@ -44,14 +44,18 @@ export interface CreateDatabaseHandlerResult {
 
 export async function createDatabaseHandler({
   locale,
-}: { locale?: string } = {}): Promise<CreateDatabaseHandlerResult> {
+  sessionAttributes,
+}: {
+  locale?: string;
+  sessionAttributes?: { [key: string]: any };
+} = {}): Promise<CreateDatabaseHandlerResult> {
   const { persistenceAdapter, firestoreMock } = createPersistenceAdapter();
 
   const {
     mockedAttributesManager,
     instanceRequestEnvelope,
     t,
-  } = await mockHandlerInput({ locale });
+  } = await mockHandlerInput({ locale, sessionAttributes });
 
   const persistentAttributesHolder: { attributes?: UserData } = {};
 

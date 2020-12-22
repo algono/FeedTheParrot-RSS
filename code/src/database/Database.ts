@@ -19,6 +19,10 @@ export interface DatabaseHandler {
   }?: GetUserDataOptions): Promise<UserData>;
 }
 
+export interface UserDataSessionAttributes {
+  userData?: UserData;
+}
+
 class DatabaseHandlerImpl implements DatabaseHandler {
   public constructor(private readonly attributesManager: AttributesManager) {}
 
@@ -31,15 +35,22 @@ class DatabaseHandlerImpl implements DatabaseHandler {
   public async getUserData({ throwIfUserWasNotFound = false } = {}): Promise<
     UserData
   > {
-    try {
-      return (await this.attributesManager.getPersistentAttributes()) as UserData;
-    } catch (err) {
-      if (!throwIfUserWasNotFound && err instanceof NoUserDataError) {
-        const userData: UserData = { feeds: null, feedNames: null };
-        this.attributesManager.setPersistentAttributes(userData);
+    const sessionAttributes: UserDataSessionAttributes = this.attributesManager.getSessionAttributes();
+    if (sessionAttributes.userData) {
+      return sessionAttributes.userData;
+    } else {
+      try {
+        const userData = (await this.attributesManager.getPersistentAttributes()) as UserData;
+        sessionAttributes.userData = userData;
         return userData;
-      } else {
-        throw err;
+      } catch (err) {
+        if (!throwIfUserWasNotFound && err instanceof NoUserDataError) {
+          const userData: UserData = { feeds: null, feedNames: null };
+          this.attributesManager.setPersistentAttributes(userData);
+          return userData;
+        } else {
+          throw err;
+        }
       }
     }
   }

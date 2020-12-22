@@ -12,6 +12,7 @@ import {
   verify,
   when,
 } from 'ts-mockito';
+import { UserDataSessionAttributes } from '../../src/database/Database';
 import { collectionNames } from '../../src/database/FirebasePersistenceAdapter';
 import { AuthCode, UserData, UserDocData } from '../../src/database/UserData';
 import { NoUserDataError } from '../../src/logic/Errors';
@@ -31,6 +32,7 @@ import {
   mockCollectionFromRef,
   mockQueryDocumentSnapshot,
 } from '../helpers/mocks/mockFirebase';
+import { resolvableInstance } from '../helpers/ts-mockito/resolvableInstance';
 
 jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
@@ -193,6 +195,26 @@ describe('setAuthCode', () => {
 });
 
 describe('getUserData', () => {
+  test('if the user data is already cached in session attributes, it is returned without getting any persistent attributes', async () => {
+    const cachedUserData = resolvableInstance(mock<UserData>());
+    const sessionAttributes: UserDataSessionAttributes = {
+      userData: cachedUserData,
+    };
+
+    const {
+      databaseHandler,
+      mockedAttributesManager,
+    } = await createDatabaseHandler({
+      sessionAttributes,
+    });
+
+    const userData = await databaseHandler.getUserData();
+
+    expect(userData).toBe(cachedUserData);
+
+    verify(mockedAttributesManager.getPersistentAttributes()).never();
+  });
+
   test('throws an error if the user does not exist and the "throwIfUserWasNotFound" flag is true', async () => {
     const { databaseHandler, firestoreMock } = await createDatabaseHandler();
 
