@@ -51,7 +51,7 @@
     "@types/node-fetch": "^2.5.7",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
-    "ask-sdk-local-debug": "^1.0.0",
+    "ask-sdk-local-debug": "^1.1.0",
     "cpy-cli": "^3.1.1",
     "eslint": "^7.12.1",
     "fast-check": "^2.6.0",
