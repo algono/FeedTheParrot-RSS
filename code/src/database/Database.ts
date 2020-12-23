@@ -29,6 +29,7 @@ class DatabaseHandlerImpl implements DatabaseHandler {
   public async setAuthCode(code: AuthCode) {
     const userData = await this.getUserData();
     userData.authCode = code;
+    this.attributesManager.setPersistentAttributes(userData);
     return this.attributesManager.savePersistentAttributes();
   }
 
