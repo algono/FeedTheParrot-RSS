@@ -3,7 +3,7 @@ import { DynamoDbPersistenceAdapter } from 'ask-sdk-dynamodb-persistence-adapter
 import { RequestEnvelope } from 'ask-sdk-model';
 import AWS from 'aws-sdk';
 import { FirebasePersistenceAdapter } from './FirebasePersistenceAdapter';
-import { AuthCode, UserData } from './UserData';
+import { AuthCode, authCodeToDB, UserData } from './UserData';
 
 interface DynamoDbProcessEnv extends NodeJS.ProcessEnv {
   DYNAMODB_PERSISTENCE_TABLE_NAME: string;
@@ -37,15 +37,11 @@ export class FirebaseWithDynamoDbPersistenceAdapter
     return this._firebasePersistenceAdapter.getAttributes(requestEnvelope);
   }
 
-  private setAuthCode(
-    requestEnvelope: RequestEnvelope,
-    docId: string,
-    code: AuthCode
-  ) {
-    return this._dynamoDbPersistenceAdapter.saveAttributes(requestEnvelope, {
-      id: docId,
-      code,
-    });
+  private setAuthCode(requestEnvelope: RequestEnvelope, code: AuthCode) {
+    return this._dynamoDbPersistenceAdapter.saveAttributes(
+      requestEnvelope,
+      authCodeToDB(code)
+    );
   }
 
   public async saveAttributes(
@@ -55,11 +51,7 @@ export class FirebaseWithDynamoDbPersistenceAdapter
     await this._firebasePersistenceAdapter.saveAttributes(requestEnvelope);
 
     if (attributes.authCode) {
-      await this.setAuthCode(
-        requestEnvelope,
-        await this._firebasePersistenceAdapter.getUserRefId(requestEnvelope),
-        attributes.authCode
-      );
+      await this.setAuthCode(requestEnvelope, attributes.authCode);
     }
   }
 }
