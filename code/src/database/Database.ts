@@ -46,7 +46,10 @@ class DatabaseHandlerImpl implements DatabaseHandler {
       } catch (err) {
         if (!throwIfUserWasNotFound && err instanceof NoUserDataError) {
           const userData: UserData = { feeds: null, feedNames: null };
+
           this.attributesManager.setPersistentAttributes(userData);
+          sessionAttributes.userData = userData;
+
           return userData;
         } else {
           throw err;
