@@ -2,7 +2,7 @@ import { Feed } from '../logic/Feed';
 
 interface AuthCodeBase {
   code: string;
-  expirationDate: Date | string;
+  expirationDate: Date | number;
 }
 
 export interface AuthCode extends AuthCodeBase {
@@ -10,11 +10,11 @@ export interface AuthCode extends AuthCodeBase {
 }
 
 export interface AuthCodeDB extends AuthCodeBase {
-  expirationDate: string;
+  expirationDate: number;
 }
 
 export function authCodeToDB(code: AuthCode): AuthCodeDB {
-  return { ...code, expirationDate: code.expirationDate.toUTCString() };
+  return { ...code, expirationDate: code.expirationDate.getTime() };
 }
 
 export interface UserDocData {

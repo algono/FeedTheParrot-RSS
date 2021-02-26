@@ -11,7 +11,7 @@ interface DynamoDbParameters {
 }
 
 const dynamoDbParameters: DynamoDbParameters = {
-  DYNAMODB_PERSISTENCE_TABLE_NAME: 'al-loro-auth',
+  DYNAMODB_PERSISTENCE_TABLE_NAME: 'feed-the-parrot-auth',
   DYNAMODB_PERSISTENCE_REGION: 'eu-west-1',
 };
 
