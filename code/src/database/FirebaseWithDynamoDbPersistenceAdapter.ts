@@ -5,10 +5,15 @@ import AWS from 'aws-sdk';
 import { FirebasePersistenceAdapter } from './FirebasePersistenceAdapter';
 import { AuthCode, authCodeToDB, UserData } from './UserData';
 
-interface DynamoDbProcessEnv extends NodeJS.ProcessEnv {
-  DYNAMODB_PERSISTENCE_TABLE_NAME: string;
-  DYNAMODB_PERSISTENCE_REGION: string;
+interface DynamoDbParameters {
+  readonly DYNAMODB_PERSISTENCE_TABLE_NAME: string;
+  readonly DYNAMODB_PERSISTENCE_REGION: string;
 }
+
+const dynamoDbParameters: DynamoDbParameters = {
+  DYNAMODB_PERSISTENCE_TABLE_NAME: 'al-loro-auth',
+  DYNAMODB_PERSISTENCE_REGION: 'eu-west-1',
+};
 
 export class FirebaseWithDynamoDbPersistenceAdapter
   implements PersistenceAdapter {
@@ -20,15 +25,31 @@ export class FirebaseWithDynamoDbPersistenceAdapter
     this.initDynamoDb();
   }
 
-  private initDynamoDb() {
-    const dynamoDbProcessEnv: DynamoDbProcessEnv = process.env as DynamoDbProcessEnv;
+  private async initDynamoDb() {
+    const STS = new AWS.STS({ apiVersion: '2011-06-15' });
+    const credentials = await STS.assumeRole(
+      {
+        RoleArn: 'arn:aws:iam::303145520006:role/Alexa-Al-Loro-DynamoDB',
+        RoleSessionName: 'AlLoroRoleSession',
+      },
+      (err, res) => {
+        if (err) {
+          console.log('AssumeRole FAILED: ', err);
+          throw new Error('Error while assuming role');
+        }
+        return res;
+      }
+    ).promise();
 
     this._dynamoDbPersistenceAdapter = new DynamoDbPersistenceAdapter({
-      tableName: dynamoDbProcessEnv.DYNAMODB_PERSISTENCE_TABLE_NAME,
+      tableName: dynamoDbParameters.DYNAMODB_PERSISTENCE_TABLE_NAME,
       createTable: false,
       dynamoDBClient: new AWS.DynamoDB({
-        apiVersion: 'latest',
-        region: dynamoDbProcessEnv.DYNAMODB_PERSISTENCE_REGION,
+        apiVersion: '2012-08-10',
+        region: dynamoDbParameters.DYNAMODB_PERSISTENCE_REGION,
+        accessKeyId: credentials.Credentials.AccessKeyId,
+        secretAccessKey: credentials.Credentials.SecretAccessKey,
+        sessionToken: credentials.Credentials.SessionToken,
       }),
     });
   }
