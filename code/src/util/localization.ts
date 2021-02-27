@@ -30,7 +30,7 @@ export function initNewInstance(locale: string) {
 
 export const LocalizationRequestInterceptor: RequestInterceptor = {
   async process(handlerInput) {
-    const t = await init(getLocale(handlerInput.requestEnvelope));
+    const t = await initNewInstance(getLocale(handlerInput.requestEnvelope));
     const attributes = handlerInput.attributesManager.getRequestAttributes();
     attributes.t = function (...args: any[]) {
       return (<any>t)(...args);
