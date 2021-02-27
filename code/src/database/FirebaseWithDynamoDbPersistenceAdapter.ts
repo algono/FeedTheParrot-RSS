@@ -21,6 +21,13 @@ export class FirebaseWithDynamoDbPersistenceAdapter
 
   private async initDynamoDb() {
     const STS = new AWS.STS({ apiVersion: '2011-06-15' });
+
+    // If there are no credentials available, then we should be in a local debug session.
+    // In that case, just return without throwing an error
+    if (STS.config.credentials === null) {
+      return;
+    }
+
     const credentials = await STS.assumeRole(
       {
         RoleArn: 'arn:aws:iam::303145520006:role/Alexa-Al-Loro-DynamoDB',
