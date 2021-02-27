@@ -1,24 +1,18 @@
-import { PersistenceAdapter } from 'ask-sdk-core';
-import { DynamoDbPersistenceAdapter } from 'ask-sdk-dynamodb-persistence-adapter';
+import { getUserId, PersistenceAdapter } from 'ask-sdk-core';
 import { RequestEnvelope } from 'ask-sdk-model';
 import AWS from 'aws-sdk';
 import { FirebasePersistenceAdapter } from './FirebasePersistenceAdapter';
 import { AuthCode, authCodeToDB, UserData } from './UserData';
 
-interface DynamoDbParameters {
-  readonly DYNAMODB_PERSISTENCE_TABLE_NAME: string;
-  readonly DYNAMODB_PERSISTENCE_REGION: string;
-}
-
-const dynamoDbParameters: DynamoDbParameters = {
-  DYNAMODB_PERSISTENCE_TABLE_NAME: 'feed-the-parrot-auth',
-  DYNAMODB_PERSISTENCE_REGION: 'eu-west-1',
+const dynamoDbParameters = {
+  tableName: 'feed-the-parrot-auth',
+  region: 'eu-west-1',
 };
 
 export class FirebaseWithDynamoDbPersistenceAdapter
   implements PersistenceAdapter {
   private _firebasePersistenceAdapter: FirebasePersistenceAdapter;
-  private _dynamoDbPersistenceAdapter: DynamoDbPersistenceAdapter;
+  private _dynamoDbDocumentClient: AWS.DynamoDB.DocumentClient;
 
   public constructor() {
     this._firebasePersistenceAdapter = new FirebasePersistenceAdapter();
@@ -41,16 +35,12 @@ export class FirebaseWithDynamoDbPersistenceAdapter
       }
     ).promise();
 
-    this._dynamoDbPersistenceAdapter = new DynamoDbPersistenceAdapter({
-      tableName: dynamoDbParameters.DYNAMODB_PERSISTENCE_TABLE_NAME,
-      createTable: false,
-      dynamoDBClient: new AWS.DynamoDB({
-        apiVersion: '2012-08-10',
-        region: dynamoDbParameters.DYNAMODB_PERSISTENCE_REGION,
-        accessKeyId: credentials.Credentials.AccessKeyId,
-        secretAccessKey: credentials.Credentials.SecretAccessKey,
-        sessionToken: credentials.Credentials.SessionToken,
-      }),
+    this._dynamoDbDocumentClient = new AWS.DynamoDB.DocumentClient({
+      apiVersion: '2012-08-10',
+      region: dynamoDbParameters.region,
+      accessKeyId: credentials.Credentials.AccessKeyId,
+      secretAccessKey: credentials.Credentials.SecretAccessKey,
+      sessionToken: credentials.Credentials.SessionToken,
     });
   }
 
@@ -59,10 +49,15 @@ export class FirebaseWithDynamoDbPersistenceAdapter
   }
 
   private setAuthCode(requestEnvelope: RequestEnvelope, code: AuthCode) {
-    return this._dynamoDbPersistenceAdapter.saveAttributes(
-      requestEnvelope,
-      authCodeToDB(code)
-    );
+    return this._dynamoDbDocumentClient
+      .put({
+        TableName: dynamoDbParameters.tableName,
+        Item: {
+          id: getUserId(requestEnvelope),
+          ...authCodeToDB(code),
+        },
+      })
+      .promise();
   }
 
   public async saveAttributes(
