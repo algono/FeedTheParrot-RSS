@@ -14,8 +14,8 @@ export interface AuthCodeDB extends AuthCodeBase {
 }
 
 export function authCodeToDB(code: AuthCode): AuthCodeDB {
-  // The getTime() function returns the time in millis. We need it in seconds
-  return { ...code, expirationDate: code.expirationDate.getTime() / 1000 };
+  // The getTime() function returns the time in millis. We need it in seconds (and as an integer)
+  return { ...code, expirationDate: Math.round(code.expirationDate.getTime() / 1000) };
 }
 
 export interface UserDocData {
