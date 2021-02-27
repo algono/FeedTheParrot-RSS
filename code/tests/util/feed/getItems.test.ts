@@ -13,7 +13,7 @@ import { checkFeedSize } from '../../../src/util/feed/checkFeedSize';
 import { getItems } from '../../../src/util/feed/getItems';
 import { processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { getLangFormatter } from '../../../src/util/langFormatter';
-import { init, initNewInstance } from '../../../src/util/localization';
+import { initNewInstance } from '../../../src/util/localization';
 import {
   feedItemRecordModel,
   feedRecord,
@@ -177,12 +177,6 @@ describe('feedparser related tests', () => {
   testInAllLocales(
     "inits a new localization instance based on the feed's locale"
   )(async (locale) => {
-    mocked(init).mockImplementation(() =>
-      fail(
-        'Should init a new localization instance, not replace the current one'
-      )
-    );
-
     const initNewInstanceMock = mocked(initNewInstance);
 
     const feedMock = mock<Feed>();

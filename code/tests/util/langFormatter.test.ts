@@ -5,13 +5,13 @@ import {
   applyLangFormatter,
   getLangFormatter,
 } from '../../src/util/langFormatter';
-import { init } from '../../src/util/localization';
+import { initNewInstance } from '../../src/util/localization';
 import { testInAllLocales } from '../helpers/helperTests';
 
 describe('getLangFormatter', () => {
   testInAllLocales("returns ssml with a valid 'lang' tag")(
     async (locale) => {
-      const t = await init(locale);
+      const t = await initNewInstance(locale);
 
       const langFormatter = getLangFormatter(t);
 
@@ -23,7 +23,7 @@ describe('getLangFormatter', () => {
 
   testInAllLocales("returns ssml with a valid 'voice' tag")(
     async (locale) => {
-      const t = await init(locale);
+      const t = await initNewInstance(locale);
 
       const langFormatter = getLangFormatter(t);
 

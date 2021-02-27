@@ -12,13 +12,6 @@ export const languageStrings = {
   es,
 };
 
-export function init(locale: string) {
-  return i18next.init({
-    lng: locale,
-    resources: languageStrings,
-  });
-}
-
 export function initNewInstance(locale: string) {
   return i18next
     .createInstance({

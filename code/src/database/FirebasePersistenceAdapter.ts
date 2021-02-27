@@ -2,7 +2,7 @@ import { PersistenceAdapter, getUserId, getLocale } from 'ask-sdk-core';
 import { RequestEnvelope } from 'ask-sdk-model';
 import { NoUserDataError } from '../logic/Errors';
 import { Feed, FeedData } from '../logic/Feed';
-import { init } from '../util/localization';
+import { initNewInstance } from '../util/localization';
 import { UserData, UserDocData } from './UserData';
 
 import * as firebaseAdmin from 'firebase-admin';
@@ -72,7 +72,7 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
     requestEnvelope: RequestEnvelope,
     userRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
   ): Promise<UserData> {
-    const t = await init(getLocale(requestEnvelope));
+    const t = await initNewInstance(getLocale(requestEnvelope));
     const nameField = t('FEED_NAME_FIELD');
 
     const feedSnapshots = await userRef

@@ -1,7 +1,7 @@
 import { AttributesManager, HandlerInput, ResponseBuilder } from 'ask-sdk-core';
 import { RequestEnvelope, Response, ui } from 'ask-sdk-model';
 import { anyString, anything, instance, mock, when } from 'ts-mockito';
-import { init, TFunction } from '../../../src/util/localization';
+import { initNewInstance, TFunction } from '../../../src/util/localization';
 import { resolvableInstance } from '../ts-mockito/resolvableInstance';
 
 export interface HandlerInputMocks {
@@ -44,7 +44,7 @@ export async function mockHandlerInput({
   const mockedAttributesManager = mock<AttributesManager>();
 
   const t = locale
-    ? await init(locale)
+    ? await initNewInstance(locale)
     : locale === null
     ? () => ''
     : () => {

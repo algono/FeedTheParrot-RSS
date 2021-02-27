@@ -1,5 +1,4 @@
 import {
-  init,
   initNewInstance,
   LocalizationRequestInterceptor,
   TFunction,
@@ -41,7 +40,6 @@ function checkTFunctionFromInit(init: (locale: string) => Promise<TFunction>) {
   };
 }
 
-testInAllLocales('init works')(checkTFunctionFromInit(init));
 testInAllLocales('initNewInstance works')(
   checkTFunctionFromInit(initNewInstance)
 );

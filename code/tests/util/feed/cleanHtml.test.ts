@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { cleanHtml } from '../../../src/util/feed/cleanHtml';
-import { init } from '../../../src/util/localization';
+import { initNewInstance } from '../../../src/util/localization';
 import { htmlFormattedLorem } from '../../helpers/fast-check/arbitraries/formattedText';
 import { testInAllLocales } from '../../helpers/helperTests';
 
@@ -14,7 +14,7 @@ test('properly cleans html formatted text', () =>
 testInAllLocales(
   "changes the html ampersand symbol ('&amp;') with the ampersandReplacement"
 )(async (locale) => {
-  const t = await init(locale);
+  const t = await initNewInstance(locale);
   const ampersandReplacement = t('AMPERSAND');
 
   fc.assert(
