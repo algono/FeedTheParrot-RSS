@@ -10,10 +10,10 @@
         {
           "name": "AMAZON.HelpIntent",
           "samples": [
-            "what can I do?",
-            "how do I manage my feeds?",
+            "what can I do",
+            "how do I manage my feeds",
             "how to manage my feeds",
-            "how do I log in from the app?",
+            "how do I log in from the app",
             "how to log in from the app"
           ]
         },
