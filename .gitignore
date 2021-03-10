@@ -17,8 +17,5 @@ ask-resources.json
 **/sonarqube/test-report.xml
 **/sonarqube/*[Tt]oken*
 
-# Generated images from Alexa skill
-skill-package/assets/images/
-
 # Session replays for local debugging
 session-replays/

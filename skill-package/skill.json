@@ -28,18 +28,18 @@
       "locales": {
         "en-US": {
           "name": "Feed the Parrot - RSS feed reader",
-          "smallIconUri": "file://assets/images/en-US_smallIconUri.png",
-          "largeIconUri": "file://assets/images/en-US_largeIconUri.png"
+          "smallIconUri": "file://assets/images/en-US_smallIcon.png",
+          "largeIconUri": "file://assets/images/en-US_largeIcon.png"
         },
         "es-ES": {
           "name": "Al Loro - Lector de feeds RSS",
-          "smallIconUri": "file://assets/images/es-ES_smallIconUri.png",
-          "largeIconUri": "file://assets/images/es-ES_largeIconUri.png"
+          "smallIconUri": "file://assets/images/es-ES_smallIcon.png",
+          "largeIconUri": "file://assets/images/es-ES_largeIcon.png"
         },
         "es-US": {
           "name": "Al Loro - Lector de feeds RSS",
-          "smallIconUri": "file://assets/images/es-US_smallIconUri.png",
-          "largeIconUri": "file://assets/images/es-US_largeIconUri.png"
+          "smallIconUri": "file://assets/images/es-US_smallIcon.png",
+          "largeIconUri": "file://assets/images/es-US_largeIcon.png"
         }
       }
     }
