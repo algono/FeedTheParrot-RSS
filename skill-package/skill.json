@@ -35,11 +35,6 @@
           "name": "Al Loro - Lector de feeds RSS",
           "smallIconUri": "file://assets/images/es-ES_smallIcon.png",
           "largeIconUri": "file://assets/images/es-ES_largeIcon.png"
-        },
-        "es-US": {
-          "name": "Al Loro - Lector de feeds RSS",
-          "smallIconUri": "file://assets/images/es-US_smallIcon.png",
-          "largeIconUri": "file://assets/images/es-US_largeIcon.png"
         }
       }
     }
