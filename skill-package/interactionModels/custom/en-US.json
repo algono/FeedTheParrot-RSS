@@ -9,7 +9,13 @@
         },
         {
           "name": "AMAZON.HelpIntent",
-          "samples": []
+          "samples": [
+            "what can I do?",
+            "how do I manage my feeds?",
+            "how to manage my feeds",
+            "how do I log in from the app?",
+            "how to log in from the app"
+          ]
         },
         {
           "name": "AMAZON.StopIntent",

@@ -1,11 +1,11 @@
 {
   "translation": {
-    "WELCOME_MSG": "Bienvenido, puedes pedirme que te lea una feed o que te diga la lista. ¿Cuál quieres probar?",
+    "WELCOME_MSG": "Bienvenido a Al Loro. Si es tu primera vez, pregúntame: \"¿Qué puedo hacer?\" Si no, dime: ¿Qué quieres hacer?",
     "FEED_LIST_MSG": "Esta es la lista de feeds disponibles: ",
     "FEED_LIST_EMPTY_MSG": "No hay ninguna feed disponible. Añade una a través de la app de al loro.",
     "REPROMPT_MSG": "¿Qué quieres que haga ahora?",
     "NO_FEED_MSG": "Lo siento, no sé cuál es esa feed. Volvamos a intentarlo.",
-    "HELP_MSG": "Puedes pedirme que te lea una feed o que te diga la lista de feeds disponibles. ¿Cómo puedo ayudar?",
+    "HELP_MSG": "Puedes pedirme que te lea una feed o que te diga la lista de feeds disponibles. Para gestionar tus feeds, puedes decirme \"iniciar sesión\". ¿Cómo puedo ayudar?",
     "GOODBYE_MSG": "¡Hasta pronto!",
     "REFLECTOR_MSG": "Acabas de invocar el intent {{intent}}",
     "FALLBACK_MSG": "Lo siento, no lo sé.",
