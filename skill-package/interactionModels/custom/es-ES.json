@@ -10,7 +10,7 @@
         {
           "name": "AMAZON.HelpIntent",
           "samples": [
-            "¿Qué puedo hacer",
+            "Qué puedo hacer",
             "Cómo puedo gestionar mis feeds",
             "Cómo gestionar mis feeds",
             "Cómo inicio sesión desde la app",
