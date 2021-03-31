@@ -55,6 +55,8 @@
 
               "CONFIRMATION_GOTO_NEXT_FEED_ITEM",
 
+              "CONFIRMATION_LISTEN_PODCAST",
+
               "END_READING_FEED",
 
               "EMPTY_FEED_MSG",
@@ -153,6 +155,10 @@
               "CONFIRMATION_GOTO_NEXT_FEED_ITEM": {
                 "type": "string",
                 "description": "Prompt for confirmation on whether the user wants Alexa to go an read the next feed item, after the entire content of a feed item has been read to them"
+              },
+              "CONFIRMATION_LISTEN_PODCAST": {
+                "type": "string",
+                "description": "Prompt for confirmation on whether the user wants Alexa to start playing the podcast associated with the current feed item"
               },
               "END_READING_FEED": {
                 "type": "string",

@@ -26,6 +26,11 @@ export function processFeedItem(
     content: [],
   };
 
+  const audio = item.enclosures.find((enclosure) => enclosure.type?.startsWith('audio'));
+  if (audio) {
+    feedItem.podcast = audio;
+  }
+
   const content = getContent(feed, feedItem);
 
   feedItem.content = processContent(

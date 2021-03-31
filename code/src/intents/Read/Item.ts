@@ -24,6 +24,8 @@ export interface ReadState {
   feedItems: FeedItems;
   currentIndex: number;
   currentContentIndex?: number;
+
+  listenToPodcast?: boolean;
 }
 
 export const ReadItemIntentHandler: RequestHandler = {
@@ -123,26 +125,21 @@ export const ReadContentIntentHandler: RequestHandler = {
   handle(handlerInput) {
     const {
       attributesManager,
-      requestEnvelope,
       responseBuilder,
     } = handlerInput;
-
-    const intentRequest = getRequest<IntentRequest>(requestEnvelope);
 
     const sessionAttributes = attributesManager.getSessionAttributes();
 
     const readState: ReadState = sessionAttributes.readState;
 
-    if (intentRequest.intent.confirmationStatus == 'DENIED') {
+    const item = readState.feedItems.list[readState.currentIndex];
+
+    if (readState.listenToPodcast) {
       return responseBuilder
-        .addDelegateDirective({
-          name: 'AMAZON.NextIntent',
-          confirmationStatus: 'CONFIRMED',
-        })
+        .addAudioPlayerPlayDirective('REPLACE_ALL', item.podcast.url, 'feed_the_parrot_playing_audio', 0)
+        .withShouldEndSession(true)
         .getResponse();
     }
-
-    const item = readState.feedItems.list[readState.currentIndex];
 
     const { t }: { t?: TFunction } = attributesManager.getRequestAttributes();
 
@@ -152,8 +149,7 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     let speakOutputItem: string,
       cardOutputItem: string,
-      confirmationMsg: string,
-      nextIntentName: string;
+      confirmationMsg: string;
 
     if (index >= 0 && index < content.length) {
       cardOutputItem = content[index];
@@ -165,8 +161,6 @@ export const ReadContentIntentHandler: RequestHandler = {
       // If it is any content item but the last one, prompt for continue reading the next
       if (index < content.length - 1) {
         confirmationMsg = t('CONFIRMATION_CONTINUE_READING_FEED');
-        nextIntentName = 'AMAZON.YesIntent';
-
         readState.currentContentIndex = index + 1;
       }
     } else {
@@ -175,13 +169,23 @@ export const ReadContentIntentHandler: RequestHandler = {
     }
 
     // If there are no other items to continue to, go to the next item
-    if (!confirmationMsg)
-      confirmationMsg = t('CONFIRMATION_GOTO_NEXT_FEED_ITEM');
-    if (!nextIntentName) nextIntentName = 'AMAZON.NextIntent';
+    if (!confirmationMsg) {
+      // Unless there is a podcast to listen to. In that case, ask the user about doing so
+      if (item.podcast) {
+        confirmationMsg = t('CONFIRMATION_LISTEN_PODCAST');
+        readState.listenToPodcast = true;
+      } else {
+        return responseBuilder
+          .speak(speakOutputItem + t('CONFIRMATION_GOTO_NEXT_FEED_ITEM'))
+          .addConfirmIntentDirective({
+            name: 'AMAZON.NextIntent',
+            confirmationStatus: 'NONE',
+          })
+          .getResponse();
+      }
+    }
 
     if (speakOutputItem) speakOutputItem += LONG_PAUSE;
-
-    attributesManager.setSessionAttributes(sessionAttributes);
 
     if (cardOutputItem) {
       responseBuilder.withStandardCard(
@@ -193,10 +197,6 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     return responseBuilder
       .speak(speakOutputItem + confirmationMsg)
-      .addConfirmIntentDirective({
-        name: nextIntentName,
-        confirmationStatus: 'NONE',
-      })
       .getResponse();
   },
 };

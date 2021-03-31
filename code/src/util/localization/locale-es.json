@@ -22,6 +22,7 @@
     "READING_FEED": "Vale. Leyendo la feed \"{{feed}}\":",
     "CONFIRMATION_CONTINUE_READING_FEED": "¿Sigo leyendo?",
     "CONFIRMATION_GOTO_NEXT_FEED_ITEM": "¿Paso al siguiente?",
+    "CONFIRMATION_LISTEN_PODCAST": "¿Quieres escuchar este podcast?",
     "END_READING_FEED": "Y eso es todo por ahora.",
     "EMPTY_FEED_MSG": "¡Oh! La feed está vacía.",
     "FEED_NAME_FIELD": "name-es",

@@ -7,6 +7,13 @@ export interface FeedItem {
   imageUrl?: string;
 
   content?: string[];
+
+  podcast?: Podcast
+}
+
+interface Podcast {
+  url: string;
+  length?: string;
 }
 
 export interface FeedItems {
