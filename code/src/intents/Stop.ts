@@ -6,7 +6,8 @@ export const CancelAndStopIntentHandler: RequestHandler = {
     return (
       getRequestType(handlerInput.requestEnvelope) === 'IntentRequest' &&
       (getIntentName(handlerInput.requestEnvelope) === 'AMAZON.CancelIntent' ||
-        getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent')
+        getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent' ||
+        getIntentName(handlerInput.requestEnvelope) === 'AMAZON.PauseIntent')
     );
   },
   handle(handlerInput) {
@@ -17,9 +18,9 @@ export const CancelAndStopIntentHandler: RequestHandler = {
     } = handlerInput.attributesManager.getRequestAttributes();
     const speakOutput = t('GOODBYE_MSG');
     return handlerInput.responseBuilder
-    .speak(speakOutput)
-    .addAudioPlayerStopDirective()
-    .withShouldEndSession(true)
-    .getResponse();
+      .speak(speakOutput)
+      .addAudioPlayerStopDirective()
+      .withShouldEndSession(true)
+      .getResponse();
   },
 };

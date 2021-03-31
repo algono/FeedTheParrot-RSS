@@ -29,7 +29,6 @@ import {
   GenericErrorHandler,
   InvalidFeedUrlErrorHandler,
 } from './intents/Error';
-import { PauseIntentHandler } from './intents/Podcast';
 import { FirebaseWithDynamoDbPersistenceAdapter } from './database/FirebaseWithDynamoDbPersistenceAdapter';
 
 // The SkillBuilder acts as the entry point for your skill, routing all request and response
@@ -40,7 +39,6 @@ export const handler = SkillBuilders.custom()
   .addRequestHandlers(
     LaunchRequestHandler,
     CancelAndStopIntentHandler,
-    PauseIntentHandler,
     HelpIntentHandler,
     AuthIntentHandler,
     ReadIntentHandler,
