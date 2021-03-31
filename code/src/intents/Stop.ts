@@ -16,6 +16,10 @@ export const CancelAndStopIntentHandler: RequestHandler = {
       t?: TFunction;
     } = handlerInput.attributesManager.getRequestAttributes();
     const speakOutput = t('GOODBYE_MSG');
-    return handlerInput.responseBuilder.speak(speakOutput).getResponse();
+    return handlerInput.responseBuilder
+    .speak(speakOutput)
+    .addAudioPlayerStopDirective()
+    .withShouldEndSession(true)
+    .getResponse();
   },
 };
