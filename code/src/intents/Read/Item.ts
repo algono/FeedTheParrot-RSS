@@ -195,8 +195,11 @@ export const ReadContentIntentHandler: RequestHandler = {
       );
     }
 
+    const speakOutput = speakOutputItem + confirmationMsg;
+
     return responseBuilder
-      .speak(speakOutputItem + confirmationMsg)
+      .speak(speakOutput)
+      .reprompt(speakOutput)
       .getResponse();
   },
 };
