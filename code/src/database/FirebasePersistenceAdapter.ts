@@ -1,7 +1,7 @@
 import { PersistenceAdapter, getUserId, getLocale } from 'ask-sdk-core';
 import { RequestEnvelope } from 'ask-sdk-model';
 import { NoUserDataError } from '../logic/Errors';
-import { Feed, FeedData } from '../logic/Feed';
+import { Feed, FeedData, FeedFilters } from '../logic/Feed';
 import { initNewInstance } from '../util/localization';
 import { UserData, UserDocData } from './UserData';
 
@@ -12,6 +12,33 @@ export const collectionNames = {
   users: 'users',
   feeds: 'feeds',
 } as const;
+
+interface HasFeedFiltersDb {
+  filterByText?: string[];
+  filterByTextMatchAll?: boolean;
+  filterByCategory?: string[];
+  filterByCategoryMatchAll?: boolean;
+}
+
+function processFeedFilters(filtersDb: HasFeedFiltersDb): FeedFilters {
+  return {
+    text: {
+      values: filtersDb.filterByText,
+      matchAll: filtersDb.filterByTextMatchAll,
+    },
+    category: {
+      values: filtersDb.filterByCategory,
+      matchAll: filtersDb.filterByCategoryMatchAll,
+    },
+  };
+}
+
+function deleteFeedFiltersFrom(filtersDb: HasFeedFiltersDb) {
+  delete filtersDb.filterByCategory;
+  delete filtersDb.filterByCategoryMatchAll;
+  delete filtersDb.filterByText;
+  delete filtersDb.filterByTextMatchAll;
+}
 
 export class FirebasePersistenceAdapter implements PersistenceAdapter {
   private readonly _firestore: FirebaseFirestore.Firestore;
@@ -88,7 +115,10 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
 
       const name: string = data[nameField];
 
-      const feed: Feed = { name, ...(data as FeedData) };
+      const filters = processFeedFilters(data);
+      deleteFeedFiltersFrom(data);
+
+      const feed: Feed = { name, filters, ...(data as FeedData) };
 
       feedNames.push(name);
       feeds[name] = feed;

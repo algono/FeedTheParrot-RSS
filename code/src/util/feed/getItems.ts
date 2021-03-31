@@ -4,7 +4,7 @@ import { initNewInstance } from '../localization';
 import { Feed, FeedItems } from '../../logic/Feed';
 import { getLangFormatter } from '../langFormatter';
 import { checkFeedSize } from './checkFeedSize';
-import { processFeedItem } from './processFeedItem';
+import { matchesFilters, processFeedItem } from './processFeedItem';
 import { InvalidFeedUrlError } from '../../logic/Errors';
 
 export function getItems(
@@ -54,7 +54,7 @@ export function getItems(
       let item: Item;
       while ((item = stream.read())) {
         const feedItem = processFeedItem(item, feed, ampersandReplacement);
-        items.list.push(feedItem);
+        if (matchesFilters(feedItem, feed)) items.list.push(feedItem);
 
         // If there is an item limit set and it has been surpassed, consume the stream and break the loop
         if (feed.itemLimit && items.list.length >= feed.itemLimit) {

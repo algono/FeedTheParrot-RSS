@@ -1,6 +1,6 @@
 import { Item } from 'feedparser';
 import { MAX_CHARACTERS_SPEECH } from '../constants';
-import { Feed, FeedItem } from '../../logic/Feed';
+import { Feed, FeedFilter, FeedItem } from '../../logic/Feed';
 import { truncateAll } from '../truncateAll';
 import { cleanHtml } from './cleanHtml';
 
@@ -22,11 +22,14 @@ export function processFeedItem(
     summary: clean(item.summary),
     date: new Date(item.date).toUTCString(),
     link: item.link,
+    categories: item.categories,
     imageUrl: item.image ? item.image.url : undefined,
     content: [],
   };
 
-  const audio = item.enclosures.find((enclosure) => enclosure.type?.startsWith('audio'));
+  const audio = item.enclosures.find((enclosure) =>
+    enclosure.type?.startsWith('audio')
+  );
   if (audio) {
     feedItem.podcast = audio;
   }
@@ -60,4 +63,24 @@ function processContent(
   } else {
     return [content];
   }
+}
+
+export function matchesFilters(item: FeedItem, feed: Feed): boolean {
+  return matchesTextFilter(item, feed) && matchesCategoryFilter(item, feed);
+}
+
+function matchesTextFilter(item: FeedItem, feed: Feed): boolean {
+  return matchesFilter(feed.filters.text, (value) => {
+    return item.title.includes(value) || item.content?.includes(value);
+  });
+}
+
+function matchesCategoryFilter(item: FeedItem, feed: Feed): boolean {
+  return matchesFilter(feed.filters.category, (value) => item.categories.includes(value));
+}
+
+function matchesFilter(filter: FeedFilter, predicate: (value: string) => boolean): boolean {
+  if (!filter.values) return true; // If there is no actual filter, always match
+  if (filter.matchAll) return filter.values.every(predicate);
+  else return filter.values.some(predicate);
 }
