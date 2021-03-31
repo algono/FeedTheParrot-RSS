@@ -21,7 +21,12 @@
               "uri": "arn:aws:lambda:us-west-2:968299150356:function:ad75c16d-e3d6-4e9e-ba98-43ec1843b3d6:Release_0"
             }
           }
-        }
+        },
+        "interfaces": [
+          {
+            "type": "AUDIO_PLAYER"
+          }
+        ]
       }
     },
     "publishingInformation": {
