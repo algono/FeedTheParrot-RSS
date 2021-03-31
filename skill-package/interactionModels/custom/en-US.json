@@ -127,6 +127,18 @@
           "name": "ReadItemIntent",
           "slots": [],
           "samples": []
+        },
+        {
+            "name": "AMAZON.FallbackIntent",
+            "samples": []
+        },
+        {
+            "name": "AMAZON.PauseIntent",
+            "samples": []
+        },
+        {
+            "name": "AMAZON.ResumeIntent",
+            "samples": []
         }
       ],
       "types": [
