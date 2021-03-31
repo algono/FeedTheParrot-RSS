@@ -1,7 +1,7 @@
 import { PersistenceAdapter, getUserId, getLocale } from 'ask-sdk-core';
 import { RequestEnvelope } from 'ask-sdk-model';
 import { NoUserDataError } from '../logic/Errors';
-import { Feed, FeedData, FeedFilters } from '../logic/Feed';
+import { Feed, FeedData, FeedFilters, FilterMatch } from '../logic/Feed';
 import { initNewInstance } from '../util/localization';
 import { UserData, UserDocData } from './UserData';
 
@@ -20,15 +20,19 @@ interface HasFeedFiltersDb {
   filterByCategoryMatchAll?: boolean;
 }
 
+function selectFeedFilterMatch(matchAll: boolean): FilterMatch {
+  return matchAll ? 'all' : 'any';
+}
+
 function processFeedFilters(filtersDb: HasFeedFiltersDb): FeedFilters {
   return {
     text: {
       values: filtersDb.filterByText,
-      matchAll: filtersDb.filterByTextMatchAll,
+      matchAll: selectFeedFilterMatch(filtersDb.filterByTextMatchAll),
     },
     category: {
       values: filtersDb.filterByCategory,
-      matchAll: filtersDb.filterByCategoryMatchAll,
+      matchAll: selectFeedFilterMatch(filtersDb.filterByCategoryMatchAll),
     },
   };
 }

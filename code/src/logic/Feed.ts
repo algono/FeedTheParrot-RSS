@@ -22,9 +22,11 @@ export interface FeedItems {
   langFormatter?: string;
 }
 
+export type FilterMatch = 'any' | 'all';
+
 export interface FeedFilter {
   values: string[]
-  matchAll: boolean, // If true, all values must match for the filter to be passed
+  matchAll: FilterMatch
 }
 
 export interface FeedFilters {

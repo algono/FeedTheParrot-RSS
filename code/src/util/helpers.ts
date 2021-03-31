@@ -1,4 +1,5 @@
 import { ui } from 'ask-sdk-model';
+import { FilterMatch } from '../logic/Feed';
 
 /**
  * This is a user-defined type guard.
@@ -46,4 +47,13 @@ export function calculateMaxCharactersIn<
     }
   }
   return res;
+}
+
+export function anyOrAllElements<T>(
+  array: T[],
+  match: FilterMatch,
+  predicate: (value: T) => boolean
+): boolean {
+  if (match == 'any') return array.some(predicate);
+  if (match == 'all') return array.every(predicate);
 }

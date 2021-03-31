@@ -3,6 +3,7 @@ import { MAX_CHARACTERS_SPEECH } from '../constants';
 import { Feed, FeedFilter, FeedItem } from '../../logic/Feed';
 import { truncateAll } from '../truncateAll';
 import { cleanHtml } from './cleanHtml';
+import { anyOrAllElements } from '../helpers';
 
 export function processFeedItem(
   item: Item,
@@ -71,16 +72,25 @@ export function matchesFilters(item: FeedItem, feed: Feed): boolean {
 
 function matchesTextFilter(item: FeedItem, feed: Feed): boolean {
   return matchesFilter(feed.filters.text, (value) => {
-    return item.title.includes(value) || item.content?.includes(value);
+    return (
+      item.title.toUpperCase().includes(value.toUpperCase()) ||
+      item.content?.some((content) => {
+        content.toUpperCase().includes(value.toUpperCase());
+      })
+    );
   });
 }
 
 function matchesCategoryFilter(item: FeedItem, feed: Feed): boolean {
-  return matchesFilter(feed.filters.category, (value) => item.categories.includes(value));
+  return matchesFilter(feed.filters.category, (value) =>
+    item.categories.includes(value)
+  );
 }
 
-function matchesFilter(filter: FeedFilter, predicate: (value: string) => boolean): boolean {
+function matchesFilter(
+  filter: FeedFilter,
+  predicate: (value: string) => boolean
+): boolean {
   if (!filter.values) return true; // If there is no actual filter, always match
-  if (filter.matchAll) return filter.values.every(predicate);
-  else return filter.values.some(predicate);
+  return anyOrAllElements(filter.values, filter.matchAll, predicate);
 }
