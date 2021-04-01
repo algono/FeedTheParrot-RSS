@@ -19,7 +19,7 @@ export const CancelAndStopIntentHandler: RequestHandler = {
     const speakOutput = t('GOODBYE_MSG');
     return handlerInput.responseBuilder
       .speak(speakOutput)
-      .addAudioPlayerStopDirective()
+      .addAudioPlayerClearQueueDirective('CLEAR_ALL')
       .withShouldEndSession(true)
       .getResponse();
   },
