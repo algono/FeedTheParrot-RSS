@@ -91,6 +91,6 @@ function matchesFilter(
   filter: FeedFilter,
   predicate: (value: string) => boolean
 ): boolean {
-  if (!filter.values) return true; // If there is no actual filter, always match
+  if (!filter.values || filter.values.length === 0) return true; // If there is no actual filter, always match
   return anyOrAllElements(filter.values, filter.matchAll, predicate);
 }
