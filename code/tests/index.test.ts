@@ -1,7 +1,7 @@
 import { CustomSkillBuilder, SkillBuilders } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
 import { anyString, instance, mock, verify, when } from 'ts-mockito';
-import { FirebasePersistenceAdapter } from '../src/database/FirebasePersistenceAdapter';
+import { FirebaseWithDynamoDbPersistenceAdapter } from '../src/database/FirebaseWithDynamoDbPersistenceAdapter';
 import { GenericErrorHandler } from '../src/intents/Error';
 import { ReadItemIntentHandler } from '../src/intents/Read/Item';
 import { IntentReflectorHandler } from '../src/intents/Reflector';
@@ -15,7 +15,7 @@ import { lastCallTo } from './helpers/jest/mockInstanceHelpers';
 jest.mock('ask-sdk-core');
 
 jest.mock('../src/database/Database');
-jest.mock('../src/database/FirebasePersistenceAdapter');
+jest.mock('../src/database/FirebaseWithDynamoDbPersistenceAdapter');
 
 const customSkillBuilderMock = mock<CustomSkillBuilder>();
 
@@ -86,11 +86,11 @@ test('Custom skill has SaveResponseForRepeatingInterceptor', () => {
   );
 });
 
-test('Custom skill has one Firebase Persistence Adapter', () => {
+test('Custom skill has one Firebase With DynamoDB Persistence Adapter', () => {
   expect(withPersistenceAdapterSpy).toHaveBeenCalled();
-  expect(mocked(FirebasePersistenceAdapter)).toHaveBeenCalledTimes(1);
+  expect(mocked(FirebaseWithDynamoDbPersistenceAdapter)).toHaveBeenCalledTimes(1);
   expect(lastCallTo(withPersistenceAdapterSpy)[0]).toBeInstanceOf(
-    FirebasePersistenceAdapter
+    FirebaseWithDynamoDbPersistenceAdapter
   );
 });
 
