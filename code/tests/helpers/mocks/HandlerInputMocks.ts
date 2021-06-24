@@ -104,6 +104,14 @@ export async function mockHandlerInput({
     mockedResponseBuilder.addConfirmIntentDirective(anything())
   ).thenCall(() => instance(mockedResponseBuilder));
 
+  when(
+    mockedResponseBuilder.addAudioPlayerStopDirective()
+  ).thenCall(() => instance(mockedResponseBuilder));
+
+  when(
+    mockedResponseBuilder.withShouldEndSession(anything())
+  ).thenCall(() => instance(mockedResponseBuilder));
+
   const mockedResponse = mock<Response>();
 
   when(mockedResponse.outputSpeech).thenReturn(outputSpeech);
