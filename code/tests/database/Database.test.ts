@@ -7,7 +7,6 @@ import {
   capture,
   instance,
   mock,
-  objectContaining,
   resetCalls,
   verify,
   when,
@@ -103,19 +102,20 @@ describe('setAuthCode', () => {
       );
     };
   }
-  
+
   // Check that the auth code was stored properly
-  function verifySetAuthCode(clientMock: AWS.DynamoDB.DocumentClient, userId: string, code: AuthCode) {
-    return verify(
-        clientMock.put(
-          objectContaining({
-            Item: {
-              id: userId,
-              ...authCodeToDB(code),
-            },
-          })
-        )
-    ).once();
+  function verifySetAuthCode(
+    clientMock: AWS.DynamoDB.DocumentClient,
+    userId: string,
+    code: AuthCode
+  ) {
+    const [item] = capture(clientMock.put).last();
+    return expect(item).toMatchObject({
+      Item: {
+        id: userId,
+        ...authCodeToDB(code),
+      },
+    });
   }
 
   test(
@@ -138,7 +138,7 @@ describe('setAuthCode', () => {
 
       const [userDocData] = capture(collectionMock.add).last();
       expect(userDocData).toMatchObject<UserDocData>({ userId });
-      
+
       verifySetAuthCode(clientMock, userId, code);
     })
   );
@@ -178,8 +178,12 @@ describe('setAuthCode', () => {
     const authCodeValues: readonly AuthCode[] = [null, undefined] as const;
 
     for (const authCode of authCodeValues) {
-      const { databaseHandler, firestoreMock, clientMock, persistentAttributesHolder } =
-        await createDatabaseHandler();
+      const {
+        databaseHandler,
+        firestoreMock,
+        clientMock,
+        persistentAttributesHolder,
+      } = await createDatabaseHandler();
 
       persistentAttributesHolder.attributes = {
         feeds: null,
