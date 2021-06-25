@@ -544,33 +544,6 @@ describe('ReadContentIntent', () => {
       )
     )
   );
-
-  test('If the intent was denied, go to the next item', () =>
-    checkIfOnConfirmationStatus(
-      {
-        DENIED: true,
-      },
-      async (shouldBeTrue) => {
-        const mocks = await mockHandlerInput({ sessionAttributes: {} });
-
-        await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
-
-        const verificator = verify(
-          mocks.mockedResponseBuilder.addDelegateDirective(
-            deepEqual({
-              name: 'AMAZON.NextIntent',
-              confirmationStatus: 'CONFIRMED',
-            })
-          )
-        );
-
-        if (shouldBeTrue) {
-          verificator.once();
-        } else {
-          verificator.never();
-        }
-      }
-    ));
 });
 
 describe('GoToPreviousItemIntent', () => {
