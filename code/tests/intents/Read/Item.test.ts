@@ -503,7 +503,7 @@ describe('ReadContentIntent', () => {
         async (
           { feedItems, currentIndex, currentContentIndex },
           confirmationStatus,
-          listenToPodcast,
+          listenToPodcast
         ) => {
           const { readStateMock } = mockReadState();
 
@@ -512,11 +512,21 @@ describe('ReadContentIntent', () => {
           when(readStateMock.currentContentIndex).thenReturn(
             currentContentIndex
           );
-          when(readStateMock.listenToPodcast).thenReturn(listenToPodcast);
+
+          const sessionAttributes = {
+            readState: instance(readStateMock),
+          };
+
+          mockProperty(
+            sessionAttributes.readState,
+            'listenToPodcast',
+            () => listenToPodcast,
+            () => null
+          );
 
           const mocks = await mockHandlerInput({
             locale,
-            sessionAttributes: { readState: instance(readStateMock) },
+            sessionAttributes,
           });
 
           const { intentMock } = mockIntent();
