@@ -134,7 +134,7 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     const item = readState.feedItems.list[readState.currentIndex];
 
-    if (readState.listenToPodcast) {
+    if (item.podcast && readState.listenToPodcast) {
       return responseBuilder
         .addAudioPlayerPlayDirective('REPLACE_ALL', item.podcast.url, 'feed_the_parrot_playing_audio', 0)
         .withShouldEndSession(true)

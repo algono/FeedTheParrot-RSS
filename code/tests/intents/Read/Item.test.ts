@@ -301,9 +301,11 @@ describe('ReadContentIntent', () => {
             };
           }),
         fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
+        fc.oneof(fc.boolean(), fc.constant(undefined)),
         async (
           { feedItems, currentIndex, currentContentIndex },
-          confirmationStatus
+          confirmationStatus,
+          listenToPodcast
         ) => {
           resetCalls<unknown>(
             mocks.mockedHandlerInput,
@@ -316,6 +318,7 @@ describe('ReadContentIntent', () => {
 
           when(readStateMock.feedItems).thenReturn(feedItems);
           when(readStateMock.currentIndex).thenReturn(currentIndex);
+          when(readStateMock.listenToPodcast).thenReturn(listenToPodcast);
 
           sessionAttributes.readState = instance(readStateMock);
 
@@ -496,9 +499,11 @@ describe('ReadContentIntent', () => {
             };
           }),
         fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
+        fc.oneof(fc.boolean(), fc.constant(undefined)),
         async (
           { feedItems, currentIndex, currentContentIndex },
-          confirmationStatus
+          confirmationStatus,
+          listenToPodcast,
         ) => {
           const { readStateMock } = mockReadState();
 
@@ -507,6 +512,7 @@ describe('ReadContentIntent', () => {
           when(readStateMock.currentContentIndex).thenReturn(
             currentContentIndex
           );
+          when(readStateMock.listenToPodcast).thenReturn(listenToPodcast);
 
           const mocks = await mockHandlerInput({
             locale,

@@ -1,5 +1,5 @@
 import fc from 'fast-check';
-import { Feed, FeedItem, FeedItems } from '../../../../src/logic/Feed';
+import { Feed, FeedItem, FeedItems, Podcast } from '../../../../src/logic/Feed';
 import { getLangFormatter } from '../../../../src/util/langFormatter';
 import { TFunction } from '../../../../src/util/localization';
 import { AvailableLocale, availableLocales } from '../../helperTests';
@@ -79,7 +79,7 @@ export function feedItemRecordModel({
   contentArb?: fc.Arbitrary<string[]>;
   hasDescription?: MayHappenOption;
   hasSummary?: MayHappenOption;
-} = {}) {
+} = {}): { [K in keyof FeedItem]: fc.Arbitrary<FeedItem[K]> } {
   return {
     title: fc.lorem(),
     description: mayHappenArbitrary(
@@ -96,6 +96,13 @@ export function feedItemRecordModel({
         : fc.oneof(contentArb, fc.constant(undefined))
       : fc.constant(undefined),
     categories: fc.array(fc.lorem()),
+    podcast: fc.oneof(
+      fc.record<Podcast>({
+        url: fc.webUrl(),
+        length: fc.oneof(fc.nat(), fc.constant(undefined)),
+      }),
+      fc.constant(undefined)
+    ),
   };
 }
 
