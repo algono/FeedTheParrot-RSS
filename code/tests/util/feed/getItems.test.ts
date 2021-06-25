@@ -11,7 +11,7 @@ import {
 import { Feed, FeedItem } from '../../../src/logic/Feed';
 import { checkFeedSize } from '../../../src/util/feed/checkFeedSize';
 import { getItems } from '../../../src/util/feed/getItems';
-import { processFeedItem } from '../../../src/util/feed/processFeedItem';
+import { matchesFilters, processFeedItem } from '../../../src/util/feed/processFeedItem';
 import { getLangFormatter } from '../../../src/util/langFormatter';
 import { initNewInstance } from '../../../src/util/localization';
 import {
@@ -120,6 +120,8 @@ describe('feedparser related tests', () => {
     cleanupEventEmitter = () => eventEmitter.removeAllListeners();
 
     mocked(initNewInstance).mockResolvedValue(tMock);
+
+    mocked(matchesFilters).mockReturnValue(true);
   };
 
   beforeEach(setupFeedParser);
