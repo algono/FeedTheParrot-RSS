@@ -51,11 +51,13 @@ export function feedItemRecord({
   contentMinLength = 0,
   hasDescription = 'always',
   hasSummary = 'always',
+  hasPodcast = 'never',
 }: {
   readingContent?: boolean;
   contentMinLength?: number;
   hasDescription?: MayHappenOption;
   hasSummary?: MayHappenOption;
+  hasPodcast?: MayHappenOption;
 } = {}): fc.Arbitrary<FeedItem> {
   const contentArb = content({ minLength: contentMinLength });
   return fc.record<FeedItem, fc.RecordConstraints<keyof FeedItem>>(
@@ -64,6 +66,7 @@ export function feedItemRecord({
       contentArb,
       hasDescription,
       hasSummary,
+      hasPodcast,
     }),
     { withDeletedKeys: false }
   );
@@ -74,11 +77,13 @@ export function feedItemRecordModel({
   contentArb,
   hasDescription = 'always',
   hasSummary = 'always',
+  hasPodcast = 'never',
 }: {
   readingContent?: boolean;
   contentArb?: fc.Arbitrary<string[]>;
   hasDescription?: MayHappenOption;
   hasSummary?: MayHappenOption;
+  hasPodcast?: MayHappenOption;
 } = {}): { [K in keyof FeedItem]: fc.Arbitrary<FeedItem[K]> } {
   return {
     title: fc.lorem(),
@@ -96,12 +101,12 @@ export function feedItemRecordModel({
         : fc.oneof(contentArb, fc.constant(undefined))
       : fc.constant(undefined),
     categories: fc.array(fc.lorem()),
-    podcast: fc.oneof(
+    podcast: mayHappenArbitrary(
       fc.record<Podcast>({
         url: fc.webUrl(),
         length: fc.oneof(fc.nat(), fc.constant(undefined)),
       }),
-      fc.constant(undefined)
+      hasPodcast
     ),
   };
 }
@@ -111,19 +116,24 @@ export function feedItemsRecord({
   readingContent = false,
   contentMinLength = 0,
   t,
+  hasPodcast = 'never',
 }: {
   minLength?: number;
   contentMinLength?: number;
   readingContent?: boolean;
   t?: TFunction;
+  hasPodcast?: MayHappenOption;
 } = {}): fc.Arbitrary<FeedItems> {
   const langFormatterValue = t ? getLangFormatter(t) : undefined;
 
   return fc.record<FeedItems, fc.RecordConstraints<keyof FeedItems>>(
     {
-      list: fc.array(feedItemRecord({ readingContent, contentMinLength }), {
-        minLength,
-      }),
+      list: fc.array(
+        feedItemRecord({ readingContent, contentMinLength, hasPodcast }),
+        {
+          minLength,
+        }
+      ),
       langFormatter: fc.constant(langFormatterValue),
     },
     { withDeletedKeys: false }

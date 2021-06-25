@@ -284,6 +284,7 @@ describe('ReadContentIntent', () => {
               readingContent: true,
               contentMinLength: 2,
               t: mocks.t,
+              hasPodcast: 'sometimes',
             }),
             fc.nat(),
             fc.option(fc.nat())
@@ -476,7 +477,11 @@ describe('ReadContentIntent', () => {
       fc.asyncProperty(
         fc
           .tuple(
-            feedItemsRecord({ minLength: 1, readingContent: true }),
+            feedItemsRecord({
+              minLength: 1,
+              readingContent: true,
+              hasPodcast: 'sometimes',
+            }),
             fc.nat(),
             fc.integer()
           )
