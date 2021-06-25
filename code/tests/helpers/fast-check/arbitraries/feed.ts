@@ -90,9 +90,11 @@ export function feedItemRecordModel({
     date: fc.date({ min: new Date(0) }).map((date) => date.toUTCString()),
     link: fc.webUrl(),
     imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
-    content: readingContent
-      ? contentArb
-      : fc.oneof(contentArb, fc.constant(undefined)),
+    content: contentArb
+      ? readingContent
+        ? contentArb
+        : fc.oneof(contentArb, fc.constant(undefined))
+      : fc.constant(undefined),
     categories: fc.array(fc.lorem()),
   };
 }
