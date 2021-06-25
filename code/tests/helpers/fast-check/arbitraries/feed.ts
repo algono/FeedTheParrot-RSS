@@ -18,7 +18,7 @@ export function feedRecord({
   maxItemLimit?: number;
   readFullContentCustomArb?: fc.Arbitrary<boolean>;
 } = {}): fc.Arbitrary<Feed> {
-  return fc.record<Feed, fc.RecordConstraints>(
+  return fc.record<Feed, fc.RecordConstraints<keyof Feed>>(
     {
       name: fc.lorem(),
       url: fc.webUrl(),
@@ -58,7 +58,7 @@ export function feedItemRecord({
   hasSummary?: MayHappenOption;
 } = {}): fc.Arbitrary<FeedItem> {
   const contentArb = content({ minLength: contentMinLength });
-  return fc.record<FeedItem, fc.RecordConstraints>(
+  return fc.record<FeedItem, fc.RecordConstraints<keyof FeedItem>>(
     feedItemRecordModel({
       readingContent,
       contentArb,
@@ -93,6 +93,7 @@ export function feedItemRecordModel({
     content: readingContent
       ? contentArb
       : fc.oneof(contentArb, fc.constant(undefined)),
+    categories: fc.array(fc.lorem()),
   };
 }
 
@@ -109,7 +110,7 @@ export function feedItemsRecord({
 } = {}): fc.Arbitrary<FeedItems> {
   const langFormatterValue = t ? getLangFormatter(t) : undefined;
 
-  return fc.record<FeedItems, fc.RecordConstraints>(
+  return fc.record<FeedItems, fc.RecordConstraints<keyof FeedItems>>(
     {
       list: fc.array(feedItemRecord({ readingContent, contentMinLength }), {
         minLength,

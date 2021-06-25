@@ -66,7 +66,7 @@ describe('setAuthCode', () => {
       await fc.assert(
         fc.asyncProperty(
           fc.string({ minLength: 1 }),
-          fc.record<AuthCode, fc.RecordConstraints>(
+          fc.record<AuthCode, fc.RecordConstraints<keyof AuthCode>>(
             {
               code: authCodeString,
               expirationDate: fc.date({ min: new Date() }),

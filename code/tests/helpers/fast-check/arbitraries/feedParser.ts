@@ -3,7 +3,7 @@ import { Enclosure, Image, Item, Meta, NS, Type } from 'feedparser';
 import { availableLocales } from '../../helperTests';
 import { mayHappenArbitrary, MayHappenOption } from './misc';
 
-const imageRecord: fc.Arbitrary<Image> = fc.record<Image, fc.RecordConstraints>(
+const imageRecord: fc.Arbitrary<Image> = fc.record<Image, fc.RecordConstraints<keyof Image>>(
   {
     title: fc.lorem(),
     url: fc.webUrl(),
@@ -11,7 +11,7 @@ const imageRecord: fc.Arbitrary<Image> = fc.record<Image, fc.RecordConstraints>(
   { withDeletedKeys: false }
 );
 
-const metaRecord: fc.Arbitrary<Meta> = fc.record<Meta, fc.RecordConstraints>(
+const metaRecord: fc.Arbitrary<Meta> = fc.record<Meta, fc.RecordConstraints<keyof Meta>>(
   {
     '#ns': fc.constant<NS[]>(null),
     '#type': fc.constant<Type>(null),
@@ -40,7 +40,7 @@ export function itemRecord({
   hasDescription?: MayHappenOption;
   hasSummary?: MayHappenOption;
 } = {}): fc.Arbitrary<Item> {
-  return fc.record<Item, fc.RecordConstraints>(
+  return fc.record<Item, fc.RecordConstraints<keyof Item>>(
     {
       title: fc.lorem(),
       description: mayHappenArbitrary(
@@ -58,7 +58,7 @@ export function itemRecord({
       image: fc.oneof(imageRecord, fc.constant(undefined)),
       categories: fc.array(fc.lorem()),
       enclosures: fc.array(
-        fc.record<Enclosure, fc.RecordConstraints>(
+        fc.record<Enclosure, fc.RecordConstraints<keyof Enclosure>>(
           {
             length: fc.oneof(
               fc.nat().map((n) => n.toString()),
