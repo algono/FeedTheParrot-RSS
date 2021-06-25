@@ -69,8 +69,10 @@ describe('setAuthCode', () => {
       userId: string,
       code: AuthCode,
       isUserDataCached: boolean,
-      result: CreateDatabaseHandlerResult
-    ) => void | Promise<void>
+      result: CreateDatabaseHandlerResult,
+      userRefId?: string,
+    ) => void | Promise<void>,
+    needsUserRefId: boolean = false,
   ) {
     return async () => {
       await fc.assert(
@@ -86,7 +88,8 @@ describe('setAuthCode', () => {
             }
           ),
           fc.boolean(),
-          async (userId, code: AuthCode, isUserDataCached) => {
+          (needsUserRefId ? fc.string({minLength: 1}) : fc.constant(undefined)),
+          async (userId, code: AuthCode, isUserDataCached, userRefId?: string) => {
             const result = await createDatabaseHandler();
 
             if (isUserDataCached) {
@@ -96,7 +99,7 @@ describe('setAuthCode', () => {
               };
             }
 
-            await callback(userId, code, isUserDataCached, result);
+            await callback(userId, code, isUserDataCached, result, userRefId);
           }
         )
       );
@@ -145,15 +148,17 @@ describe('setAuthCode', () => {
 
   test(
     'if the user exists, sets the code in a document with the same id as the user',
-    testSetAuthCode(async (userId, code, _, result) => {
+    testSetAuthCode(async (userId, code, _, result, userRefId) => {
       const { databaseHandler, firestoreMock, clientMock } = result;
 
-      mockUserRefId({ firestoreMock, id: userId });
+      mocked(getUserId).mockReturnValue(userId);
+
+      mockUserRefId({ firestoreMock, id: userRefId });
 
       await databaseHandler.setAuthCode(code);
 
       verifySetAuthCode(clientMock, userId, code);
-    })
+    }, true)
   );
 
   test('If there is an unhandled error while retrieving the user id from the database (in the process of saving the auth code), the error is thrown', async () => {
