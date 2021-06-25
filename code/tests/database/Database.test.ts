@@ -29,7 +29,6 @@ import {
   CreateDatabaseHandlerResult,
   createPersistenceAdapter,
 } from '../helpers/mocks/mockDatabase';
-import { mockDocumentClient } from '../helpers/mocks/mockDynamoDb';
 import {
   mockUserRefId,
   mockCollectionFirestore,
@@ -121,7 +120,7 @@ describe('setAuthCode', () => {
   test(
     'if the user does not exist, it creates a new one and sets the code in a document with the same id as the created user',
     testSetAuthCode(async (userId, code, _, result) => {
-      const { databaseHandler, firestoreMock } = result;
+      const { databaseHandler, firestoreMock, clientMock } = result;
 
       mocked(getUserId).mockReturnValue(userId);
 
@@ -131,8 +130,6 @@ describe('setAuthCode', () => {
       });
 
       mockQuery({ empty: true, queryMock: collectionMock });
-
-      const clientMock = mockDocumentClient();
 
       await databaseHandler.setAuthCode(code);
 
@@ -148,11 +145,9 @@ describe('setAuthCode', () => {
   test(
     'if the user exists, sets the code in a document with the same id as the user',
     testSetAuthCode(async (userId, code, _, result) => {
-      const { databaseHandler, firestoreMock } = result;
+      const { databaseHandler, firestoreMock, clientMock } = result;
 
       mockUserRefId({ firestoreMock, id: userId });
-
-      const clientMock = mockDocumentClient();
 
       await databaseHandler.setAuthCode(code);
 
@@ -182,7 +177,7 @@ describe('setAuthCode', () => {
     const authCodeValues: readonly AuthCode[] = [null, undefined] as const;
 
     for (const authCode of authCodeValues) {
-      const { databaseHandler, firestoreMock, persistentAttributesHolder } =
+      const { databaseHandler, firestoreMock, clientMock, persistentAttributesHolder } =
         await createDatabaseHandler();
 
       persistentAttributesHolder.attributes = {
@@ -191,8 +186,6 @@ describe('setAuthCode', () => {
       };
 
       mockUserRefId({ firestoreMock });
-
-      const clientMock = mockDocumentClient();
 
       when(clientMock.put(anything())).thenCall(() => {
         throw new Error(

@@ -7,6 +7,7 @@ import { FirebaseWithDynamoDbPersistenceAdapter } from '../../../src/database/Fi
 import { UserData } from '../../../src/database/UserData';
 import { TFunction } from '../../../src/util/localization';
 import { mockHandlerInput } from './HandlerInputMocks';
+import { mockDocumentClient } from './mockDynamoDb';
 
 export function mockDatabase() {
   const mockedDatabase = mock<DatabaseHandler>();
@@ -24,15 +25,19 @@ export function createPersistenceAdapter() {
 
   mocked(initializeApp).mockImplementation(() => instance(appMock));
 
+  const clientMock = mockDocumentClient();
+
   return {
     persistenceAdapter: new FirebaseWithDynamoDbPersistenceAdapter(),
     appMock,
     firestoreMock,
+    clientMock,
   };
 }
 
 export interface CreateDatabaseHandlerResult {
   firestoreMock: FirebaseFirestore.Firestore;
+  clientMock: AWS.DynamoDB.DocumentClient;
   mockedAttributesManager: AttributesManager;
   attributesManager: AttributesManager;
   persistentAttributesHolder: {
@@ -49,7 +54,7 @@ export async function createDatabaseHandler({
   locale?: string;
   sessionAttributes?: { [key: string]: any };
 } = {}): Promise<CreateDatabaseHandlerResult> {
-  const { persistenceAdapter, firestoreMock } = createPersistenceAdapter();
+  const { persistenceAdapter, firestoreMock, clientMock } = createPersistenceAdapter();
 
   const {
     mockedAttributesManager,
@@ -85,6 +90,7 @@ export async function createDatabaseHandler({
 
   return {
     firestoreMock,
+    clientMock,
     mockedAttributesManager,
     attributesManager,
     persistentAttributesHolder,
