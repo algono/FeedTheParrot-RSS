@@ -47,6 +47,7 @@ jest.mock('firebase-admin', () => ({
 }));
 
 jest.mock('aws-sdk', () => ({
+  STS: jest.fn(),
   DynamoDB: {
     DocumentClient: jest.fn(),
   },
