@@ -3,7 +3,7 @@ import { app, initializeApp } from 'firebase-admin';
 import { mocked } from 'ts-jest/utils';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Database, DatabaseHandler } from '../../../src/database/Database';
-import { FirebasePersistenceAdapter } from '../../../src/database/FirebasePersistenceAdapter';
+import { FirebaseWithDynamoDbPersistenceAdapter } from '../../../src/database/FirebaseWithDynamoDbPersistenceAdapter';
 import { UserData } from '../../../src/database/UserData';
 import { TFunction } from '../../../src/util/localization';
 import { mockHandlerInput } from './HandlerInputMocks';
@@ -25,7 +25,7 @@ export function createPersistenceAdapter() {
   mocked(initializeApp).mockImplementation(() => instance(appMock));
 
   return {
-    persistenceAdapter: new FirebasePersistenceAdapter(),
+    persistenceAdapter: new FirebaseWithDynamoDbPersistenceAdapter(),
     appMock,
     firestoreMock,
   };
