@@ -284,7 +284,6 @@ describe('ReadContentIntent', () => {
               readingContent: true,
               contentMinLength: 2,
               t: mocks.t,
-              hasPodcast: 'sometimes',
             }),
             fc.nat(),
             fc.option(fc.nat())
@@ -356,15 +355,6 @@ describe('ReadContentIntent', () => {
               feedItem.title,
               currentContent,
               feedItem.imageUrl
-            )
-          ).once();
-
-          verify(
-            mocks.mockedResponseBuilder.addConfirmIntentDirective(
-              deepEqual({
-                name: 'AMAZON.YesIntent',
-                confirmationStatus: 'NONE',
-              })
             )
           ).once();
         }
@@ -480,7 +470,6 @@ describe('ReadContentIntent', () => {
             feedItemsRecord({
               minLength: 1,
               readingContent: true,
-              hasPodcast: 'sometimes',
             }),
             fc.nat(),
             fc.integer()
