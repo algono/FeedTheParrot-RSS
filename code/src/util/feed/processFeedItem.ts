@@ -71,14 +71,14 @@ export function matchesFilters(item: FeedItem, feed: Feed): boolean {
 }
 
 function matchesTextFilter(item: FeedItem, feed: Feed): boolean {
-  return matchesFilter(feed.filters?.text, (value) => {
-    return (
+  return matchesFilter(
+    feed.filters?.text,
+    (value) =>
       item.title.toUpperCase().includes(value.toUpperCase()) ||
-      item.content?.some((content) => {
-        content.toUpperCase().includes(value.toUpperCase());
-      })
-    );
-  });
+      item.content?.some((content) =>
+        content.toUpperCase().includes(value.toUpperCase())
+      )
+  );
 }
 
 function matchesCategoryFilter(item: FeedItem, feed: Feed): boolean {
