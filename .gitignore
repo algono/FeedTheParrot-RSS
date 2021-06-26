@@ -16,6 +16,7 @@ ask-resources.json
 **/sonarqube/coverage
 **/sonarqube/test-report.xml
 **/sonarqube/*[Tt]oken*
+**/sonarqube/backup.tar
 
 # Session replays for local debugging
 session-replays/
