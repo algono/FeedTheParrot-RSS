@@ -12,7 +12,7 @@ export interface FeedItem {
   podcast?: Podcast
 }
 
-interface Podcast {
+export interface Podcast {
   url: string;
   length?: string;
 }

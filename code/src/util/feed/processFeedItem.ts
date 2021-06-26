@@ -71,7 +71,7 @@ export function matchesFilters(item: FeedItem, feed: Feed): boolean {
 }
 
 function matchesTextFilter(item: FeedItem, feed: Feed): boolean {
-  return matchesFilter(feed.filters.text, (value) => {
+  return matchesFilter(feed.filters?.text, (value) => {
     return (
       item.title.toUpperCase().includes(value.toUpperCase()) ||
       item.content?.some((content) => {
@@ -82,7 +82,7 @@ function matchesTextFilter(item: FeedItem, feed: Feed): boolean {
 }
 
 function matchesCategoryFilter(item: FeedItem, feed: Feed): boolean {
-  return matchesFilter(feed.filters.category, (value) =>
+  return matchesFilter(feed.filters?.category, (value) =>
     item.categories.includes(value)
   );
 }
@@ -91,6 +91,6 @@ function matchesFilter(
   filter: FeedFilter,
   predicate: (value: string) => boolean
 ): boolean {
-  if (!filter.values || filter.values.length === 0) return true; // If there is no actual filter, always match
+  if (!filter || !filter.values || filter.values.length === 0) return true; // If there is no actual filter, always match
   return anyOrAllElements(filter.values, filter.matchAll, predicate);
 }

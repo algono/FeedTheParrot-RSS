@@ -123,10 +123,7 @@ export const ReadContentIntentHandler: RequestHandler = {
     );
   },
   handle(handlerInput) {
-    const {
-      attributesManager,
-      responseBuilder,
-    } = handlerInput;
+    const { attributesManager, responseBuilder } = handlerInput;
 
     const sessionAttributes = attributesManager.getSessionAttributes();
 
@@ -134,9 +131,14 @@ export const ReadContentIntentHandler: RequestHandler = {
 
     const item = readState.feedItems.list[readState.currentIndex];
 
-    if (readState.listenToPodcast) {
+    if (item.podcast && readState.listenToPodcast) {
       return responseBuilder
-        .addAudioPlayerPlayDirective('REPLACE_ALL', item.podcast.url, 'feed_the_parrot_playing_audio', 0)
+        .addAudioPlayerPlayDirective(
+          'REPLACE_ALL',
+          item.podcast.url,
+          'feed_the_parrot_playing_audio',
+          0
+        )
         .withShouldEndSession(true)
         .getResponse();
     }
@@ -175,13 +177,11 @@ export const ReadContentIntentHandler: RequestHandler = {
         confirmationMsg = t('CONFIRMATION_LISTEN_PODCAST');
         readState.listenToPodcast = true;
       } else {
-        return responseBuilder
-          .speak(speakOutputItem + t('CONFIRMATION_GOTO_NEXT_FEED_ITEM'))
-          .addConfirmIntentDirective({
-            name: 'AMAZON.NextIntent',
-            confirmationStatus: 'NONE',
-          })
-          .getResponse();
+        confirmationMsg = t('CONFIRMATION_GOTO_NEXT_FEED_ITEM');
+        responseBuilder.addConfirmIntentDirective({
+          name: 'AMAZON.NextIntent',
+          confirmationStatus: 'NONE',
+        });
       }
     }
 

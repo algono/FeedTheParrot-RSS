@@ -5,7 +5,6 @@ import { mocked } from 'ts-jest/utils';
 import {
   anything,
   capture,
-  deepEqual,
   instance,
   mock,
   resetCalls,
@@ -14,7 +13,12 @@ import {
 } from 'ts-mockito';
 import { UserDataSessionAttributes } from '../../src/database/Database';
 import { collectionNames } from '../../src/database/FirebasePersistenceAdapter';
-import { AuthCode, UserData, UserDocData } from '../../src/database/UserData';
+import {
+  AuthCode,
+  authCodeToDB,
+  UserData,
+  UserDocData,
+} from '../../src/database/UserData';
 import { NoUserDataError } from '../../src/logic/Errors';
 import { feedRecord } from '../helpers/fast-check/arbitraries/feed';
 import { authCodeString } from '../helpers/fast-check/arbitraries/misc';
@@ -27,7 +31,6 @@ import {
 import {
   mockUserRefId,
   mockCollectionFirestore,
-  mockRef,
   mockQuery,
   mockCollectionFromRef,
   mockQueryDocumentSnapshot,
@@ -39,6 +42,13 @@ jest.mock('firebase-admin', () => ({
   firestore: jest.fn(),
   credential: {
     cert: jest.fn(),
+  },
+}));
+
+jest.mock('aws-sdk', () => ({
+  STS: jest.fn(),
+  DynamoDB: {
+    DocumentClient: jest.fn(),
   },
 }));
 
@@ -59,14 +69,16 @@ describe('setAuthCode', () => {
       userId: string,
       code: AuthCode,
       isUserDataCached: boolean,
-      result: CreateDatabaseHandlerResult
-    ) => void | Promise<void>
+      result: CreateDatabaseHandlerResult,
+      userRefId?: string,
+    ) => void | Promise<void>,
+    needsUserRefId: boolean = false,
   ) {
     return async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.string({ minLength: 1 }),
-          fc.record<AuthCode, fc.RecordConstraints>(
+          fc.record<AuthCode, fc.RecordConstraints<keyof AuthCode>>(
             {
               code: authCodeString,
               expirationDate: fc.date({ min: new Date() }),
@@ -76,7 +88,8 @@ describe('setAuthCode', () => {
             }
           ),
           fc.boolean(),
-          async (userId, code: AuthCode, isUserDataCached) => {
+          (needsUserRefId ? fc.string({minLength: 1}) : fc.constant(undefined)),
+          async (userId, code: AuthCode, isUserDataCached, userRefId?: string) => {
             const result = await createDatabaseHandler();
 
             if (isUserDataCached) {
@@ -86,17 +99,32 @@ describe('setAuthCode', () => {
               };
             }
 
-            await callback(userId, code, isUserDataCached, result);
+            await callback(userId, code, isUserDataCached, result, userRefId);
           }
         )
       );
     };
   }
 
+  // Check that the auth code was stored properly
+  function verifySetAuthCode(
+    clientMock: AWS.DynamoDB.DocumentClient,
+    userId: string,
+    code: AuthCode
+  ) {
+    const [item] = capture(clientMock.put).last();
+    return expect(item).toMatchObject({
+      Item: {
+        id: userId,
+        ...authCodeToDB(code),
+      },
+    });
+  }
+
   test(
-    'if the user does not exist, it creates a new one',
+    'if the user does not exist, it creates a new one and sets the code in a document with the same id as the created user',
     testSetAuthCode(async (userId, code, _, result) => {
-      const { databaseHandler, firestoreMock } = result;
+      const { databaseHandler, firestoreMock, clientMock } = result;
 
       mocked(getUserId).mockReturnValue(userId);
 
@@ -107,50 +135,35 @@ describe('setAuthCode', () => {
 
       mockQuery({ empty: true, queryMock: collectionMock });
 
-      const { collectionMock: authCollectionMock } = mockCollectionFirestore({
-        firestoreMock,
-        collectionPath: collectionNames.authCodes,
-      });
-
-      when(authCollectionMock.doc(anything())).thenReturn(instance(mockRef()));
-
       await databaseHandler.setAuthCode(code);
 
       verify(collectionMock.add(anything())).once();
 
       const [userDocData] = capture(collectionMock.add).last();
       expect(userDocData).toMatchObject<UserDocData>({ userId });
+
+      verifySetAuthCode(clientMock, userId, code);
     })
   );
 
   test(
-    'if the user exists, sets the code in a document with the same id as the user in auth codes collection',
-    testSetAuthCode(async (userId, code, _, result) => {
-      const { databaseHandler, firestoreMock } = result;
+    'if the user exists, sets the code in a document with the same id as the user',
+    testSetAuthCode(async (userId, code, _, result, userRefId) => {
+      const { databaseHandler, firestoreMock, clientMock } = result;
 
-      mockUserRefId({ firestoreMock, id: userId });
+      mocked(getUserId).mockReturnValue(userId);
 
-      const { collectionMock } = mockCollectionFirestore({
-        firestoreMock,
-        collectionPath: collectionNames.authCodes,
-      });
-
-      const refMock = mockRef();
-
-      when(collectionMock.doc(userId)).thenCall(() => instance(refMock));
+      mockUserRefId({ firestoreMock, id: userRefId });
 
       await databaseHandler.setAuthCode(code);
 
-      verify(refMock.set(deepEqual(code))).once();
-    })
+      verifySetAuthCode(clientMock, userId, code);
+    }, true)
   );
 
   test('If there is an unhandled error while retrieving the user id from the database (in the process of saving the auth code), the error is thrown', async () => {
-    const {
-      databaseHandler,
-      firestoreMock,
-      persistentAttributesHolder,
-    } = await createDatabaseHandler();
+    const { databaseHandler, firestoreMock, persistentAttributesHolder } =
+      await createDatabaseHandler();
 
     // To prevent the user id being retrieved when getting persistent attributes, we cache some null values
     persistentAttributesHolder.attributes = {
@@ -173,6 +186,7 @@ describe('setAuthCode', () => {
       const {
         databaseHandler,
         firestoreMock,
+        clientMock,
         persistentAttributesHolder,
       } = await createDatabaseHandler();
 
@@ -183,7 +197,7 @@ describe('setAuthCode', () => {
 
       mockUserRefId({ firestoreMock });
 
-      when(firestoreMock.collection(collectionNames.authCodes)).thenCall(() => {
+      when(clientMock.put(anything())).thenCall(() => {
         throw new Error(
           'The auth codes collection in the database was used/called'
         );
@@ -201,12 +215,10 @@ describe('getUserData', () => {
       userData: cachedUserData,
     };
 
-    const {
-      databaseHandler,
-      mockedAttributesManager,
-    } = await createDatabaseHandler({
-      sessionAttributes,
-    });
+    const { databaseHandler, mockedAttributesManager } =
+      await createDatabaseHandler({
+        sessionAttributes,
+      });
 
     const userData = await databaseHandler.getUserData();
 
@@ -275,11 +287,8 @@ describe('getUserData', () => {
         async (userId, throwIfUserWasNotFound, locale, expectedFeeds) => {
           mocked(getLocale).mockReturnValue(locale);
 
-          const {
-            databaseHandler,
-            firestoreMock,
-            t,
-          } = await createDatabaseHandler({ locale });
+          const { databaseHandler, firestoreMock, t } =
+            await createDatabaseHandler({ locale });
 
           const nameField = t('FEED_NAME_FIELD');
 

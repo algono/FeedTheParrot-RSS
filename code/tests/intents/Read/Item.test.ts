@@ -301,9 +301,11 @@ describe('ReadContentIntent', () => {
             };
           }),
         fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
+        fc.oneof(fc.boolean(), fc.constant(undefined)),
         async (
           { feedItems, currentIndex, currentContentIndex },
-          confirmationStatus
+          confirmationStatus,
+          listenToPodcast
         ) => {
           resetCalls<unknown>(
             mocks.mockedHandlerInput,
@@ -316,6 +318,7 @@ describe('ReadContentIntent', () => {
 
           when(readStateMock.feedItems).thenReturn(feedItems);
           when(readStateMock.currentIndex).thenReturn(currentIndex);
+          when(readStateMock.listenToPodcast).thenReturn(listenToPodcast);
 
           sessionAttributes.readState = instance(readStateMock);
 
@@ -352,15 +355,6 @@ describe('ReadContentIntent', () => {
               feedItem.title,
               currentContent,
               feedItem.imageUrl
-            )
-          ).once();
-
-          verify(
-            mocks.mockedResponseBuilder.addConfirmIntentDirective(
-              deepEqual({
-                name: 'AMAZON.YesIntent',
-                confirmationStatus: 'NONE',
-              })
             )
           ).once();
         }
@@ -473,7 +467,10 @@ describe('ReadContentIntent', () => {
       fc.asyncProperty(
         fc
           .tuple(
-            feedItemsRecord({ minLength: 1, readingContent: true }),
+            feedItemsRecord({
+              minLength: 1,
+              readingContent: true,
+            }),
             fc.nat(),
             fc.integer()
           )
@@ -496,9 +493,11 @@ describe('ReadContentIntent', () => {
             };
           }),
         fc.constantFrom<IntentConfirmationStatus[]>('NONE', 'CONFIRMED'),
+        fc.oneof(fc.boolean(), fc.constant(undefined)),
         async (
           { feedItems, currentIndex, currentContentIndex },
-          confirmationStatus
+          confirmationStatus,
+          listenToPodcast
         ) => {
           const { readStateMock } = mockReadState();
 
@@ -508,9 +507,20 @@ describe('ReadContentIntent', () => {
             currentContentIndex
           );
 
+          const sessionAttributes = {
+            readState: instance(readStateMock),
+          };
+
+          mockProperty(
+            sessionAttributes.readState,
+            'listenToPodcast',
+            () => listenToPodcast,
+            () => null
+          );
+
           const mocks = await mockHandlerInput({
             locale,
-            sessionAttributes: { readState: instance(readStateMock) },
+            sessionAttributes,
           });
 
           const { intentMock } = mockIntent();
@@ -544,33 +554,6 @@ describe('ReadContentIntent', () => {
       )
     )
   );
-
-  test('If the intent was denied, go to the next item', () =>
-    checkIfOnConfirmationStatus(
-      {
-        DENIED: true,
-      },
-      async (shouldBeTrue) => {
-        const mocks = await mockHandlerInput({ sessionAttributes: {} });
-
-        await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
-
-        const verificator = verify(
-          mocks.mockedResponseBuilder.addDelegateDirective(
-            deepEqual({
-              name: 'AMAZON.NextIntent',
-              confirmationStatus: 'CONFIRMED',
-            })
-          )
-        );
-
-        if (shouldBeTrue) {
-          verificator.once();
-        } else {
-          verificator.never();
-        }
-      }
-    ));
 });
 
 describe('GoToPreviousItemIntent', () => {

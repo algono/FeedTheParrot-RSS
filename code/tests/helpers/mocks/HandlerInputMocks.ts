@@ -1,7 +1,8 @@
 import { AttributesManager, HandlerInput, ResponseBuilder } from 'ask-sdk-core';
 import { RequestEnvelope, Response, ui } from 'ask-sdk-model';
-import { anyString, anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { initNewInstance, TFunction } from '../../../src/util/localization';
+import { fmock } from '../ts-mockito/FunctionalMocker';
 import { resolvableInstance } from '../ts-mockito/resolvableInstance';
 
 export interface HandlerInputMocks {
@@ -83,26 +84,7 @@ export async function mockHandlerInput({
     instanceAttributesManager
   );
 
-  const mockedResponseBuilder = mock<ResponseBuilder>();
-
-  when(mockedResponseBuilder.speak(anyString())).thenCall(() =>
-    instance(mockedResponseBuilder)
-  );
-  when(mockedResponseBuilder.reprompt(anyString())).thenCall(() =>
-    instance(mockedResponseBuilder)
-  );
-  when(
-    mockedResponseBuilder.withSimpleCard(anyString(), anyString())
-  ).thenCall(() => instance(mockedResponseBuilder));
-  when(mockedResponseBuilder.addDirective(anything())).thenCall(() =>
-    instance(mockedResponseBuilder)
-  );
-  when(mockedResponseBuilder.addDelegateDirective(anything())).thenCall(() =>
-    instance(mockedResponseBuilder)
-  );
-  when(
-    mockedResponseBuilder.addConfirmIntentDirective(anything())
-  ).thenCall(() => instance(mockedResponseBuilder));
+  const mockedResponseBuilder = fmock<ResponseBuilder>();
 
   const mockedResponse = mock<Response>();
 
