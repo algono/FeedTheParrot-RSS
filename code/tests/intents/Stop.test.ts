@@ -1,4 +1,4 @@
-import { anything, verify } from 'ts-mockito';
+import { verify } from 'ts-mockito';
 import { CancelAndStopIntentHandler } from '../../src/intents/Stop';
 import { testIntentCanHandle } from '../helpers/helperTests';
 import { mockHandlerInput } from '../helpers/mocks/HandlerInputMocks';
@@ -34,6 +34,6 @@ describe('Cancel and stop intent', () => {
 
     CancelAndStopIntentHandler.handle(instanceHandlerInput);
 
-    verify(mockedResponseBuilder.withShouldEndSession(anything())).once();
+    verify(mockedResponseBuilder.withShouldEndSession(true)).once();
   });
 });
