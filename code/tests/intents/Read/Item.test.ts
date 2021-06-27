@@ -381,7 +381,10 @@ describe('ReadContentIntent', () => {
     name: string,
     config?: {
       setup?: (input: TestLastContentItemParams) => T | Promise<T>;
-      assert?: (input: TestLastContentItemParams, setupOutput: T) => void | Promise<void>;
+      assert?: (
+        input: TestLastContentItemParams,
+        setupOutput: T
+      ) => void | Promise<void>;
     },
     hasPodcast: MayHappenOption = 'never'
   ) {
@@ -400,7 +403,7 @@ describe('ReadContentIntent', () => {
                 readingContent: true,
                 contentMinLength: 1,
                 t: mocks.t,
-                hasPodcast
+                hasPodcast,
               }),
               fc.nat(),
               fc.boolean()
@@ -451,7 +454,7 @@ describe('ReadContentIntent', () => {
               intentMock,
               mocks,
               readStateMock,
-              readStateInstance: sessionAttributes.readState
+              readStateInstance: sessionAttributes.readState,
             };
 
             const setupOutput = await config?.setup?.(configParams);
@@ -555,8 +558,6 @@ describe('ReadContentIntent', () => {
             readState: instance(readStateMock),
           };
 
-          
-
           const mocks = await mockHandlerInput({
             locale,
             sessionAttributes,
@@ -597,22 +598,68 @@ describe('ReadContentIntent', () => {
   testLastContentItem<jest.SpyInstance<void, [boolean]>>(
     'If there is a podcast available and the last content item is being read, set the "listenToPodcast" flag to true and ask the user for confirmation about listening to it',
     {
-      setup: ({readStateInstance}) => {
-        const {setterSpy} = mockProperty(
-            readStateInstance,
-            'listenToPodcast',
-            () => null,
-            (value) => expect(value).toBe(true),
+      setup: ({ readStateInstance }) => {
+        const { setterSpy } = mockProperty(
+          readStateInstance,
+          'listenToPodcast',
+          () => null,
+          (value) => expect(value).toBe(true)
         );
 
         return setterSpy;
       },
       assert: (_, setterSpy) => {
         expect(setterSpy).toHaveBeenCalled();
-      }
+      },
     },
     'always'
   );
+
+  test('If there is a podcast available and the "listenToPodcast" flag is set to true, start playing the podcast and end the current skill session', () =>
+    fc.assert(
+      fc.asyncProperty(
+        fc
+          .tuple(
+            feedItemsRecord({
+              minLength: 1,
+              hasPodcast: 'always',
+            }),
+            fc.nat()
+          )
+          .map<[FeedItems, number]>(([feedItems, currentIndex]) => [
+            feedItems,
+            currentIndex % feedItems.list.length,
+          ]),
+        async ([feedItems, currentIndex]) => {
+          const { readStateMock } = mockReadState();
+
+          when(readStateMock.feedItems).thenReturn(feedItems);
+          when(readStateMock.currentIndex).thenReturn(currentIndex);
+
+          when(readStateMock.listenToPodcast).thenReturn(true);
+
+          const sessionAttributes: { readState?: ReadState } = {
+            readState: instance(readStateMock),
+          };
+          const mocks = await mockHandlerInput({
+            sessionAttributes,
+          });
+
+          const currentItem = feedItems.list[currentIndex];
+
+          await ReadContentIntentHandler.handle(mocks.instanceHandlerInput);
+
+          const playArgs = capture(
+            mocks.mockedResponseBuilder.addAudioPlayerPlayDirective
+          ).last();
+          const playUrl = playArgs[1];
+
+          expect(playUrl).toEqual(currentItem.podcast.url);
+
+          verify(mocks.mockedResponseBuilder.withShouldEndSession(true)).once();
+        }
+      )
+    ));
 });
 
 describe('GoToPreviousItemIntent', () => {
