@@ -4,18 +4,20 @@ import { AUTH_CODE_LENGTH } from '../../../../src/util/constants';
 export type MayHappenOption = 'sometimes' | 'always' | 'never';
 
 export function mayHappenArbitrary<T>(
-  arb: fc.Arbitrary<T>,
-  isDefined: MayHappenOption
+  arb: () => fc.Arbitrary<T>,
+  isDefined: MayHappenOption,
+  nil: () => fc.Arbitrary<T | undefined> = () =>
+    fc.constant<undefined>(undefined)
 ): fc.Arbitrary<T | undefined> {
   switch (isDefined) {
     case 'always':
-      return arb;
+      return arb();
 
     case 'never':
-      return fc.constant<undefined>(undefined);
+      return nil();
 
     default:
-      return fc.oneof(arb, fc.constant<undefined>(undefined));
+      return fc.oneof(arb(), nil());
   }
 }
 

@@ -44,10 +44,10 @@ export function itemRecord({
     {
       title: fc.lorem(),
       description: mayHappenArbitrary(
-        fc.lorem({ mode: 'sentences' }),
+        () => fc.lorem({ mode: 'sentences' }),
         hasDescription
       ),
-      summary: mayHappenArbitrary(fc.lorem({ mode: 'sentences' }), hasSummary),
+      summary: mayHappenArbitrary(() => fc.lorem({ mode: 'sentences' }), hasSummary),
       date: fc.option(fc.date({ min: new Date(0) })),
       pubdate: fc.option(fc.date({ min: new Date(0) })),
       link: fc.webUrl(),

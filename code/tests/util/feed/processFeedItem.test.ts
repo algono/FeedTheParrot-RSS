@@ -224,24 +224,12 @@ describe('matchesFilters', () => {
   }
 
   testFilter(
-    'If the feed does not have any filters, it should return true',
-    true,
-    {
-      feedRecordConfig: {
-        hasFilters: 'never',
-        hasTextFilter: 'never',
-        hasCategoryFilter: 'never',
-      },
-    }
-  );
-
-  testFilter(
     'If the feed only has empty filters, it should return true',
     true,
     {
       feedRecordConfig: {
-        isTextFilterEmpty: true,
-        isCategoryFilterEmpty: true,
+        hasTextFilter: 'never',
+        hasCategoryFilter: 'never',
       },
     }
   );

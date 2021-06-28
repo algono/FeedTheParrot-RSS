@@ -19,11 +19,8 @@ export function feedRecord({
   locales = availableLocales,
   maxItemLimit,
   readFullContentCustomArb,
-  hasFilters = 'sometimes',
   hasTextFilter = 'sometimes',
   hasCategoryFilter = 'sometimes',
-  isTextFilterEmpty,
-  isCategoryFilterEmpty,
   filtersMatchAll,
 }: {
   hasItemLimit?: MayHappenOption;
@@ -31,11 +28,8 @@ export function feedRecord({
   locales?: readonly AvailableLocale[];
   maxItemLimit?: number;
   readFullContentCustomArb?: fc.Arbitrary<boolean>;
-  hasFilters?: MayHappenOption;
   hasTextFilter?: MayHappenOption;
   hasCategoryFilter?: MayHappenOption;
-  isTextFilterEmpty?: boolean;
-  isCategoryFilterEmpty?: boolean;
   filtersMatchAll?: FilterMatch;
 } = {}): fc.Arbitrary<Feed> {
   return fc.record<Feed, fc.RecordConstraints<keyof Feed>>(
@@ -44,44 +38,37 @@ export function feedRecord({
       url: fc.webUrl(),
       language: fc.constantFrom(...locales),
       itemLimit: mayHappenArbitrary(
-        fc.integer({ min: 1, max: maxItemLimit }),
+        () => fc.integer({ min: 1, max: maxItemLimit }),
         hasItemLimit
       ),
       truncateContentAt: mayHappenArbitrary(
-        fc.integer({ min: 1 }),
+        () => fc.integer({ min: 1 }),
         hasTruncateContentAt
       ),
       readFullContent:
         readFullContentCustomArb !== undefined
           ? readFullContentCustomArb
           : fc.boolean(),
-      filters: mayHappenArbitrary(
-        fc.record<FeedFilters, fc.RecordConstraints<keyof FeedFilters>>(
-          {
-            text: mayHappenArbitrary(
-              filterRecord(filtersMatchAll, isTextFilterEmpty),
-              hasTextFilter
-            ),
-            category: mayHappenArbitrary(
-              filterRecord(filtersMatchAll, isCategoryFilterEmpty),
-              hasCategoryFilter
-            ),
-          },
-          { withDeletedKeys: false }
-        ),
-        hasFilters
+      filters: fc.record<FeedFilters, fc.RecordConstraints<keyof FeedFilters>>(
+        {
+          text: filterRecord(filtersMatchAll, hasTextFilter),
+          category: filterRecord(filtersMatchAll, hasCategoryFilter),
+        },
+        { withDeletedKeys: false }
       ),
     },
     { withDeletedKeys: false }
   );
 }
 
-function filterRecord(matchAll?: FilterMatch, isEmpty?: boolean) {
+function filterRecord(matchAll?: FilterMatch, hasValues?: MayHappenOption) {
   return fc.record<FeedFilter, fc.RecordConstraints<keyof FeedFilter>>(
     {
-      values: isEmpty
-        ? fc.oneof(fc.constant<string[]>([]), fc.constant<undefined>(undefined))
-        : fc.array(fc.lorem()),
+      values: mayHappenArbitrary(
+        () => fc.array(fc.lorem()),
+        hasValues,
+        () => fc.constantFrom<string[] | undefined>([], undefined)
+      ),
       matchAll: matchAll
         ? fc.constant(matchAll)
         : fc.constantFrom<FilterMatch>('any', 'all'),
@@ -138,10 +125,13 @@ export function feedItemRecordModel({
   return {
     title: fc.lorem(),
     description: mayHappenArbitrary(
-      fc.lorem({ mode: 'sentences' }),
+      () => fc.lorem({ mode: 'sentences' }),
       hasDescription
     ),
-    summary: mayHappenArbitrary(fc.lorem({ mode: 'sentences' }), hasSummary),
+    summary: mayHappenArbitrary(
+      () => fc.lorem({ mode: 'sentences' }),
+      hasSummary
+    ),
     date: fc.date({ min: new Date(0) }).map((date) => date.toUTCString()),
     link: fc.webUrl(),
     imageUrl: fc.oneof(fc.webUrl(), fc.constant(undefined)),
@@ -152,10 +142,11 @@ export function feedItemRecordModel({
       : fc.constant(undefined),
     categories: fc.array(fc.lorem()),
     podcast: mayHappenArbitrary(
-      fc.record<Podcast>({
-        url: fc.webUrl(),
-        length: fc.oneof(fc.nat(), fc.constant(undefined)),
-      }),
+      () =>
+        fc.record<Podcast>({
+          url: fc.webUrl(),
+          length: fc.oneof(fc.nat(), fc.constant(undefined)),
+        }),
       hasPodcast
     ),
   };
