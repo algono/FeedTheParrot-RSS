@@ -4,6 +4,7 @@ import { MAX_CHARACTERS_SPEECH } from '../../../src/util/constants';
 import { cleanHtml } from '../../../src/util/feed/cleanHtml';
 import {
   getContent,
+  matchesFilters,
   processFeedItem,
 } from '../../../src/util/feed/processFeedItem';
 import { truncateAll } from '../../../src/util/truncateAll';
@@ -198,39 +199,94 @@ describe('getContent', () => {
 });
 
 describe('matchesFilters', () => {
-  describe('text', () => {
-    test.todo(
-      'If there is a text filter with "matchAll" set to "any" and the content contains some of the strings within its values, it should return true'
+  function testFilter(
+    name: string,
+    expectedResult: boolean,
+    config?: {
+      feedRecordConfig?: Parameters<typeof feedRecord>[0];
+      readingContent?: boolean;
+    }
+  ) {
+    return test(name, () =>
+      fc.assert(
+        fc.property(
+          feedRecord(
+            Object.assign({ hasFilters: 'always' }, config.feedRecordConfig)
+          ),
+          feedItemRecord({ readingContent: config?.readingContent }),
+          (feed, item) => {
+            const res = matchesFilters(item, feed);
+            expect(res).toEqual(expectedResult);
+          }
+        )
+      )
+    );
+  }
+
+  testFilter(
+    'If the feed does not have any filters, it should return true',
+    true,
+    {
+      feedRecordConfig: {
+        hasFilters: 'never',
+        hasTextFilter: 'never',
+        hasCategoryFilter: 'never',
+      },
+    }
+  );
+
+  testFilter(
+    'If the feed only has empty filters, it should return true',
+    true,
+    {
+      feedRecordConfig: {
+        isTextFilterEmpty: true,
+        isCategoryFilterEmpty: true,
+      },
+    }
+  );
+
+  describe.skip('text', () => {
+    testFilter(
+      'If there is a text filter with "matchAll" set to "any" and the content contains some of the strings within its values, it should return true',
+      true
     );
 
-    test.todo(
-      'If there is a text filter with "matchAll" set to "all" and the content contains all of the strings within its values, it should return true'
+    testFilter(
+      'If there is a text filter with "matchAll" set to "all" and the content contains all of the strings within its values, it should return true',
+      true
     );
 
-    test.todo(
-      'If there is a text filter with "matchAll" set to "any" and the content does not contain any of the strings within its values, it should return false'
+    testFilter(
+      'If there is a text filter with "matchAll" set to "any" and the content does not contain any of the strings within its values, it should return false',
+      false
     );
 
-    test.todo(
-      'If there is a text filter with "matchAll" set to "all" and the content does not contain all of the strings within its values (that means, between 0 and n-1 strings), it should return false'
+    testFilter(
+      'If there is a text filter with "matchAll" set to "all" and the content does not contain all of the strings within its values (that means, between 0 and n-1 strings), it should return false',
+      false
     );
   });
 
-  describe('category', () => {
-    test.todo(
-      'If there is a category filter with "matchAll" set to "any" and some of the categories match with some of the strings within its values, it should return true'
+  describe.skip('category', () => {
+    testFilter(
+      'If there is a category filter with "matchAll" set to "any" and some of the categories match with some of the strings within its values, it should return true',
+      true
     );
 
-    test.todo(
-      'If there is a category filter with "matchAll" set to "all" and all of the strings within its values are present in the list of categories, it should return true'
+    testFilter(
+      'If there is a category filter with "matchAll" set to "all" and all of the strings within its values are present in the list of categories, it should return true',
+      true
     );
 
-    test.todo(
-      'If there is a category filter with "matchAll" set to "any" and none of the categories match with any of the strings within its values, it should return false'
+    testFilter(
+      'If there is a category filter with "matchAll" set to "any" and none of the categories match with any of the strings within its values, it should return false',
+      false
     );
 
-    test.todo(
-      'If there is a category filter with "matchAll" set to "all" and the list of categories does not contain all of the strings within its values (that means, between 0 and n-1 strings), it should return false'
+    testFilter(
+      'If there is a category filter with "matchAll" set to "all" and the list of categories does not contain all of the strings within its values (that means, between 0 and n-1 strings), it should return false',
+      false
     );
   });
 });

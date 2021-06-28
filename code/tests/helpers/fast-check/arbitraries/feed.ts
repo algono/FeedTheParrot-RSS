@@ -19,6 +19,11 @@ export function feedRecord({
   locales = availableLocales,
   maxItemLimit,
   readFullContentCustomArb,
+  hasFilters = 'sometimes',
+  hasTextFilter = 'sometimes',
+  hasCategoryFilter = 'sometimes',
+  isTextFilterEmpty,
+  isCategoryFilterEmpty,
   filtersMatchAll,
 }: {
   hasItemLimit?: MayHappenOption;
@@ -26,6 +31,11 @@ export function feedRecord({
   locales?: readonly AvailableLocale[];
   maxItemLimit?: number;
   readFullContentCustomArb?: fc.Arbitrary<boolean>;
+  hasFilters?: MayHappenOption;
+  hasTextFilter?: MayHappenOption;
+  hasCategoryFilter?: MayHappenOption;
+  isTextFilterEmpty?: boolean;
+  isCategoryFilterEmpty?: boolean;
   filtersMatchAll?: FilterMatch;
 } = {}): fc.Arbitrary<Feed> {
   return fc.record<Feed, fc.RecordConstraints<keyof Feed>>(
@@ -45,22 +55,33 @@ export function feedRecord({
         readFullContentCustomArb !== undefined
           ? readFullContentCustomArb
           : fc.boolean(),
-      filters: fc.record<FeedFilters, fc.RecordConstraints<keyof FeedFilters>>(
-        {
-          text: filterRecord(filtersMatchAll),
-          category: filterRecord(filtersMatchAll),
-        },
-        { withDeletedKeys: false }
+      filters: mayHappenArbitrary(
+        fc.record<FeedFilters, fc.RecordConstraints<keyof FeedFilters>>(
+          {
+            text: mayHappenArbitrary(
+              filterRecord(filtersMatchAll, isTextFilterEmpty),
+              hasTextFilter
+            ),
+            category: mayHappenArbitrary(
+              filterRecord(filtersMatchAll, isCategoryFilterEmpty),
+              hasCategoryFilter
+            ),
+          },
+          { withDeletedKeys: false }
+        ),
+        hasFilters
       ),
     },
     { withDeletedKeys: false }
   );
 }
 
-function filterRecord(matchAll?: FilterMatch) {
+function filterRecord(matchAll?: FilterMatch, isEmpty?: boolean) {
   return fc.record<FeedFilter, fc.RecordConstraints<keyof FeedFilter>>(
     {
-      values: fc.array(fc.lorem()),
+      values: isEmpty
+        ? fc.oneof(fc.constant<string[]>([]), fc.constant<undefined>(undefined))
+        : fc.array(fc.lorem()),
       matchAll: matchAll
         ? fc.constant(matchAll)
         : fc.constantFrom<FilterMatch>('any', 'all'),
