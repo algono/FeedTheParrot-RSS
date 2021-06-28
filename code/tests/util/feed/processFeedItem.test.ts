@@ -196,3 +196,41 @@ describe('getContent', () => {
     );
   });
 });
+
+describe('matchesFilters', () => {
+  describe('text', () => {
+    test.todo(
+      'If there is a text filter with "matchAll" set to "any" and the content contains some of the strings within its values, it should return true'
+    );
+
+    test.todo(
+      'If there is a text filter with "matchAll" set to "all" and the content contains all of the strings within its values, it should return true'
+    );
+
+    test.todo(
+      'If there is a text filter with "matchAll" set to "any" and the content does not contain any of the strings within its values, it should return false'
+    );
+
+    test.todo(
+      'If there is a text filter with "matchAll" set to "all" and the content does not contain all of the strings within its values (that means, between 0 and n-1 strings), it should return false'
+    );
+  });
+
+  describe('category', () => {
+    test.todo(
+      'If there is a category filter with "matchAll" set to "any" and some of the categories match with some of the strings within its values, it should return true'
+    );
+
+    test.todo(
+      'If there is a category filter with "matchAll" set to "all" and all of the strings within its values are present in the list of categories, it should return true'
+    );
+
+    test.todo(
+      'If there is a category filter with "matchAll" set to "any" and none of the categories match with any of the strings within its values, it should return false'
+    );
+
+    test.todo(
+      'If there is a category filter with "matchAll" set to "all" and the list of categories does not contain all of the strings within its values (that means, between 0 and n-1 strings), it should return false'
+    );
+  });
+});

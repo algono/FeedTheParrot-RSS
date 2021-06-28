@@ -1,5 +1,13 @@
 import fc from 'fast-check';
-import { Feed, FeedItem, FeedItems, Podcast } from '../../../../src/logic/Feed';
+import {
+  Feed,
+  FeedFilter,
+  FeedFilters,
+  FeedItem,
+  FeedItems,
+  FilterMatch,
+  Podcast,
+} from '../../../../src/logic/Feed';
 import { getLangFormatter } from '../../../../src/util/langFormatter';
 import { TFunction } from '../../../../src/util/localization';
 import { AvailableLocale, availableLocales } from '../../helperTests';
@@ -11,12 +19,14 @@ export function feedRecord({
   locales = availableLocales,
   maxItemLimit,
   readFullContentCustomArb,
+  filtersMatchAll,
 }: {
   hasItemLimit?: MayHappenOption;
   hasTruncateContentAt?: MayHappenOption;
   locales?: readonly AvailableLocale[];
   maxItemLimit?: number;
   readFullContentCustomArb?: fc.Arbitrary<boolean>;
+  filtersMatchAll?: FilterMatch;
 } = {}): fc.Arbitrary<Feed> {
   return fc.record<Feed, fc.RecordConstraints<keyof Feed>>(
     {
@@ -35,6 +45,25 @@ export function feedRecord({
         readFullContentCustomArb !== undefined
           ? readFullContentCustomArb
           : fc.boolean(),
+      filters: fc.record<FeedFilters, fc.RecordConstraints<keyof FeedFilters>>(
+        {
+          text: filterRecord(filtersMatchAll),
+          category: filterRecord(filtersMatchAll),
+        },
+        { withDeletedKeys: false }
+      ),
+    },
+    { withDeletedKeys: false }
+  );
+}
+
+function filterRecord(matchAll?: FilterMatch) {
+  return fc.record<FeedFilter, fc.RecordConstraints<keyof FeedFilter>>(
+    {
+      values: fc.array(fc.lorem()),
+      matchAll: matchAll
+        ? fc.constant(matchAll)
+        : fc.constantFrom<FilterMatch>('any', 'all'),
     },
     { withDeletedKeys: false }
   );
