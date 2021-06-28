@@ -10,7 +10,7 @@ function buildMockInstance<T>() {
 }
 
 export function mockArbitrary<T>(setup?: (mock: T) => void) {
-  return fc.clonedConstant(buildMockInstance<T>()).map(({ mock }) => {
+  return fc.constant(buildMockInstance<T>()).map(({ mock }) => {
     if (setup) setup(mock);
     return instance(mock);
   });

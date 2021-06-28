@@ -287,7 +287,7 @@ describe('feedparser related tests', () => {
           .array(mockArbitrary<FeedParser.Item>(), { minLength: 1 })
           .chain((itemList) =>
             fc.tuple(
-              fc.clonedConstant(itemList),
+              fc.constant(itemList),
               fc.array(
                 dateArbitrary.chain((date) =>
                   mockArbitrary<FeedItem>((mock) => {
@@ -354,7 +354,7 @@ describe('feedparser related tests', () => {
             .chain((itemList) =>
               fc.tuple(
                 fc.constant(feed),
-                fc.clonedConstant(itemList),
+                fc.constant(itemList),
                 fc.array(mockArbitrary<FeedItem>(), {
                   minLength: itemList.length,
                   maxLength: itemList.length,
