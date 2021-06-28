@@ -210,9 +210,7 @@ describe('matchesFilters', () => {
     return test(name, () =>
       fc.assert(
         fc.property(
-          feedRecord(
-            Object.assign({ hasFilters: 'always' }, config.feedRecordConfig)
-          ),
+          feedRecord(config.feedRecordConfig),
           feedItemRecord({ readingContent: config?.readingContent }),
           (feed, item) => {
             const res = matchesFilters(item, feed);
