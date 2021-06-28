@@ -122,7 +122,8 @@ export class FirebasePersistenceAdapter implements PersistenceAdapter {
       const filters = processFeedFilters(data);
       deleteFeedFiltersFrom(data);
 
-      const feed: Feed = { name, filters, ...(data as FeedData) };
+      (data as FeedData).filters = filters;
+      const feed: Feed = { name, ...(data as FeedData) };
 
       feedNames.push(name);
       feeds[name] = feed;
