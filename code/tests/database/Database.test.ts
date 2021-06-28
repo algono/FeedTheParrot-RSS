@@ -12,7 +12,10 @@ import {
   when,
 } from 'ts-mockito';
 import { UserDataSessionAttributes } from '../../src/database/Database';
-import { collectionNames } from '../../src/database/FirebasePersistenceAdapter';
+import {
+  collectionNames,
+  HasFeedFiltersDb,
+} from '../../src/database/FirebasePersistenceAdapter';
 import {
   AuthCode,
   authCodeToDB,
@@ -20,6 +23,7 @@ import {
   UserDocData,
 } from '../../src/database/UserData';
 import { NoUserDataError } from '../../src/logic/Errors';
+import { Feed } from '../../src/logic/Feed';
 import { feedRecord } from '../helpers/fast-check/arbitraries/feed';
 import { authCodeString } from '../helpers/fast-check/arbitraries/misc';
 import { availableLocales } from '../helpers/helperTests';
@@ -70,9 +74,9 @@ describe('setAuthCode', () => {
       code: AuthCode,
       isUserDataCached: boolean,
       result: CreateDatabaseHandlerResult,
-      userRefId?: string,
+      userRefId?: string
     ) => void | Promise<void>,
-    needsUserRefId: boolean = false,
+    needsUserRefId: boolean = false
   ) {
     return async () => {
       await fc.assert(
@@ -88,8 +92,13 @@ describe('setAuthCode', () => {
             }
           ),
           fc.boolean(),
-          (needsUserRefId ? fc.string({minLength: 1}) : fc.constant(undefined)),
-          async (userId, code: AuthCode, isUserDataCached, userRefId?: string) => {
+          needsUserRefId ? fc.string({ minLength: 1 }) : fc.constant(undefined),
+          async (
+            userId,
+            code: AuthCode,
+            isUserDataCached,
+            userRefId?: string
+          ) => {
             const result = await createDatabaseHandler();
 
             if (isUserDataCached) {
@@ -293,8 +302,13 @@ describe('getUserData', () => {
           const nameField = t('FEED_NAME_FIELD');
 
           const feedSnapshots = expectedFeeds.map((feed) => {
-            const { name, ...data } = feed;
+            const { name, filters, ...data }: Feed & HasFeedFiltersDb = feed;
             data[nameField] = name;
+
+            data.filterByText = filters.text.values;
+            data.filterByCategory = filters.category.values;
+            data.filterByTextMatchAll = filters.text.matchAll === 'all';
+            data.filterByCategoryMatchAll = filters.category.matchAll === 'all';
 
             const snapshot = mockQueryDocumentSnapshot();
 

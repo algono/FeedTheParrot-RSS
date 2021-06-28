@@ -13,7 +13,7 @@ export const collectionNames = {
   feeds: 'feeds',
 } as const;
 
-interface HasFeedFiltersDb {
+export interface HasFeedFiltersDb {
   filterByText?: string[];
   filterByTextMatchAll?: boolean;
   filterByCategory?: string[];
