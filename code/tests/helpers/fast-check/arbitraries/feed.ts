@@ -21,6 +21,8 @@ export function feedRecord({
   readFullContentCustomArb,
   hasTextFilter = 'sometimes',
   hasCategoryFilter = 'sometimes',
+  textFilterValues,
+  categoryFilterValues,
   filtersMatchAll,
 }: {
   hasItemLimit?: MayHappenOption;
@@ -30,6 +32,8 @@ export function feedRecord({
   readFullContentCustomArb?: fc.Arbitrary<boolean>;
   hasTextFilter?: MayHappenOption;
   hasCategoryFilter?: MayHappenOption;
+  textFilterValues?: string[];
+  categoryFilterValues?: string[];
   filtersMatchAll?: FilterMatch;
 } = {}): fc.Arbitrary<Feed> {
   return fc.record<Feed, fc.RecordConstraints<keyof Feed>>(
@@ -51,8 +55,16 @@ export function feedRecord({
           : fc.boolean(),
       filters: fc.record<FeedFilters, fc.RecordConstraints<keyof FeedFilters>>(
         {
-          text: filterRecord(filtersMatchAll, hasTextFilter),
-          category: filterRecord(filtersMatchAll, hasCategoryFilter),
+          text: filterRecord({
+            values: textFilterValues,
+            matchAll: filtersMatchAll,
+            hasValues: hasTextFilter,
+          }),
+          category: filterRecord({
+            values: categoryFilterValues,
+            matchAll: filtersMatchAll,
+            hasValues: hasCategoryFilter,
+          }),
         },
         { withDeletedKeys: false }
       ),
@@ -61,16 +73,23 @@ export function feedRecord({
   );
 }
 
-function filterRecord(matchAll?: FilterMatch, hasValues?: MayHappenOption) {
+function filterRecord(config: {
+  values?: string[];
+  matchAll?: FilterMatch;
+  hasValues?: MayHappenOption;
+}) {
   return fc.record<FeedFilter, fc.RecordConstraints<keyof FeedFilter>>(
     {
-      values: mayHappenArbitrary(
-        () => fc.array(fc.lorem()),
-        hasValues,
-        () => fc.constantFrom<string[] | undefined>([], undefined)
-      ),
-      matchAll: matchAll
-        ? fc.constant(matchAll)
+      values:
+        'values' in config
+          ? fc.constant(config.values)
+          : mayHappenArbitrary(
+              () => fc.array(fc.lorem()),
+              config.hasValues,
+              () => fc.constantFrom<string[] | undefined>([], undefined)
+            ),
+      matchAll: config.matchAll
+        ? fc.constant(config.matchAll)
         : fc.constantFrom<FilterMatch>('any', 'all'),
     },
     { withDeletedKeys: false }
@@ -89,12 +108,14 @@ export function feedItemRecord({
   hasDescription = 'always',
   hasSummary = 'always',
   hasPodcast = 'never',
+  categoriesMinLength = 0,
 }: {
   readingContent?: boolean;
   contentMinLength?: number;
   hasDescription?: MayHappenOption;
   hasSummary?: MayHappenOption;
   hasPodcast?: MayHappenOption;
+  categoriesMinLength?: number;
 } = {}): fc.Arbitrary<FeedItem> {
   const contentArb = content({ minLength: contentMinLength });
   return fc.record<FeedItem, fc.RecordConstraints<keyof FeedItem>>(
@@ -104,6 +125,7 @@ export function feedItemRecord({
       hasDescription,
       hasSummary,
       hasPodcast,
+      categoriesMinLength,
     }),
     { withDeletedKeys: false }
   );
@@ -115,12 +137,14 @@ export function feedItemRecordModel({
   hasDescription = 'always',
   hasSummary = 'always',
   hasPodcast = 'never',
+  categoriesMinLength = 0,
 }: {
   readingContent?: boolean;
   contentArb?: fc.Arbitrary<string[]>;
   hasDescription?: MayHappenOption;
   hasSummary?: MayHappenOption;
   hasPodcast?: MayHappenOption;
+  categoriesMinLength?: number;
 } = {}): { [K in keyof FeedItem]: fc.Arbitrary<FeedItem[K]> } {
   return {
     title: fc.lorem(),
@@ -140,7 +164,7 @@ export function feedItemRecordModel({
         ? contentArb
         : fc.oneof(contentArb, fc.constant(undefined))
       : fc.constant(undefined),
-    categories: fc.array(fc.lorem()),
+    categories: fc.array(fc.lorem(), { minLength: categoriesMinLength }),
     podcast: mayHappenArbitrary(
       () =>
         fc.record<Podcast>({
