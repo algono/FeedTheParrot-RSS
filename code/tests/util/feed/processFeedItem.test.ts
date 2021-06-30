@@ -409,6 +409,7 @@ describe('matchesFilters', () => {
 
                 return fc.tuple(fc.constant(item), fc.constant(filter));
               })
+              .filter(([item]) => item.categories.length > 0)
               .chain(([item, filter]) => {
                 return fc.tuple(
                   fc.constant(item),
