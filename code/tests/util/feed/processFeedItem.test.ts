@@ -270,6 +270,8 @@ describe('matchesFilters', () => {
                     'ig'
                   ); // 'ig' = 'ignore case, global'
 
+                  item.title = item.title.replace(nonMatchFiltersRegex, '');
+
                   item.content = item.content.map((line) => {
                     fullContent += line;
                     // Make sure that the non-matching filters never match
@@ -291,14 +293,14 @@ describe('matchesFilters', () => {
                   fc.constant(item),
                   (matchesType === 'none'
                     ? fc.constant<string[]>([])
-                    : fc
+                    : fc.array(fc
                         .integer({
                           min: 1,
                           max: fullContent.length,
-                        })
-                        .chain((splitLimit) =>
+                        }), {minLength: 2, maxLength: 2})
+                        .chain(([titleSplitLimit, contentSplitLimit]) =>
                           fc.shuffledSubarray(
-                            fullContent.split('', splitLimit),
+                            item.title.split('', titleSplitLimit).concat(fullContent.split('', contentSplitLimit)),
                             {
                               minLength:
                                 matchesType === 'some' || matchesType === 'all'
