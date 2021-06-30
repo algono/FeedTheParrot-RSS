@@ -234,7 +234,7 @@ describe('matchesFilters', () => {
 
   type FilterMatchesType = 'all' | 'some' | 'none' | 'except-all';
 
-  describe.only('text', () => {
+  describe('text', () => {
     function testFilter(
       name: string,
       expectedResult: boolean,
@@ -293,14 +293,19 @@ describe('matchesFilters', () => {
                   fc.constant(item),
                   (matchesType === 'none'
                     ? fc.constant<string[]>([])
-                    : fc.array(fc
-                        .integer({
-                          min: 1,
-                          max: fullContent.length,
-                        }), {minLength: 2, maxLength: 2})
+                    : fc
+                        .array(
+                          fc.integer({
+                            min: 1,
+                            max: fullContent.length,
+                          }),
+                          { minLength: 2, maxLength: 2 }
+                        )
                         .chain(([titleSplitLimit, contentSplitLimit]) =>
                           fc.shuffledSubarray(
-                            item.title.split('', titleSplitLimit).concat(fullContent.split('', contentSplitLimit)),
+                            item.title
+                              .split('', titleSplitLimit)
+                              .concat(fullContent.split('', contentSplitLimit)),
                             {
                               minLength:
                                 matchesType === 'some' || matchesType === 'all'
@@ -371,25 +376,109 @@ describe('matchesFilters', () => {
     );
   });
 
-  describe.skip('category', () => {
+  describe('category', () => {
+    function testFilter(
+      name: string,
+      expectedResult: boolean,
+      matchesType: FilterMatchesType,
+      config?: {
+        feedRecordConfig?: Parameters<typeof feedRecord>[0];
+      }
+    ) {
+      return test(name, () =>
+        fc.assert(
+          fc.property(
+            fc
+              .tuple(
+                matchesType === 'all'
+                  ? fc.constant<string[]>([])
+                  : fc.set(fc.lorem({ maxCount: 1 }), {
+                      minLength:
+                        matchesType === 'except-all' || matchesType === 'none'
+                          ? 1
+                          : 0,
+                    }), // non-matching filter values
+                feedItemRecord({ categoriesMinLength: 1 })
+              )
+              .chain(([filter, item]) => {
+                if (filter) {
+                  item.categories = item.categories.filter(
+                    (x) => !filter.includes(x)
+                  );
+                }
+
+                return fc.tuple(fc.constant(item), fc.constant(filter));
+              })
+              .chain(([item, filter]) => {
+                return fc.tuple(
+                  fc.constant(item),
+                  (matchesType === 'none'
+                    ? fc.constant<string[]>([])
+                    : fc.shuffledSubarray(item.categories, {
+                        minLength:
+                          matchesType === 'some' || matchesType === 'all'
+                            ? 1
+                            : 0,
+                      })
+                  ).chain((matches) => {
+                    return feedRecord({
+                      categoryFilterValues: filter.concat(matches),
+                      ...config.feedRecordConfig,
+                    });
+                  })
+                );
+              }),
+            ([item, feed]) => {
+              const res = matchesFilters(item, feed);
+              expect(res).toEqual(expectedResult);
+            }
+          )
+        )
+      );
+    }
+
     testFilter(
       'If there is a category filter with "matchAll" set to "any" and some of the categories match with some of the strings within its values, it should return true',
-      true
+      true,
+      'some',
+      {
+        feedRecordConfig: {
+          filtersMatchAll: 'any',
+        },
+      }
     );
 
     testFilter(
       'If there is a category filter with "matchAll" set to "all" and all of the strings within its values are present in the list of categories, it should return true',
-      true
+      true,
+      'all',
+      {
+        feedRecordConfig: {
+          filtersMatchAll: 'all',
+        },
+      }
     );
 
     testFilter(
       'If there is a category filter with "matchAll" set to "any" and none of the categories match with any of the strings within its values, it should return false',
-      false
+      false,
+      'none',
+      {
+        feedRecordConfig: {
+          filtersMatchAll: 'any',
+        },
+      }
     );
 
     testFilter(
       'If there is a category filter with "matchAll" set to "all" and the list of categories does not contain all of the strings within its values (that means, between 0 and n-1 strings), it should return false',
-      false
+      false,
+      'except-all',
+      {
+        feedRecordConfig: {
+          filtersMatchAll: 'all',
+        },
+      }
     );
   });
 });

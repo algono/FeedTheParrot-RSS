@@ -108,12 +108,14 @@ export function feedItemRecord({
   hasDescription = 'always',
   hasSummary = 'always',
   hasPodcast = 'never',
+  categoriesMinLength = 0,
 }: {
   readingContent?: boolean;
   contentMinLength?: number;
   hasDescription?: MayHappenOption;
   hasSummary?: MayHappenOption;
   hasPodcast?: MayHappenOption;
+  categoriesMinLength?: number;
 } = {}): fc.Arbitrary<FeedItem> {
   const contentArb = content({ minLength: contentMinLength });
   return fc.record<FeedItem, fc.RecordConstraints<keyof FeedItem>>(
@@ -123,6 +125,7 @@ export function feedItemRecord({
       hasDescription,
       hasSummary,
       hasPodcast,
+      categoriesMinLength,
     }),
     { withDeletedKeys: false }
   );
@@ -134,12 +137,14 @@ export function feedItemRecordModel({
   hasDescription = 'always',
   hasSummary = 'always',
   hasPodcast = 'never',
+  categoriesMinLength = 0,
 }: {
   readingContent?: boolean;
   contentArb?: fc.Arbitrary<string[]>;
   hasDescription?: MayHappenOption;
   hasSummary?: MayHappenOption;
   hasPodcast?: MayHappenOption;
+  categoriesMinLength?: number;
 } = {}): { [K in keyof FeedItem]: fc.Arbitrary<FeedItem[K]> } {
   return {
     title: fc.lorem(),
@@ -159,7 +164,7 @@ export function feedItemRecordModel({
         ? contentArb
         : fc.oneof(contentArb, fc.constant(undefined))
       : fc.constant(undefined),
-    categories: fc.array(fc.lorem()),
+    categories: fc.array(fc.lorem(), { minLength: categoriesMinLength }),
     podcast: mayHappenArbitrary(
       () =>
         fc.record<Podcast>({
