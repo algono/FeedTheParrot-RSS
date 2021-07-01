@@ -10,7 +10,8 @@ const dynamoDbParameters = {
 };
 
 export class FirebaseWithDynamoDbPersistenceAdapter
-  implements PersistenceAdapter {
+  implements PersistenceAdapter
+{
   private _firebasePersistenceAdapter: FirebasePersistenceAdapter;
   private _dynamoDbDocumentClient: AWS.DynamoDB.DocumentClient;
 
@@ -18,7 +19,7 @@ export class FirebaseWithDynamoDbPersistenceAdapter
     this._firebasePersistenceAdapter = new FirebasePersistenceAdapter();
   }
 
-  private async initDynamoDb() {
+  public async initDynamoDb() {
     const STS = new AWS.STS({ apiVersion: '2011-06-15' });
 
     const credentials = await STS.assumeRole(

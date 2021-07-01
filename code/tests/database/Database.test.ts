@@ -60,8 +60,8 @@ jest.mock('../../src/database/firebaseServiceAccountKey', () => null);
 
 jest.mock('ask-sdk-core');
 
-test('Creating a new persistence adapter initializes the database', () => {
-  const { appMock } = createPersistenceAdapter();
+test('Creating a new persistence adapter initializes the database', async () => {
+  const { appMock } = await createPersistenceAdapter();
 
   expect(mocked(initializeApp)).toHaveBeenCalled();
   verify(appMock.firestore()).once();
@@ -92,14 +92,16 @@ describe('setAuthCode', () => {
             }
           ),
           fc.boolean(),
+          fc.boolean(),
           needsUserRefId ? fc.string({ minLength: 1 }) : fc.constant(undefined),
           async (
             userId,
             code: AuthCode,
             isUserDataCached,
+            initDynamoDb,
             userRefId?: string
           ) => {
-            const result = await createDatabaseHandler();
+            const result = await createDatabaseHandler({ initDynamoDb });
 
             if (isUserDataCached) {
               result.persistentAttributesHolder.attributes = {

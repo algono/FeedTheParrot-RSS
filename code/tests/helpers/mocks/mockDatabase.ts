@@ -17,7 +17,7 @@ export function mockDatabase() {
   return mockedDatabase;
 }
 
-export function createPersistenceAdapter() {
+export async function createPersistenceAdapter(initDynamoDb: boolean = false) {
   const appMock = mock<app.App>();
 
   const firestoreMock = mock<FirebaseFirestore.Firestore>();
@@ -27,8 +27,12 @@ export function createPersistenceAdapter() {
 
   const { clientMock, stsMock } = mockDocumentClient();
 
+  const persistenceAdapter = new FirebaseWithDynamoDbPersistenceAdapter();
+
+  if (initDynamoDb) await persistenceAdapter.initDynamoDb();
+
   return {
-    persistenceAdapter: new FirebaseWithDynamoDbPersistenceAdapter(),
+    persistenceAdapter,
     appMock,
     firestoreMock,
     clientMock,
@@ -52,12 +56,14 @@ export interface CreateDatabaseHandlerResult {
 export async function createDatabaseHandler({
   locale,
   sessionAttributes,
+  initDynamoDb = false,
 }: {
   locale?: string;
   sessionAttributes?: { [key: string]: any };
+  initDynamoDb?: boolean;
 } = {}): Promise<CreateDatabaseHandlerResult> {
   const { persistenceAdapter, firestoreMock, clientMock, stsMock } =
-    createPersistenceAdapter();
+    await createPersistenceAdapter(initDynamoDb);
 
   const { mockedAttributesManager, instanceRequestEnvelope, t } =
     await mockHandlerInput({ locale, sessionAttributes });
