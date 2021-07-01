@@ -269,10 +269,7 @@ describe('matchesFilters', () => {
                           ? 1
                           : 0,
                     }), // non-matching filter values
-                feedItemRecord({
-                  readingContent: true,
-                  contentMinLength: 1,
-                })
+                feedItemRecord()
               )
               .chain(([filter, item]) => {
                 let fullContent = '';
@@ -284,40 +281,51 @@ describe('matchesFilters', () => {
 
                   item.title = item.title.replace(nonMatchFiltersRegex, '');
 
-                  item.content = item.content.map((line) => {
-                    fullContent += line;
-                    // Make sure that the non-matching filters never match
-                    return line.replace(nonMatchFiltersRegex, '');
-                  });
-                } else {
+                  if (item.content) {
+                    item.content = item.content.map((line) => {
+                      fullContent += line;
+                      // Make sure that the non-matching filters never match
+                      return line.replace(nonMatchFiltersRegex, '');
+                    });
+                  }
+                } else if (item.content) {
                   fullContent = item.content.join('');
                 }
 
                 return fc.tuple(
-                  fc.constant(fullContent),
+                  fc.constant(item),
                   fc.constant(filter),
-                  fc.constant(item)
+                  fc.constant(fullContent)
                 );
               })
-              .filter(([fullContent]) => /\w+/.test(fullContent)) // Checks that the full content still contains some letters (for the filter matches)
-              .chain(([fullContent, filter, item]) => {
+              .filter(([item]) => /\w+/.test(item.title)) // Checks that the title still contains some letters (for the filter matches)
+              .chain(([item, filter, fullContent]) => {
                 return fc.tuple(
                   fc.constant(item),
                   (matchesType === 'none'
                     ? fc.constant<string[]>([])
                     : fc
-                        .array(
+                        .tuple(
                           fc.integer({
                             min: 1,
-                            max: fullContent.length,
+                            max: item.title.length,
                           }),
-                          { minLength: 2, maxLength: 2 }
+                          fullContent
+                            ? fc.integer({
+                                min: 1,
+                                max: fullContent.length,
+                              })
+                            : fc.constant<number>(undefined)
                         )
                         .chain(([titleSplitLimit, contentSplitLimit]) =>
                           fc.shuffledSubarray(
                             item.title
                               .split('', titleSplitLimit)
-                              .concat(fullContent.split('', contentSplitLimit)),
+                              .concat(
+                                fullContent
+                                  ? fullContent.split('', contentSplitLimit)
+                                  : []
+                              ),
                             {
                               minLength:
                                 matchesType === 'some' || matchesType === 'all'
