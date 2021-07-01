@@ -11,7 +11,10 @@ import {
 import { Feed, FeedItem } from '../../../src/logic/Feed';
 import { checkFeedSize } from '../../../src/util/feed/checkFeedSize';
 import { getItems } from '../../../src/util/feed/getItems';
-import { matchesFilters, processFeedItem } from '../../../src/util/feed/processFeedItem';
+import {
+  matchesFilters,
+  processFeedItem,
+} from '../../../src/util/feed/processFeedItem';
 import { getLangFormatter } from '../../../src/util/langFormatter';
 import { initNewInstance } from '../../../src/util/localization';
 import {
@@ -80,9 +83,9 @@ testInAllLocales(
         .then(() => fail('The promise was not rejected'))
         .catch((err) => {
           expect(err).toBeInstanceOf(InvalidFeedUrlError);
-          expect((err as InvalidFeedUrlError).code).toEqual<
-            InvalidFeedUrlErrorCode
-          >('invalid-url');
+          expect(
+            (err as InvalidFeedUrlError).code
+          ).toEqual<InvalidFeedUrlErrorCode>('invalid-url');
         });
     })
   )
@@ -150,9 +153,9 @@ describe('feedparser related tests', () => {
             .then(() => fail('The promise was not rejected'))
             .catch((err) => {
               expect(err).toBeInstanceOf(InvalidFeedUrlError);
-              expect((err as InvalidFeedUrlError).code).toEqual<
-                InvalidFeedUrlErrorCode
-              >('no-feed');
+              expect(
+                (err as InvalidFeedUrlError).code
+              ).toEqual<InvalidFeedUrlErrorCode>('no-feed');
             });
 
           clearInterval(intervals.error);
@@ -244,14 +247,27 @@ describe('feedparser related tests', () => {
   function setupReadable(
     itemList: FeedParser.Item[],
     feedItemList: FeedItem[],
-    ampersandReplacement: string
+    ampersandReplacement: string,
+    passingFeedItems?: FeedItem[]
   ) {
     tMock.mockReset();
 
     let processFeedItemMock = mocked(processFeedItem);
     processFeedItemMock.mockReset();
 
+    const matchesFiltersMock = mocked(matchesFilters);
+    matchesFiltersMock.mockReset();
+
     setupFeedParser();
+
+    // If passingFeedItems is not null or undefined, only make passingFeedItems match the filters
+    if (passingFeedItems != null) {
+      matchesFiltersMock.mockReset();
+
+      matchesFiltersMock.mockImplementation((item) =>
+        passingFeedItems.includes(item)
+      );
+    }
 
     tMock.mockImplementation((key) => {
       if (key === 'AMPERSAND') {
@@ -276,7 +292,7 @@ describe('feedparser related tests', () => {
   }
 
   testInAllLocales(
-    'processes all items and returns a list of the results sorted by date in descending order'
+    'processes all items and returns a list containing the results of the items that passed the filters sorted by date in descending order'
   )(async (locale) => {
     const dateArbitrary = feedItemRecordModel().date;
 
@@ -288,31 +304,46 @@ describe('feedparser related tests', () => {
           .chain((itemList) =>
             fc.tuple(
               fc.constant(itemList),
-              fc.array(
-                dateArbitrary.chain((date) =>
-                  mockArbitrary<FeedItem>((mock) => {
-                    when(mock.date).thenReturn(date);
-                  })
-                ),
-                {
-                  minLength: itemList.length,
-                  maxLength: itemList.length,
-                }
-              )
+              fc
+                .array(
+                  dateArbitrary.chain((date) =>
+                    mockArbitrary<FeedItem>((mock) => {
+                      when(mock.date).thenReturn(date);
+                    })
+                  ),
+                  {
+                    minLength: itemList.length,
+                    maxLength: itemList.length,
+                  }
+                )
+                .chain((feedItemList) =>
+                  fc.tuple(
+                    fc.constant(feedItemList),
+                    fc.shuffledSubarray(feedItemList.map((_v, idx) => idx))
+                  )
+                )
             )
           ),
         fc.lorem({ maxCount: 1 }),
-        async (feed, [itemList, feedItemList], ampersandReplacement) => {
+        async (
+          feed,
+          [itemList, [feedItemList, passingFeedItemIndexes]],
+          ampersandReplacement
+        ) => {
+          const passingFeedItems = passingFeedItemIndexes.map(
+            (idx) => feedItemList[idx]
+          );
+
           const { processFeedItemMock } = setupReadable(
             itemList,
             feedItemList,
-            ampersandReplacement
+            ampersandReplacement,
+            passingFeedItems
           );
 
           setEventInterval('readable');
           const items = await getItems(feed, locale);
 
-          expect(items.list.length).toEqual(itemList.length);
           expect(processFeedItemMock).toHaveBeenCalledTimes(itemList.length);
 
           for (let i = 0; i < itemList.length; i++) {
@@ -323,8 +354,8 @@ describe('feedparser related tests', () => {
             expect(nthCallArgs[2]).toEqual(ampersandReplacement);
           }
 
-          // Check that items list contains all elements from feedItemList, ignoring order
-          expect(items.list).toEqual(expect.arrayContaining(feedItemList));
+          // Check that items list contains all elements from passingFeedItems, ignoring order
+          expect(items.list).toEqual(expect.arrayContaining(passingFeedItems));
 
           expect(
             // List is sorted by date in descending order
