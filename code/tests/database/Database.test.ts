@@ -170,6 +170,16 @@ describe('setAuthCode', () => {
     }, true)
   );
 
+  function basicAuthCodeMockInstance() {
+    const authCodeMock = mock<AuthCode>();
+    const dateMock = mock<Date>();
+
+    when(dateMock.getTime()).thenReturn(0);
+    when(authCodeMock.expirationDate).thenCall(() => instance(dateMock));
+
+    return instance(authCodeMock);
+  }
+
   test('If there is an unhandled error while retrieving the user id from the database (in the process of saving the auth code), the error is thrown', async () => {
     const { databaseHandler, firestoreMock, persistentAttributesHolder } =
       await createDatabaseHandler();
@@ -184,7 +194,7 @@ describe('setAuthCode', () => {
     when(firestoreMock.collection(anything())).thenThrow(expectedError);
 
     await expect(() =>
-      databaseHandler.setAuthCode(instance(mock<AuthCode>()))
+      databaseHandler.setAuthCode(basicAuthCodeMockInstance())
     ).rejects.toBe(expectedError);
   });
 
@@ -214,6 +224,30 @@ describe('setAuthCode', () => {
 
       await databaseHandler.setAuthCode(authCode);
     }
+  });
+
+  test('(aws-sdk) If STS assumeRole throws an error, the callback should throw an error too', async () => {
+    const {
+      databaseHandler,
+      stsMock,
+      firestoreMock,
+      persistentAttributesHolder,
+    } = await createDatabaseHandler();
+
+    persistentAttributesHolder.attributes = {
+      feeds: null,
+      feedNames: null,
+    };
+
+    mockUserRefId({ firestoreMock });
+
+    when(stsMock.assumeRole(anything(), anything())).thenCall(
+      (_cfg, callback) => callback(new Error(), null)
+    );
+
+    await expect(() =>
+      databaseHandler.setAuthCode(basicAuthCodeMockInstance())
+    ).rejects.toBeInstanceOf(Error);
   });
 });
 

@@ -5,10 +5,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { resolvableInstance } from '../ts-mockito/resolvableInstance';
 
 function mockRequest<D>(result: PromiseResult<D, AWS.AWSError>) {
-  const requestMock =
-    mock<
-      AWS.Request<D, AWS.AWSError>
-    >();
+  const requestMock = mock<AWS.Request<D, AWS.AWSError>>();
 
   when(requestMock.promise()).thenResolve(result);
 
@@ -23,13 +20,20 @@ function mockSTS() {
   when(configMock.credentials).thenCall(() => instance(configCredentialsMock));
   when(stsMock.config).thenCall(() => instance(configMock));
 
-  const credentialsMock = mock<PromiseResult<AWS.STS.AssumeRoleResponse, AWS.AWSError>>();
+  const credentialsMock =
+    mock<PromiseResult<AWS.STS.AssumeRoleResponse, AWS.AWSError>>();
 
   const stsCredentialsMock = mock<AWS.STS.Credentials>();
-  when(credentialsMock.Credentials).thenCall(() => instance(stsCredentialsMock));
+  when(credentialsMock.Credentials).thenCall(() =>
+    instance(stsCredentialsMock)
+  );
 
-  const requestMock = mockRequest<AWS.STS.AssumeRoleResponse>(resolvableInstance(credentialsMock));
-  when(stsMock.assumeRole(anything(), anything())).thenCall(() => instance(requestMock));
+  const requestMock = mockRequest<AWS.STS.AssumeRoleResponse>(
+    resolvableInstance(credentialsMock)
+  );
+  when(stsMock.assumeRole(anything(), anything())).thenCall(() =>
+    instance(requestMock)
+  );
 
   return stsMock;
 }
@@ -37,7 +41,8 @@ function mockSTS() {
 export function mockDocumentClient() {
   const clientMock = mock<AWS.DynamoDB.DocumentClient>();
 
-  const requestMock = mockRequest<AWS.DynamoDB.DocumentClient.PutItemOutput>(null);
+  const requestMock =
+    mockRequest<AWS.DynamoDB.DocumentClient.PutItemOutput>(null);
 
   when(clientMock.put(anything())).thenCall(() => instance(requestMock));
 
@@ -48,5 +53,5 @@ export function mockDocumentClient() {
   const stsMock = mockSTS();
   mocked(AWS.STS).mockImplementation(() => instance(stsMock));
 
-  return clientMock;
+  return { clientMock, stsMock };
 }

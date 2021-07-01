@@ -25,19 +25,21 @@ export function createPersistenceAdapter() {
 
   mocked(initializeApp).mockImplementation(() => instance(appMock));
 
-  const clientMock = mockDocumentClient();
+  const { clientMock, stsMock } = mockDocumentClient();
 
   return {
     persistenceAdapter: new FirebaseWithDynamoDbPersistenceAdapter(),
     appMock,
     firestoreMock,
     clientMock,
+    stsMock,
   };
 }
 
 export interface CreateDatabaseHandlerResult {
   firestoreMock: FirebaseFirestore.Firestore;
   clientMock: AWS.DynamoDB.DocumentClient;
+  stsMock: AWS.STS;
   mockedAttributesManager: AttributesManager;
   attributesManager: AttributesManager;
   persistentAttributesHolder: {
@@ -54,22 +56,19 @@ export async function createDatabaseHandler({
   locale?: string;
   sessionAttributes?: { [key: string]: any };
 } = {}): Promise<CreateDatabaseHandlerResult> {
-  const { persistenceAdapter, firestoreMock, clientMock } = createPersistenceAdapter();
+  const { persistenceAdapter, firestoreMock, clientMock, stsMock } =
+    createPersistenceAdapter();
 
-  const {
-    mockedAttributesManager,
-    instanceRequestEnvelope,
-    t,
-  } = await mockHandlerInput({ locale, sessionAttributes });
+  const { mockedAttributesManager, instanceRequestEnvelope, t } =
+    await mockHandlerInput({ locale, sessionAttributes });
 
   const persistentAttributesHolder: { attributes?: UserData } = {};
 
   when(mockedAttributesManager.getPersistentAttributes()).thenCall(async () =>
     persistentAttributesHolder.attributes !== undefined
       ? Promise.resolve(persistentAttributesHolder.attributes)
-      : (persistentAttributesHolder.attributes = await persistenceAdapter.getAttributes(
-          instanceRequestEnvelope
-        ))
+      : (persistentAttributesHolder.attributes =
+          await persistenceAdapter.getAttributes(instanceRequestEnvelope))
   );
 
   when(mockedAttributesManager.setPersistentAttributes(anything())).thenCall(
@@ -91,6 +90,7 @@ export async function createDatabaseHandler({
   return {
     firestoreMock,
     clientMock,
+    stsMock,
     mockedAttributesManager,
     attributesManager,
     persistentAttributesHolder,
