@@ -54,6 +54,8 @@ export function anyOrAllElements<T>(
   match: FilterMatch,
   predicate: (value: T) => boolean
 ): boolean {
-  if (match == 'any') return array.some(predicate);
-  if (match == 'all') return array.every(predicate);
+  switch (match) {
+    case 'any': return array.some(predicate);
+    case 'all': return array.every(predicate);
+  }
 }
