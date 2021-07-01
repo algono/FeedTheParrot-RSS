@@ -19,6 +19,7 @@ export function feedRecord({
   locales = availableLocales,
   maxItemLimit,
   readFullContentCustomArb,
+  hasFilters = true,
   hasTextFilter = 'sometimes',
   hasCategoryFilter = 'sometimes',
   textFilterValues,
@@ -30,6 +31,7 @@ export function feedRecord({
   locales?: readonly AvailableLocale[];
   maxItemLimit?: number;
   readFullContentCustomArb?: fc.Arbitrary<boolean>;
+  hasFilters?: boolean;
   hasTextFilter?: MayHappenOption;
   hasCategoryFilter?: MayHappenOption;
   textFilterValues?: string[];
@@ -53,7 +55,7 @@ export function feedRecord({
         readFullContentCustomArb !== undefined
           ? readFullContentCustomArb
           : fc.boolean(),
-      filters: fc.record<FeedFilters, fc.RecordConstraints<keyof FeedFilters>>(
+      filters: hasFilters ? fc.record<FeedFilters, fc.RecordConstraints<keyof FeedFilters>>(
         {
           text: filterRecord({
             values: textFilterValues,
@@ -67,7 +69,7 @@ export function feedRecord({
           }),
         },
         { withDeletedKeys: false }
-      ),
+      ) : fc.constant<FeedFilters>(undefined),
     },
     { withDeletedKeys: false }
   );
