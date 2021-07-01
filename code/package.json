@@ -29,7 +29,8 @@
     "build:full": "npm run clean:full && npm run build:skill-package && npm run build:minimal",
     "build": "npm run clean && npm run build:minimal",
     "rebuild": "npm run clean:full && npm run build:minimal",
-    "rebuild:full": "npm run clean:full && npm run build:full"
+    "rebuild:full": "npm run clean:full && npm run build:full",
+    "husky-init": "cd .. && husky install code/hooks"
   },
   "author": "algono",
   "license": "ISC",
@@ -55,7 +56,7 @@
     "cpy-cli": "^3.1.1",
     "eslint": "^7.12.1",
     "fast-check": "^2.6.0",
-    "husky": "^4.3.0",
+    "husky": "^7.0.0",
     "jest": "^26.6.2",
     "jest-sonar-reporter": "^2.0.0",
     "prettier": "^2.1.2",
@@ -65,12 +66,6 @@
     "ts-mockito": "^2.6.1",
     "ts-node": "^9.0.0",
     "typescript": "^4.3.4"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/commit-msg $HUSKY_GIT_PARAMS)",
-      "pre-push": "cd .. && (echo $HUSKY_GIT_STDIN | ./code/hooks/pre-push $HUSKY_GIT_PARAMS)"
-    }
   },
   "jestSonar": {
     "reportPath": "sonarqube"
