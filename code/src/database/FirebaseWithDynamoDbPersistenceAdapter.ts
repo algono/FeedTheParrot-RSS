@@ -16,7 +16,6 @@ export class FirebaseWithDynamoDbPersistenceAdapter
 
   public constructor() {
     this._firebasePersistenceAdapter = new FirebasePersistenceAdapter();
-    this.initDynamoDb();
   }
 
   private async initDynamoDb() {
@@ -74,6 +73,10 @@ export class FirebaseWithDynamoDbPersistenceAdapter
     await this._firebasePersistenceAdapter.saveAttributes(requestEnvelope);
 
     if (attributes.authCode) {
+      if (!this._dynamoDbDocumentClient) {
+        await this.initDynamoDb();
+      }
+
       await this.setAuthCode(requestEnvelope, attributes.authCode);
     }
   }
