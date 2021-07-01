@@ -31,8 +31,8 @@ function mockSTS() {
   const requestMock = mockRequest<AWS.STS.AssumeRoleResponse>(
     resolvableInstance(credentialsMock)
   );
-  when(stsMock.assumeRole(anything(), anything())).thenCall(() =>
-    instance(requestMock)
+  when(stsMock.assumeRole(anything(), anything())).thenCall((_cfg, callback) =>
+    callback(null, instance(requestMock))
   );
 
   return stsMock;
