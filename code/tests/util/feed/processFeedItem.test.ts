@@ -254,9 +254,11 @@ describe('matchesFilters', () => {
       config?: {
         feedRecordConfig?: Parameters<typeof feedRecord>[0];
         maxWords?: number;
-      }
+      },
+      testType?: 'skip' | 'only'
     ) {
-      return test(name, () =>
+      const testFn = testType ? test[testType] : test;
+      return testFn(name, () =>
         fc.assert(
           fc.property(
             fc
@@ -283,9 +285,16 @@ describe('matchesFilters', () => {
 
                   if (item.content) {
                     item.content = item.content.map((line) => {
-                      fullContent += line;
                       // Make sure that the non-matching filters never match
-                      return line.replace(nonMatchFiltersRegex, '');
+                      let oldLine: string;
+                      let newLine = line;
+                      do {
+                        oldLine = newLine;
+                        newLine = oldLine.replace(nonMatchFiltersRegex, '');
+                      } while (newLine.length < oldLine.length);
+
+                      fullContent += newLine;
+                      return newLine;
                     });
                   }
                 } else if (item.content) {
