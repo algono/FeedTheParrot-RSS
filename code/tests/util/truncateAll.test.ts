@@ -1,7 +1,6 @@
 import fc from 'fast-check';
 import * as truncate from '../../src/util/truncate';
 import { truncateAll } from '../../src/util/truncateAll';
-import { hasReturned } from '../helpers/jest/mockResultHelpers';
 
 test('None of the strings from the result surpass the provided length', () =>
   fc.assert(
@@ -34,7 +33,7 @@ describe('tests with truncate mocked', () => {
 
   function getTruncateSpyResults({ readable }: { readable?: boolean } = {}) {
     return truncateSpy.mock.results.map((res) => {
-      if (hasReturned(res)) {
+      if (res.type === 'return') {
         return readable ? res.value.readable || res.value.str : res.value.str;
       } else {
         fail('One of the results was not returned, but instead: ' + res.type);
