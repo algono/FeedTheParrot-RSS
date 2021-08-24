@@ -1,6 +1,6 @@
 import { CustomSkillBuilder, SkillBuilders } from 'ask-sdk-core';
 import { mocked } from 'ts-jest/utils';
-import { anyString, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, instance, verify, when } from 'ts-mockito';
 import { FirebaseWithDynamoDbPersistenceAdapter } from '../src/database/FirebaseWithDynamoDbPersistenceAdapter';
 import { GenericErrorHandler } from '../src/intents/Error';
 import { ReadItemIntentHandler } from '../src/intents/Read/Item';
@@ -11,13 +11,14 @@ import {
 } from '../src/intents/Repeat';
 import { LocalizationRequestInterceptor } from '../src/util/localization';
 import { lastCallTo } from './helpers/jest/mockInstanceHelpers';
+import { fmock } from './helpers/ts-mockito/FunctionalMocker';
 
 jest.mock('ask-sdk-core');
 
 jest.mock('../src/database/Database');
 jest.mock('../src/database/FirebaseWithDynamoDbPersistenceAdapter');
 
-const customSkillBuilderMock = mock<CustomSkillBuilder>();
+const customSkillBuilderMock = fmock<CustomSkillBuilder>();
 
 const customSkillBuilder = instance(customSkillBuilderMock);
 
@@ -27,28 +28,19 @@ const customSkillBuilder = instance(customSkillBuilderMock);
  * So spying the functions with jest seems to be the best alternative, as the spy works with any number (and/or type) of arguments
  */
 const addRequestHandlersSpy = jest
-  .spyOn(customSkillBuilder, 'addRequestHandlers')
-  .mockReturnThis();
-
-when(customSkillBuilderMock.withSkillId(anyString())).thenCall(() =>
-  instance(customSkillBuilderMock)
-);
+  .spyOn(customSkillBuilder, 'addRequestHandlers');
 
 const addErrorHandlersSpy = jest
-  .spyOn(customSkillBuilder, 'addErrorHandlers')
-  .mockReturnThis();
+  .spyOn(customSkillBuilder, 'addErrorHandlers');
 
 const addRequestInterceptorsSpy = jest
-  .spyOn(customSkillBuilder, 'addRequestInterceptors')
-  .mockReturnThis();
+  .spyOn(customSkillBuilder, 'addRequestInterceptors');
 
 const addResponseInterceptorsSpy = jest
-  .spyOn(customSkillBuilder, 'addResponseInterceptors')
-  .mockReturnThis();
+  .spyOn(customSkillBuilder, 'addResponseInterceptors');
 
 const withPersistenceAdapterSpy = jest
-  .spyOn(customSkillBuilder, 'withPersistenceAdapter')
-  .mockReturnThis();
+  .spyOn(customSkillBuilder, 'withPersistenceAdapter');
 
 when(customSkillBuilderMock.lambda()).thenReturn(null);
 
