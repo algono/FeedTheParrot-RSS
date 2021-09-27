@@ -7,7 +7,7 @@ Fue diseñado para mi Trabajo de Fin de Grado (TFG).
 
 ## Enlaces relacionados / Related links
 
-- [App](https://github.com/algono/feed-the-parrot-app)
+- [App](https://github.com/algono/feed_the_parrot_app)
 - [Autenticación / Auth](https://github.com/algono/feed-the-parrot-auth)
 - [(Antigua) Autenticación / (Old) Auth](https://github.com/algono/feed-the-parrot-auth-old)
 - Memoria / Paper
